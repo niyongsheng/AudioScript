@@ -9,6 +9,7 @@ pub mod overlay;
 pub mod paths;
 pub mod permission;
 pub mod prefs;
+pub mod project;
 pub mod session;
 pub mod shortcut;
 pub mod telemetry;
@@ -71,7 +72,12 @@ pub fn run() {
         lifecycle::show_main(app);
     }));
 
-    builder = builder.plugin(tauri_plugin_aptabase::Builder::new(telemetry::APP_KEY).build());
+    if let Some(key) = telemetry::app_key() {
+        builder = builder.plugin(tauri_plugin_aptabase::Builder::new(key).build());
+    }
+    if let Some(key) = update::public_key() {
+        builder = builder.plugin(tauri_plugin_updater::Builder::new().pubkey(key).build());
+    }
 
     #[cfg(target_os = "macos")]
     {
@@ -81,7 +87,6 @@ pub fn run() {
     builder
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_dialog::init())
-        .plugin(tauri_plugin_updater::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
             None,

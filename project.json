@@ -1,0 +1,8 @@
+{
+  "repository": "https://github.com/zyg0733/AudioScript",
+  "site": "https://zyg0733.github.io/AudioScript/",
+  "upstreamRepository": "https://github.com/niyongsheng/AudioScript",
+  "upstreamSponsor": "https://ifdian.net/a/nico2026",
+  "updaterEndpoint": "https://github.com/zyg0733/AudioScript/releases/latest/download/latest.json",
+  "modelsRelease": "https://github.com/zyg0733/AudioScript/releases/download/models-v1"
+}

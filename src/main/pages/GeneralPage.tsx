@@ -16,7 +16,7 @@ const THEME_OPTIONS = [
 ]
 
 export function GeneralPage() {
-  const { theme, changeTheme, prefsReady, analyticsEnabled, setAnalyticsEnabled, setError } = useStore()
+  const { info, theme, changeTheme, prefsReady, analyticsEnabled, setAnalyticsEnabled, setError } = useStore()
 
   const [autostart, setAutostart] = useState<boolean | null>(null)
   const [confirmingReset, setConfirmingReset] = useState(false)
@@ -100,12 +100,16 @@ export function GeneralPage() {
         <SettingsRow
           icon="shield"
           title="匿名使用统计"
-          description="通过 Aptabase 发送功能使用情况，帮助改进 AudioScript。"
+          description={
+            info?.analyticsAvailable
+              ? '默认关闭。开启后通过此 fork 配置的 Aptabase 发送功能使用情况。'
+              : (info?.analyticsDisabledReason ?? '正在读取统计配置…')
+          }
           control={
             <Switch
               label="匿名使用统计"
-              checked={analyticsEnabled}
-              disabled={!prefsReady}
+              checked={analyticsEnabled && info?.analyticsAvailable === true}
+              disabled={!prefsReady || !info?.analyticsAvailable}
               onChange={setAnalyticsEnabled}
             />
           }

@@ -111,7 +111,7 @@ Tauri v2 **没有**「按名字从 Rust 侧调用 command」的公开 API——c
 - `commands` 模块 MUST 定义**唯一的** `route(name, args) -> Result<Value, CmdError>`（异步入口为 `dispatch`）。
 - 每一条 `#[tauri::command]` MUST 是它的薄包装，MUST NOT 在包装里写业务逻辑。
 - 任何批处理 / 测试路径 MUST 走同一个 `route`。
-- **`route` 是同步的**，而麦克风授权申请最长等 30s、模型加载以秒计。这类会阻塞的命令 MUST 由 `route_async` 用 `spawn_blocking` 兜出去（名单在 `route_async` 的 `matches!` 里），MUST NOT 让它们占住 tokio worker。`dispatch` 走 `route_async`；冒烟路径 `AUDIOSCRIPT_SMOKE_ROUTE` 仍走同步 `route`，且 MUST NOT 把阻塞命令加进去。
+- **`route` 是同步的**，而麦克风授权申请最长等 30s、模型加载以秒计。这类会阻塞的命令 MUST 由 `route_async` 派发到启动时预创建的 `cmd-quick` / `cmd-session` 常驻线程并设置超时，MUST NOT 让它们占住 tokio worker，也 MUST NOT 在 CT2/MKL 初始化之后为控制路径新建线程。`dispatch` 走 `route_async`；冒烟路径 `AUDIOSCRIPT_SMOKE_ROUTE` 仍走同步 `route`，且 MUST NOT 把阻塞命令加进去。
 
 > 这条约束 MUST 在写第一条 command 时就建立：晚建立意味着回头重写全部 command。
 
@@ -605,7 +605,7 @@ Remote API 密钥 MUST 存入系统密钥链（macOS Keychain / Windows Credenti
 
 ## 12. 匿名使用统计
 
-统计默认开启，可在「通用 → 隐私 → 匿名使用统计」关闭；关闭后 Rust 与前端都 MUST NOT 再入队新事件。
+统计默认关闭。仅在构建时配置维护者自己的 `AUDIOSCRIPT_APTABASE_APP_KEY` 才注册统计插件，并允许用户在「通用 → 隐私 → 匿名使用统计」主动开启；无 Key 时界面 MUST 禁止开启，后端 MUST 拒绝启用请求。关闭后 Rust 与前端都 MUST NOT 再入队新事件。
 
 - 事件：`app_started` / `app_exited`、`session_started` / `session_stopped`、`model_download`、`overlay_toggled`、`setting_changed`、`onboarding_completed`。
 - 属性只允许枚举值与分档（音源、翻译引擎、源语言、模型档位、时长分档、结果状态）。

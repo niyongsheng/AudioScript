@@ -20,7 +20,7 @@ const DEFAULT_CONFIG: OverlayConfig = {
 }
 
 function OverlayApp() {
-  const { segments } = useTranscriptStream()
+  const { segments, error } = useTranscriptStream()
   const [config, setConfig] = useState<OverlayConfig>(DEFAULT_CONFIG)
 
   useEffect(() => {
@@ -57,6 +57,7 @@ function OverlayApp() {
         opacity={config.opacity}
         bgColor={config.bgColor}
         glow={config.glow}
+        error={error}
       />
       {config.mode === OverlayMode.Edit && <EditChrome />}
     </div>

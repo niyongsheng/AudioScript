@@ -449,7 +449,7 @@ impl Default for Preferences {
             onboarding_done: false,
             asr_model_tier: AsrModelTier::default(),
             mt_model_tier: MtModelTier::default(),
-            analytics_enabled: true,
+            analytics_enabled: false,
         }
     }
 }
@@ -986,16 +986,16 @@ mod tests {
     }
 
     #[test]
-    fn analytics_defaults_on_and_patch_can_disable_it() {
-        assert!(Preferences::default().analytics_enabled);
+    fn analytics_defaults_off_and_patch_can_change_it() {
+        assert!(!Preferences::default().analytics_enabled);
 
         let mut p = Preferences::default();
         PrefsPatch {
-            analytics_enabled: Some(false),
+            analytics_enabled: Some(true),
             ..Default::default()
         }
         .apply_to(&mut p);
-        assert!(!p.analytics_enabled);
+        assert!(p.analytics_enabled);
     }
 
     #[test]

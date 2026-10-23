@@ -18,13 +18,17 @@ use crate::transcript::{TranscriptSegment, TranscriptStore, TranslationState};
 use crate::translate::queue::{Job, JobQueue};
 use crate::translate::Translator;
 
+mod lifecycle;
+
+use lifecycle::{Failure, Lifecycle};
+
 const TRANSLATE_QUEUE_CAPACITY: usize = 32;
 
 fn create_translator(
     app: &AppHandle,
     cfg: &TranslateConfig,
     mt_tier: MtModelTier,
-) -> Result<Box<dyn Translator>, String> {
+) -> Result<Option<Box<dyn Translator>>, String> {
     let engine: Box<dyn Translator> = match cfg.engine {
         TranslateEngine::LocalNmt => {
             let roots = paths::search_roots(app);
@@ -59,10 +63,7 @@ fn create_translator(
                 fail_every,
             ))
         }
-        TranslateEngine::Off => Box::new(crate::translate::mock::MockTranslator::new(
-            std::time::Duration::ZERO,
-            0,
-        )),
+        TranslateEngine::Off => return Ok(None),
         TranslateEngine::RemoteApi => {
             return Err(format!(
                 "翻译引擎 {} 尚未接入。可选值：local-nmt（本地离线）、mock（开发用）、off（仅显示原文）",
@@ -71,13 +72,14 @@ fn create_translator(
         }
     };
 
-    Ok(engine)
+    Ok(Some(engine))
 }
 
 pub const EVENT_SEGMENTS: &str = "transcript://segments";
 pub const EVENT_TASK_STATE: &str = "transcript://state";
 pub const EVENT_AUDIO: &str = "transcript://audio";
 pub const EVENT_LEVEL: &str = "transcript://level";
+pub const EVENT_ERROR: &str = "transcript://error";
 
 const FIRST_TEXT_BUDGET_MS: u128 = 200;
 
@@ -106,19 +108,41 @@ pub enum TaskStatus {
     Error,
 }
 
+impl From<lifecycle::Status> for TaskStatus {
+    fn from(status: lifecycle::Status) -> Self {
+        match status {
+            lifecycle::Status::Ready => Self::Ready,
+            lifecycle::Status::Capturing => Self::Capturing,
+            lifecycle::Status::Error => Self::Error,
+        }
+    }
+}
+
+struct TranslationSession {
+    queue: Arc<JobQueue>,
+    translator: Arc<Mutex<Box<dyn Translator>>>,
+    done: std::sync::mpsc::Receiver<()>,
+}
+
+impl Drop for TranslationSession {
+    fn drop(&mut self) {
+        self.queue.close();
+    }
+}
+
 struct RunningSession {
     capture: CaptureHandle,
     engine: Arc<Mutex<Box<dyn AsrEngine>>>,
     device: String,
     device_sample_rate: u32,
 
-    queue: Arc<JobQueue>,
-    translator: Arc<Mutex<Box<dyn Translator>>>,
+    translation: Option<TranslationSession>,
     events: Sender<UiEvent>,
 }
 
 enum UiEvent {
     Status(TaskStatus),
+    Failed { epoch: u64, message: String },
     Level(f64),
     Audio(AudioStatus),
     Segments(Vec<TranscriptSegment>),
@@ -142,7 +166,12 @@ pub fn init_emitter(app: &AppHandle) -> Result<(), String> {
 
                 let t0 = Instant::now();
                 match event {
-                    UiEvent::Status(status) => emit_status(&app, status),
+                    UiEvent::Status(status) => {
+                        if app.state::<SessionState>().status() == status {
+                            emit_status(&app, status);
+                        }
+                    }
+                    UiEvent::Failed { epoch, message } => fail_session(&app, epoch, message),
                     UiEvent::Segments(segments) => emit_segments(&app, segments),
                     UiEvent::Level(level) => {
                         if let Err(e) = app.emit(EVENT_LEVEL, level) {
@@ -182,6 +211,7 @@ enum TranslateCommand {
         translator: Arc<Mutex<Box<dyn Translator>>>,
         store: Arc<Mutex<TranscriptStore>>,
         events: Sender<UiEvent>,
+        done: Sender<()>,
     },
 }
 
@@ -191,49 +221,50 @@ pub fn init_translate_worker() -> Result<(), String> {
     let (tx, rx) = std::sync::mpsc::channel::<TranslateCommand>();
     std::thread::Builder::new()
         .name("translate-worker".into())
-        .spawn(move || {
-            while let Ok(TranslateCommand::Start {
-                queue,
-                translator,
-                store,
-                events,
-            }) = rx.recv()
-            {
-                while let Some(job) = queue.pop_blocking() {
-                    let result = translator
-                        .lock()
-                        .expect("translator mutex poisoned")
-                        .translate(&job.text)
-                        .map_err(|e| e.to_string());
-
-                    let updated = {
-                        let mut s = store.lock().expect("transcript store mutex poisoned");
-                        s.set_translation(&job.segment_id, result).ok()
-                    };
-
-                    if let Some(seg) = updated {
-                        match seg.translation_state {
-                            TranslationState::Done => {
-                                tracing::info!(
-                                    "[译文] {}",
-                                    seg.translation.as_deref().unwrap_or("")
-                                )
-                            }
-                            TranslationState::Failed => {
-                                tracing::warn!(id = %seg.id, "[译文] 失败，该段只显示原文")
-                            }
-                            _ => {}
-                        }
-                        let _ = events.send(UiEvent::Segments(vec![seg]));
-                    }
-                }
-                tracing::info!("翻译工作线程空闲");
-            }
-            tracing::debug!("翻译线程退出");
-        })
+        .spawn(move || run_translate_worker(rx))
         .map_err(|e| format!("启动翻译线程失败：{e}"))?;
     let _ = TRANSLATE_TX.set(tx);
     Ok(())
+}
+
+fn run_translate_worker(rx: std::sync::mpsc::Receiver<TranslateCommand>) {
+    while let Ok(TranslateCommand::Start {
+        queue,
+        translator,
+        store,
+        events,
+        done,
+    }) = rx.recv()
+    {
+        while let Some(job) = queue.pop_blocking() {
+            let result = translator
+                .lock()
+                .expect("translator mutex poisoned")
+                .translate(&job.text)
+                .map_err(|e| e.to_string());
+
+            let updated = {
+                let mut s = store.lock().expect("transcript store mutex poisoned");
+                s.set_translation(&job.segment_id, result).ok()
+            };
+
+            if let Some(seg) = updated {
+                match seg.translation_state {
+                    TranslationState::Done => {
+                        tracing::info!("[译文] {}", seg.translation.as_deref().unwrap_or(""))
+                    }
+                    TranslationState::Failed => {
+                        tracing::warn!(id = %seg.id, "[译文] 失败，该段只显示原文")
+                    }
+                    _ => {}
+                }
+                let _ = events.send(UiEvent::Segments(vec![seg]));
+            }
+        }
+        tracing::info!("翻译工作线程空闲");
+        let _ = done.send(());
+    }
+    tracing::debug!("翻译线程退出");
 }
 
 #[typeshare::typeshare]
@@ -243,13 +274,14 @@ pub struct SessionInfo {
     pub status: TaskStatus,
     pub device: Option<String>,
     pub device_sample_rate: Option<u32>,
+    pub error: Option<String>,
 }
 
 #[derive(Default)]
 pub struct SessionState {
     store: Arc<Mutex<TranscriptStore>>,
-    running: Mutex<Option<RunningSession>>,
-    status: Mutex<TaskStatus>,
+    broadcast: Mutex<()>,
+    lifecycle: Mutex<Lifecycle<RunningSession>>,
     started_at: Mutex<Option<Instant>>,
     first_text_logged: AtomicBool,
     audio_started_at: Arc<Mutex<Option<Instant>>>,
@@ -257,6 +289,56 @@ pub struct SessionState {
 }
 
 impl SessionState {
+    fn clear_with(&self, emit: impl FnOnce(Vec<TranscriptSegment>)) -> Result<(), String> {
+        let _broadcast = self
+            .broadcast
+            .lock()
+            .expect("session broadcast mutex poisoned");
+        let lifecycle = self
+            .lifecycle
+            .lock()
+            .expect("session lifecycle mutex poisoned");
+        lifecycle.ensure_clearable(self.teardown_active.load(Ordering::SeqCst))?;
+        {
+            let mut store = self.store.lock().expect("transcript store mutex poisoned");
+            *store = TranscriptStore::new();
+        }
+        emit(Vec::new());
+        Ok(())
+    }
+
+    fn broadcast_segments(
+        &self,
+        queued: Vec<TranscriptSegment>,
+        emit: impl FnOnce(Vec<TranscriptSegment>),
+    ) {
+        let _broadcast = self
+            .broadcast
+            .lock()
+            .expect("session broadcast mutex poisoned");
+        let segments = {
+            let store = self.store.lock().expect("transcript store mutex poisoned");
+            coalesce(queued)
+                .into_iter()
+                .filter_map(|segment| {
+                    store
+                        .get(&segment.id)
+                        .filter(|current| current.revision >= segment.revision)
+                        .cloned()
+                })
+                .collect::<Vec<_>>()
+        };
+        if !segments.is_empty() {
+            if segments
+                .iter()
+                .any(|segment| !segment.text.trim().is_empty())
+            {
+                self.note_first_text();
+            }
+            emit(segments);
+        }
+    }
+
     fn note_first_text(&self) {
         if self.first_text_logged.swap(true, Ordering::SeqCst) {
             return;
@@ -282,11 +364,11 @@ impl SessionState {
 
 impl SessionState {
     pub fn status(&self) -> TaskStatus {
-        *self.status.lock().expect("session status mutex poisoned")
-    }
-
-    fn set_status(&self, s: TaskStatus) {
-        *self.status.lock().expect("session status mutex poisoned") = s;
+        self.lifecycle
+            .lock()
+            .expect("session lifecycle mutex poisoned")
+            .status()
+            .into()
     }
 
     pub fn snapshot(&self) -> Vec<TranscriptSegment> {
@@ -298,25 +380,32 @@ impl SessionState {
     }
 
     pub fn is_running(&self) -> bool {
-        self.running
+        self.lifecycle
             .lock()
-            .expect("session running mutex poisoned")
+            .expect("session lifecycle mutex poisoned")
+            .running()
             .is_some()
     }
 
     pub fn info(&self) -> SessionInfo {
-        let guard = self.running.lock().expect("session running mutex poisoned");
-        let status = self.status();
-        match guard.as_ref() {
+        let guard = self
+            .lifecycle
+            .lock()
+            .expect("session lifecycle mutex poisoned");
+        let status = guard.status().into();
+        let error = guard.error().map(str::to_owned);
+        match guard.running() {
             Some(r) => SessionInfo {
                 status,
                 device: Some(r.device.clone()),
                 device_sample_rate: Some(r.device_sample_rate),
+                error,
             },
             None => SessionInfo {
                 status,
                 device: None,
                 device_sample_rate: None,
+                error,
             },
         }
     }
@@ -329,6 +418,21 @@ impl std::fmt::Debug for SessionState {
             .field("running", &self.is_running())
             .field("segments", &self.snapshot().len())
             .finish()
+    }
+}
+
+struct StartAttempt<'a> {
+    state: &'a SessionState,
+    epoch: u64,
+}
+
+impl Drop for StartAttempt<'_> {
+    fn drop(&mut self) {
+        self.state
+            .lifecycle
+            .lock()
+            .expect("session lifecycle mutex poisoned")
+            .abort_start(self.epoch);
     }
 }
 
@@ -359,6 +463,21 @@ pub fn start(
     if waited_ms > 0 {
         tracing::info!(ms = waited_ms, "启动前等待上一次收尾完成");
     }
+
+    let epoch = {
+        let mut lifecycle = state
+            .lifecycle
+            .lock()
+            .expect("session lifecycle mutex poisoned");
+        if state.teardown_active.load(Ordering::SeqCst) {
+            return Err("上一次会话仍在收尾，请稍后重试".into());
+        }
+        lifecycle.begin()?
+    };
+    let _attempt = StartAttempt {
+        state: &state,
+        epoch,
+    };
 
     let t0 = Instant::now();
     *state
@@ -439,48 +558,44 @@ pub fn start(
 
     let engine: Arc<Mutex<Box<dyn AsrEngine>>> = Arc::new(Mutex::new(Box::new(engine)));
 
-    let translator: Arc<Mutex<Box<dyn Translator>>> = Arc::new(Mutex::new(
-        create_translator(app, &cfg.translate, prefs.mt_model_tier)?,
-    ));
-
-    let queue = Arc::new(JobQueue::new(TRANSLATE_QUEUE_CAPACITY));
     let events = events_sender()?;
+    let translation = match create_translator(app, &cfg.translate, prefs.mt_model_tier)? {
+        Some(mut translator) => {
+            translator
+                .init(&cfg.translate)
+                .map_err(|e| format!("翻译引擎初始化失败：{e}"))?;
+            tracing::info!(
+                engine = cfg.translate.engine.as_str(),
+                caps = ?translator.capabilities(),
+                ms = t0.elapsed().as_millis(),
+                "翻译引擎已就绪"
+            );
 
-    let translate_tx = TRANSLATE_TX
-        .get()
-        .ok_or("翻译线程未初始化")?
-        .clone();
-    translate_tx
-        .send(TranslateCommand::Start {
-            queue: Arc::clone(&queue),
-            translator: Arc::clone(&translator),
-            store: Arc::clone(&state.store),
-            events: events.clone(),
-        })
-        .map_err(|_| "翻译线程已退出".to_string())?;
-
-    if let Err(e) = translator
-        .lock()
-        .expect("translator mutex poisoned")
-        .init(&cfg.translate)
-    {
-        queue.close();
-        return Err(format!("翻译引擎初始化失败：{e}"));
-    }
-    let caps = translator
-        .lock()
-        .expect("translator mutex poisoned")
-        .capabilities();
-    tracing::info!(
-        engine = cfg.translate.engine.as_str(),
-        ?caps,
-        ms = t0.elapsed().as_millis(),
-        "翻译引擎已就绪"
-    );
+            let (done_tx, done_rx) = std::sync::mpsc::channel();
+            let translation = TranslationSession {
+                queue: Arc::new(JobQueue::new(TRANSLATE_QUEUE_CAPACITY)),
+                translator: Arc::new(Mutex::new(translator)),
+                done: done_rx,
+            };
+            TRANSLATE_TX
+                .get()
+                .ok_or("翻译线程未初始化")?
+                .send(TranslateCommand::Start {
+                    queue: Arc::clone(&translation.queue),
+                    translator: Arc::clone(&translation.translator),
+                    store: Arc::clone(&state.store),
+                    events: events.clone(),
+                    done: done_tx,
+                })
+                .map_err(|_| "翻译线程已退出".to_string())?;
+            Some(translation)
+        }
+        None => None,
+    };
 
     let store = Arc::clone(&state.store);
     let engine_for_sink = Arc::clone(&engine);
-    let queue_for_sink = Arc::clone(&queue);
+    let queue_for_sink = translation.as_ref().map(|t| Arc::clone(&t.queue));
     let events_for_sink = events.clone();
 
     let mut last_emit = Instant::now()
@@ -501,6 +616,7 @@ pub fn start(
     let translate_source_is_zh = cfg.translate.source_lang.starts_with("zh");
     let zh_script = cfg.translate.zh_script;
     let audio_clock = Arc::clone(&state.audio_started_at);
+    let events_for_failure = events.clone();
     let capture = audio::start(source, device.as_deref(), move |chunk: &[f32]| {
         {
             let mut clock = audio_clock.lock().expect("audio start mutex poisoned");
@@ -588,16 +704,11 @@ pub fn start(
 
         let mut deltas = {
             let mut eng = engine_for_sink.lock().expect("engine mutex poisoned");
-            match eng.feed_pcm(chunk) {
-                Ok(d) => d,
-                Err(e) => {
-                    tracing::error!("引擎处理音频失败：{e}");
-                    return;
-                }
-            }
+            eng.feed_pcm(chunk)
+                .map_err(|e| format!("语音识别中断：{e}"))?
         };
         if deltas.is_empty() {
-            return;
+            return Ok(());
         }
         if translate_source_is_zh && zh_script == ZhScript::Traditional {
             for d in &mut deltas {
@@ -626,44 +737,26 @@ pub fn start(
                         }
                     }
 
-                    let ids: Vec<String> = changed
-                        .iter()
-                        .filter(|s| {
-                            s.state.is_frozen() && s.translation_state == TranslationState::Idle
-                        })
-                        .map(|s| s.id.clone())
-                        .collect();
-
-                    let marked = s.mark_pending_translation(&ids);
+                    let marked = schedule_translation(&mut s, &changed, queue_for_sink.as_deref());
                     pending.extend(changed);
                     marked
                 }
                 Err(e) => {
-                    tracing::error!("段落状态机拒绝了引擎输出：{e}");
-                    return;
+                    return Err(format!("段落状态机拒绝了引擎输出：{e}"));
                 }
             }
         };
 
-        for seg in to_translate {
-            let dropped = queue_for_sink.push(Job {
-                segment_id: seg.id.clone(),
-                text: seg.text.clone(),
-            });
-            if let Some(d) = dropped {
-                tracing::warn!(
-                    dropped_ms = d.segment_id,
-                    "翻译队列溢出，丢弃最旧的任务（翻译跟不上实时）"
-                );
-            }
-            pending.push(seg);
-        }
+        pending.extend(to_translate);
 
         if last_emit.elapsed() >= EMIT_INTERVAL && !pending.is_empty() {
             let batch = coalesce(std::mem::take(&mut pending));
             let _ = events_for_sink.send(UiEvent::Segments(batch));
             last_emit = Instant::now();
         }
+        Ok(())
+    }, move |message| {
+        let _ = events_for_failure.send(UiEvent::Failed { epoch, message });
     })
     .map_err(|e| format!("启动采集失败：{e}"))?;
 
@@ -678,21 +771,37 @@ pub fn start(
         "转写会话已开始"
     );
 
-    let _ = events.send(UiEvent::Status(TaskStatus::Capturing));
-
-    *state
-        .running
-        .lock()
-        .expect("session running mutex poisoned") = Some(RunningSession {
+    let session = RunningSession {
         capture,
         engine,
         device: device_name,
         device_sample_rate,
-        queue,
-        translator,
-        events,
-    });
-    state.set_status(TaskStatus::Capturing);
+        translation,
+        events: events.clone(),
+    };
+    let published = {
+        let mut lifecycle = state
+            .lifecycle
+            .lock()
+            .expect("session lifecycle mutex poisoned");
+        match lifecycle.publish(epoch, session) {
+            Ok(()) => {
+                let _ = events.send(UiEvent::Status(TaskStatus::Capturing));
+                Ok(())
+            }
+            Err(session) => {
+                state.teardown_active.store(true, Ordering::SeqCst);
+                Err((
+                    session,
+                    lifecycle.error().unwrap_or("启动已取消").to_owned(),
+                ))
+            }
+        }
+    };
+    if let Err((session, error)) = published {
+        schedule_teardown(app, session);
+        return Err(error);
+    }
 
     crate::telemetry::track(
         app,
@@ -713,18 +822,21 @@ pub fn start(
 pub fn stop(app: &AppHandle) -> Result<(), String> {
     tracing::info!("停止：收到命令");
     let state = app.state::<SessionState>();
-
-    let Some(session) = state
-        .running
-        .lock()
-        .expect("session running mutex poisoned")
-        .take()
-    else {
-        state.set_status(TaskStatus::Ready);
-        tracing::info!("停止：没有运行中的会话，直接返回");
+    let session = {
+        let mut lifecycle = state
+            .lifecycle
+            .lock()
+            .expect("session lifecycle mutex poisoned");
+        let session = lifecycle.stop();
+        if session.is_some() {
+            state.teardown_active.store(true, Ordering::SeqCst);
+        }
+        session
+    };
+    let Some(session) = session else {
+        tracing::info!("停止：没有运行中的会话，已取消尚未完成的启动");
         return Ok(());
     };
-    tracing::info!("停止：已摘除运行会话");
 
     let audio_ms = {
         let clock = state
@@ -743,19 +855,57 @@ pub fn stop(app: &AppHandle) -> Result<(), String> {
             "segments": state.snapshot().len() as u64,
         })),
     );
-
-    session.capture.request_stop();
-    session.queue.close();
-
-    state.set_status(TaskStatus::Ready);
     let _ = session.events.send(UiEvent::Status(TaskStatus::Ready));
-    tracing::info!("停止：状态已就绪，收尾转入后台");
+    schedule_teardown(app, session);
+    Ok(())
+}
 
-    state.teardown_active.store(true, Ordering::SeqCst);
+fn fail_session(app: &AppHandle, epoch: u64, message: String) {
+    let state = app.state::<SessionState>();
+    let session = {
+        let mut lifecycle = state
+            .lifecycle
+            .lock()
+            .expect("session lifecycle mutex poisoned");
+        match lifecycle.fail(epoch, message.clone()) {
+            Failure::Stale => return,
+            Failure::Accepted(session) => {
+                if session.is_some() {
+                    state.teardown_active.store(true, Ordering::SeqCst);
+                }
+                session
+            }
+        }
+    };
+    tracing::error!(epoch, "会话中断：{message}");
+    emit_status(app, TaskStatus::Error);
+    if let Err(error) = app.emit(EVENT_ERROR, message) {
+        tracing::debug!("广播会话错误失败：{error}");
+    }
+    if let Some(session) = session {
+        schedule_teardown(app, session);
+    }
+}
 
+fn schedule_teardown(app: &AppHandle, session: RunningSession) {
+    session.capture.request_stop();
+    if let Some(translation) = &session.translation {
+        let jobs = translation.queue.close_and_drain();
+        let changed = cancel_translation_jobs(
+            &mut app
+                .state::<SessionState>()
+                .store
+                .lock()
+                .expect("transcript store mutex poisoned"),
+            jobs,
+            "会话已结束，取消积压翻译",
+        );
+        if !changed.is_empty() {
+            let _ = session.events.send(UiEvent::Segments(changed));
+        }
+    }
     let app_for_teardown = app.clone();
     let task: TeardownTask = Box::new(move || finish_teardown(&app_for_teardown, session));
-
     match TEARDOWN_TX.get() {
         Some(tx) => {
             if let Err(err) = tx.send(task) {
@@ -768,8 +918,6 @@ pub fn stop(app: &AppHandle) -> Result<(), String> {
             task();
         }
     }
-
-    Ok(())
 }
 
 type TeardownTask = Box<dyn FnOnce() + Send>;
@@ -808,8 +956,7 @@ fn teardown(app: &AppHandle, session: RunningSession) {
     let RunningSession {
         capture,
         engine,
-        queue,
-        translator,
+        translation,
         events,
         ..
     } = session;
@@ -849,19 +996,22 @@ fn teardown(app: &AppHandle, session: RunningSession) {
     };
     tracing::info!(ms = t0.elapsed().as_millis(), "收尾：引擎已关闭");
 
-    let dropped = queue.clear();
-    if dropped > 0 {
-        tracing::info!(dropped, "停止时丢弃了积压的翻译任务");
-    }
-    queue.close();
-
-    tracing::info!(ms = t0.elapsed().as_millis(), "收尾：翻译队列已关闭");
-
-    tracing::info!("收尾：释放翻译引擎");
-    translator
-        .lock()
-        .expect("translator mutex poisoned")
-        .shutdown();
+    let state = app.state::<SessionState>();
+    let changed = if let Some(translation) = translation {
+        translation.queue.close();
+        if translation.done.recv().is_err() {
+            tracing::error!("翻译工作线程异常退出");
+        }
+        let mut translator = translation
+            .translator
+            .lock()
+            .expect("translator mutex poisoned");
+        let changed = translate_final_tail(&state.store, changed, Some(translator.as_mut()));
+        translator.shutdown();
+        changed
+    } else {
+        translate_final_tail(&state.store, changed, None)
+    };
     tracing::info!(ms = t0.elapsed().as_millis(), "收尾完成");
 
     if !changed.is_empty() {
@@ -869,13 +1019,93 @@ fn teardown(app: &AppHandle, session: RunningSession) {
     }
 }
 
-pub fn clear(app: &AppHandle) {
+pub fn clear(app: &AppHandle) -> Result<(), String> {
     let state = app.state::<SessionState>();
-    {
-        let mut store = state.store.lock().expect("transcript store mutex poisoned");
-        *store = TranscriptStore::new();
+    state.clear_with(|segments| broadcast_segments(app, segments))
+}
+
+fn translate_final_tail(
+    store: &Mutex<TranscriptStore>,
+    changed: Vec<TranscriptSegment>,
+    translator: Option<&mut dyn Translator>,
+) -> Vec<TranscriptSegment> {
+    let Some(translator) = translator else {
+        return changed;
+    };
+    let ids = changed
+        .iter()
+        .filter(|segment| {
+            segment.state.is_frozen() && segment.translation_state == TranslationState::Idle
+        })
+        .map(|segment| segment.id.clone())
+        .collect::<Vec<_>>();
+    let pending = store
+        .lock()
+        .expect("transcript store mutex poisoned")
+        .mark_pending_translation(&ids);
+    let mut updates = changed;
+    for segment in pending {
+        let result = translator
+            .translate(&segment.text)
+            .map_err(|error| error.to_string());
+        let translated = store
+            .lock()
+            .expect("transcript store mutex poisoned")
+            .set_translation(&segment.id, result);
+        if let Ok(segment) = translated {
+            updates.push(segment);
+        }
     }
-    emit_segments(app, Vec::new());
+    coalesce(updates)
+}
+
+fn cancel_translation_jobs(
+    store: &mut TranscriptStore,
+    jobs: impl IntoIterator<Item = Job>,
+    reason: &str,
+) -> Vec<TranscriptSegment> {
+    jobs.into_iter()
+        .filter_map(|job| {
+            if store.get(&job.segment_id)?.translation_state != TranslationState::Pending {
+                return None;
+            }
+            store
+                .set_translation(&job.segment_id, Err(reason.to_owned()))
+                .ok()
+        })
+        .collect()
+}
+
+fn schedule_translation(
+    store: &mut TranscriptStore,
+    changed: &[TranscriptSegment],
+    queue: Option<&JobQueue>,
+) -> Vec<TranscriptSegment> {
+    let Some(queue) = queue else {
+        return Vec::new();
+    };
+    let ids: Vec<String> = changed
+        .iter()
+        .filter(|s| s.state.is_frozen() && s.translation_state == TranslationState::Idle)
+        .map(|s| s.id.clone())
+        .collect();
+    let mut updates = Vec::new();
+    for segment in store.mark_pending_translation(&ids) {
+        let dropped = queue.push(Job {
+            segment_id: segment.id.clone(),
+            text: segment.text.clone(),
+        });
+        updates.push(segment);
+        if let Some(dropped) = dropped {
+            tracing::warn!(id = %dropped.segment_id, "翻译任务已丢弃（队列已满或会话已结束）");
+            updates.extend(cancel_translation_jobs(
+                store,
+                [dropped],
+                "翻译任务已丢弃（队列已满或会话已结束）",
+            ));
+        }
+    }
+    updates
 }
 
 fn coalesce(batch: Vec<TranscriptSegment>) -> Vec<TranscriptSegment> {
@@ -901,10 +1131,11 @@ fn coalesce(batch: Vec<TranscriptSegment>) -> Vec<TranscriptSegment> {
 }
 
 fn emit_segments(app: &AppHandle, segments: Vec<TranscriptSegment>) {
-    if segments.iter().any(|s| !s.text.trim().is_empty()) {
-        app.state::<SessionState>().note_first_text();
-    }
+    app.state::<SessionState>()
+        .broadcast_segments(segments, |segments| broadcast_segments(app, segments));
+}
 
+fn broadcast_segments(app: &AppHandle, segments: Vec<TranscriptSegment>) {
     if let Err(e) = app.emit(EVENT_SEGMENTS, segments) {
         tracing::debug!("广播段落失败（可能没有窗口在监听）：{e}");
     }
@@ -955,5 +1186,263 @@ mod tests {
     fn coalesce_does_not_let_an_older_revision_win() {
         let out = coalesce(vec![seg("a", "新", 5), seg("a", "旧", 2)]);
         assert_eq!(out[0].text, "新");
+    }
+
+    fn finalized(id: &str) -> TranscriptSegment {
+        let mut segment = seg(id, "只有原文", 1);
+        segment.state = SegmentState::Final;
+        segment
+    }
+
+    #[test]
+    fn translation_off_keeps_snapshot_and_export_without_fake_translation() {
+        let mut store = TranscriptStore::new();
+        let changed = store.apply(vec![finalized("off")]).unwrap();
+        assert!(schedule_translation(&mut store, &changed, None).is_empty());
+        let segment = store.get("off").unwrap();
+        assert_eq!(segment.translation_state, TranslationState::Idle);
+        assert_eq!(segment.translation, None);
+        let markdown = crate::transcript::to_markdown(store.snapshot(), "测试时间", None);
+        assert!(markdown.contains("只有原文"));
+        assert!(!markdown.contains("⟦译⟧"));
+        assert!(!markdown.contains("> "));
+    }
+
+    #[test]
+    fn overflow_and_stop_cancel_pending_translations() {
+        let mut store = TranscriptStore::new();
+        let changed = store
+            .apply(vec![finalized("old"), finalized("latest")])
+            .unwrap();
+        let queue = JobQueue::new(1);
+        let updates = schedule_translation(&mut store, &changed, Some(&queue));
+        assert_eq!(
+            store.get("old").unwrap().translation_state,
+            TranslationState::Failed
+        );
+        assert_eq!(
+            store.get("latest").unwrap().translation_state,
+            TranslationState::Pending
+        );
+        assert!(updates
+            .iter()
+            .any(|s| s.id == "old" && s.translation_state == TranslationState::Failed));
+
+        let cancelled = cancel_translation_jobs(&mut store, queue.close_and_drain(), "已停止");
+        assert_eq!(cancelled.len(), 1);
+        assert!(store
+            .snapshot()
+            .iter()
+            .all(|s| s.translation_state == TranslationState::Failed));
+
+        let changed = store.apply(vec![finalized("after-stop")]).unwrap();
+        schedule_translation(&mut store, &changed, Some(&queue));
+        assert_eq!(
+            store.get("after-stop").unwrap().translation_state,
+            TranslationState::Failed
+        );
+    }
+
+    #[test]
+    fn failed_capture_start_releases_worker_for_the_next_session() {
+        let (commands, receiver) = std::sync::mpsc::channel();
+        let worker = std::thread::spawn(move || run_translate_worker(receiver));
+        let (events, _) = std::sync::mpsc::channel();
+        let store = Arc::new(Mutex::new(TranscriptStore::new()));
+        let start_translation = || {
+            let mut translator = crate::translate::mock::MockTranslator::new(Duration::ZERO, 0);
+            translator.init(&TranslateConfig::default()).unwrap();
+            let (done_tx, done_rx) = std::sync::mpsc::channel();
+            let session = TranslationSession {
+                queue: Arc::new(JobQueue::new(4)),
+                translator: Arc::new(Mutex::new(Box::new(translator))),
+                done: done_rx,
+            };
+            commands
+                .send(TranslateCommand::Start {
+                    queue: Arc::clone(&session.queue),
+                    translator: Arc::clone(&session.translator),
+                    store: Arc::clone(&store),
+                    events: events.clone(),
+                    done: done_tx,
+                })
+                .unwrap();
+            session
+        };
+
+        let failed_start = start_translation();
+        drop(failed_start);
+        let retry = start_translation();
+        {
+            let mut store = store.lock().unwrap();
+            let changed = store.apply(vec![finalized("retry")]).unwrap();
+            schedule_translation(&mut store, &changed, Some(&retry.queue));
+        }
+        retry.queue.close();
+        retry
+            .done
+            .recv_timeout(Duration::from_secs(2))
+            .expect("首次采集失败不能阻塞后续翻译");
+        assert_eq!(
+            store
+                .lock()
+                .unwrap()
+                .get("retry")
+                .unwrap()
+                .translation_state,
+            TranslationState::Done
+        );
+        drop(commands);
+        worker.join().unwrap();
+    }
+
+    #[test]
+    fn clear_waits_for_initialization_and_teardown_even_after_stop() {
+        let state = SessionState::default();
+        state
+            .store
+            .lock()
+            .unwrap()
+            .apply(vec![finalized("saved")])
+            .unwrap();
+        let epoch = state.lifecycle.lock().unwrap().begin().unwrap();
+        assert!(state.clear_with(|_| panic!("启动期间不应清空")).is_err());
+        state.lifecycle.lock().unwrap().stop();
+        assert!(state
+            .clear_with(|_| panic!("取消后初始化仍未退出"))
+            .is_err());
+        state.lifecycle.lock().unwrap().abort_start(epoch);
+        state.teardown_active.store(true, Ordering::SeqCst);
+        assert!(state.clear_with(|_| panic!("收尾期间不应清空")).is_err());
+        assert_eq!(state.snapshot().len(), 1);
+
+        state.teardown_active.store(false, Ordering::SeqCst);
+        state
+            .clear_with(|segments| assert!(segments.is_empty()))
+            .unwrap();
+        assert!(state.snapshot().is_empty());
+    }
+
+    #[test]
+    fn queued_batches_use_current_revision_and_cannot_resurrect_cleared_segments() {
+        let state = SessionState::default();
+        let old = seg("queued", "旧草稿", 1);
+        {
+            let mut store = state.store.lock().unwrap();
+            store.apply(vec![old.clone()]).unwrap();
+            let mut latest = finalized("queued");
+            latest.revision = 2;
+            store.apply(vec![latest]).unwrap();
+            store
+                .set_translation("queued", Ok("最新译文".into()))
+                .unwrap();
+        }
+        state.broadcast_segments(vec![old.clone(), old.clone()], |segments| {
+            assert_eq!(segments.len(), 1);
+            assert_eq!(segments[0].revision, 3);
+            assert_eq!(segments[0].translation.as_deref(), Some("最新译文"));
+        });
+        let mut emissions = Vec::new();
+        state
+            .clear_with(|segments| emissions.push(segments))
+            .unwrap();
+        state.broadcast_segments(vec![old], |segments| emissions.push(segments));
+        assert_eq!(emissions.len(), 1, "清空后的旧批次必须被丢弃");
+        assert!(emissions[0].is_empty());
+    }
+
+    #[test]
+    fn clear_is_serialized_with_a_broadcast_already_in_progress() {
+        let state = Arc::new(SessionState::default());
+        let segment = finalized("in-flight");
+        state
+            .store
+            .lock()
+            .unwrap()
+            .apply(vec![segment.clone()])
+            .unwrap();
+        let emissions = Arc::new(Mutex::new(Vec::new()));
+        let (broadcasting, started) = std::sync::mpsc::channel();
+        let (resume, resume_receiver) = std::sync::mpsc::channel();
+        let broadcast_state = Arc::clone(&state);
+        let broadcast_emissions = Arc::clone(&emissions);
+        let broadcaster = std::thread::spawn(move || {
+            broadcast_state.broadcast_segments(vec![segment], |segments| {
+                broadcasting.send(()).unwrap();
+                resume_receiver.recv().unwrap();
+                broadcast_emissions.lock().unwrap().push(segments);
+            });
+        });
+        started.recv().unwrap();
+
+        let (cleared, clear_done) = std::sync::mpsc::channel();
+        let clear_state = Arc::clone(&state);
+        let clear_emissions = Arc::clone(&emissions);
+        let clearer = std::thread::spawn(move || {
+            clear_state
+                .clear_with(|segments| {
+                    clear_emissions.lock().unwrap().push(segments);
+                })
+                .unwrap();
+            cleared.send(()).unwrap();
+        });
+        let premature_clear = clear_done.recv_timeout(Duration::from_millis(50));
+        resume.send(()).unwrap();
+        broadcaster.join().unwrap();
+        clearer.join().unwrap();
+        assert!(premature_clear.is_err(), "清空广播必须等待在途广播完成");
+        let emissions = emissions.lock().unwrap();
+        assert_eq!(emissions.len(), 2);
+        assert_eq!(emissions[0][0].id, "in-flight");
+        assert!(emissions[1].is_empty());
+    }
+
+    #[test]
+    fn stop_flush_translates_final_tail_before_export() {
+        let store = Mutex::new(TranscriptStore::new());
+        let changed = store
+            .lock()
+            .unwrap()
+            .apply(vec![finalized("tail")])
+            .unwrap();
+        let mut translator = crate::translate::mock::MockTranslator::new(Duration::ZERO, 0);
+        translator.init(&TranslateConfig::default()).unwrap();
+        let translated = translate_final_tail(&store, changed, Some(&mut translator));
+        assert_eq!(translated.len(), 1);
+        assert_eq!(translated[0].translation_state, TranslationState::Done);
+        assert!(translated[0].revision > 1);
+        let store = store.lock().unwrap();
+        let markdown = crate::transcript::to_markdown(store.snapshot(), "测试时间", None);
+        assert!(markdown.contains("> ⟦译⟧只有原文"));
+    }
+
+    #[test]
+    fn stop_flush_with_translation_off_preserves_only_source_text() {
+        let store = Mutex::new(TranscriptStore::new());
+        let changed = store
+            .lock()
+            .unwrap()
+            .apply(vec![finalized("tail-off")])
+            .unwrap();
+        let translated = translate_final_tail(&store, changed, None);
+        assert_eq!(translated[0].translation_state, TranslationState::Idle);
+        assert_eq!(translated[0].translation, None);
+        assert_eq!(store.lock().unwrap().get("tail-off").unwrap().revision, 1);
+    }
+
+    #[test]
+    fn failed_tail_translation_terminates_pending_and_keeps_original() {
+        let store = Mutex::new(TranscriptStore::new());
+        let changed = store
+            .lock()
+            .unwrap()
+            .apply(vec![finalized("tail-error")])
+            .unwrap();
+        let mut translator = crate::translate::mock::MockTranslator::new(Duration::ZERO, 1);
+        translator.init(&TranslateConfig::default()).unwrap();
+        let translated = translate_final_tail(&store, changed, Some(&mut translator));
+        assert_eq!(translated[0].translation_state, TranslationState::Failed);
+        assert_eq!(translated[0].text, "只有原文");
+        assert_eq!(translated[0].translation, None);
     }
 }

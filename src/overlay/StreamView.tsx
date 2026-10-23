@@ -14,19 +14,17 @@ interface Props {
   opacity: number
   bgColor: string
   glow: boolean
+  error?: string | null
 }
 
-export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, glow }: Props) {
+export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, glow, error }: Props) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  const tail = segments.at(-1)
-  const followKey = tail ? `${tail.id}:${tail.revision}` : ''
-
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 意图是 followKey 变化时滚到底，体内无需读取
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 早先段落的译文回填和字号变化也会改变内容高度
   useLayoutEffect(() => {
     const el = scrollRef.current
     if (el) el.scrollTop = el.scrollHeight
-  }, [followKey])
+  }, [segments, fontSize, error])
 
   const bg = hexToRgba(bgColor, opacity / 100)
 
@@ -43,6 +41,11 @@ export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, gl
           scrollbarWidth: 'none',
         }}
       >
+        {error && (
+          <p role="alert" className="m-0 text-[0.8em]">
+            {error}
+          </p>
+        )}
         {segments.length === 0 ? (
           <p className="m-0 text-[0.8em]" style={{ color: fontColor, opacity: 0.45 }}>
             等待识别…

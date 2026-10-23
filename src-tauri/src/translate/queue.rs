@@ -61,18 +61,20 @@ impl JobQueue {
         }
     }
 
-    pub fn clear(&self) -> usize {
-        let mut g = self.inner.lock().expect("job queue mutex poisoned");
-        let n = g.items.len();
-        g.items.clear();
-        n
-    }
-
     pub fn close(&self) {
         let mut g = self.inner.lock().expect("job queue mutex poisoned");
         g.closed = true;
         drop(g);
         self.ready.notify_all();
+    }
+
+    pub fn close_and_drain(&self) -> Vec<Job> {
+        let mut g = self.inner.lock().expect("job queue mutex poisoned");
+        g.closed = true;
+        let jobs = g.items.drain(..).collect();
+        drop(g);
+        self.ready.notify_all();
+        jobs
     }
 }
 
@@ -154,5 +156,16 @@ mod tests {
         q.close();
 
         assert!(h.join().unwrap().is_none());
+    }
+
+    #[test]
+    fn cancellation_returns_jobs_and_prevents_further_consumption() {
+        let queue = JobQueue::new(4);
+        queue.push(job("first"));
+        queue.push(job("second"));
+        let cancelled = queue.close_and_drain();
+        assert_eq!(cancelled, vec![job("first"), job("second")]);
+        assert!(queue.pop_blocking().is_none());
+        assert_eq!(queue.push(job("late")), Some(job("late")));
     }
 }
