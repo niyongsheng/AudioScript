@@ -9,13 +9,17 @@ pnpm install          # 依赖；prepare 会拉内置 ASR 模型
 pnpm fetch:mt         # 拉内置翻译模型
 pnpm tauri dev        # 开发模式（前端固定 5173）
 pnpm typecheck        # tsc --noEmit
-pnpm lint             # biome check --write src/
+pnpm lint             # 只读静态与格式检查
+pnpm lint:fix         # 显式修复格式与可修复问题
+pnpm test             # Vitest 回归测试
+pnpm test:scripts     # 发布配置脚本回归测试
+pnpm verify:project   # fork 身份与链接一致性
 pnpm build            # typeshare + vite 生产构建
 pnpm tauri build      # 打包
 cd src-tauri && cargo test
 ```
 
-前端没有测试框架；Rust 单测写在各模块的 `#[cfg(test)]` 里。
+前端使用 Vitest，Rust 单测写在各模块的 `#[cfg(test)]` 里。PR Checks 校验前端类型、静态检查、回归测试、双窗口构建、模型目录与 fork 配置，并运行 Rust 测试和生成类型差异检查。
 
 ## 结构
 
@@ -42,6 +46,10 @@ pnpm fetch:model:high   # 下载高精度 ASR（511 MB）到 .cache/，打印 ca
 pnpm verify:models      # 校验 model-catalog.json（--online 会重新下载核对）
 ```
 
-自动更新签名：GitHub Actions 需要 `TAURI_SIGNING_PRIVATE_KEY`（`~/.tauri/audioscript.key` 的内容）和 `TAURI_SIGNING_PRIVATE_KEY_PASSWORD`。本地 `pnpm tauri build` 不产出更新包，CI 通过 `src-tauri/tauri.updater.conf.json` 打开 `createUpdaterArtifacts`；缺 Secret 时 `.sig` 不会生成，release job 的 latest.json 步骤会失败。
+fork 身份：`zyg0733/AudioScript`，应用标识 `io.github.zyg0733.audioscript`。项目链接集中在根目录 `project.json`；保留原作者与 MIT，不得沿用上游更新公钥或统计 Key。新应用标识使用独立配置目录，旧安装的数据不自动迁移。
+
+自动更新签名：仓库 Actions 变量 `TAURI_UPDATER_PUBLIC_KEY` 保存本项目公钥；Secrets `TAURI_SIGNING_PRIVATE_KEY` / `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` 保存本项目私钥及其密码。CI 的 `scripts/configure-release.mjs` 生成 `.cache/tauri-release.conf.json`；tag 发布缺配置立即失败，手动验证缺配置不产出更新工件。普通本地构建未设置公钥时更新明确禁用，禁止回退到上游。不要生成、读取或输出私钥。
+
+统计默认关闭，仅构建环境 `AUDIOSCRIPT_APTABASE_APP_KEY` 非空才加载插件并允许用户主动开启。完整流程见 `docs/FORK_MAINTENANCE.md`。
 
 `fetch:model:high` 仅供维护者启用可选模型，普通开发构建不需要。

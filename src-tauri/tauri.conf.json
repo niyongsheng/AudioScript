@@ -2,7 +2,7 @@
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
   "productName": "AudioScript",
   "version": "0.2.10",
-  "identifier": "com.audioscript.desktop",
+  "identifier": "io.github.zyg0733.audioscript",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:5173",
@@ -51,12 +51,13 @@
   },
   "plugins": {
     "updater": {
-      "endpoints": ["https://github.com/niyongsheng/AudioScript/releases/latest/download/latest.json"],
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDIzMDAzQzYxRkYwRDYxMTkKUldRWllRMy9ZVHdBSXdRVmdCUjBZSmZ0dXpkZzNrUTJxVGRFbERCV0N3amRzS3RuYVN4bFdVZm8K"
+      "endpoints": ["https://github.com/zyg0733/AudioScript/releases/latest/download/latest.json"],
+      "pubkey": ""
     }
   },
   "bundle": {
     "active": true,
+    "createUpdaterArtifacts": false,
     "targets": "all",
     "icon": [
       "icons/32x32.png",

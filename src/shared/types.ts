@@ -246,6 +246,7 @@ export interface SessionInfo {
 	status: TaskStatus;
 	device?: string;
 	deviceSampleRate?: number;
+	error?: string;
 }
 
 export enum SystemAudioVerdict {

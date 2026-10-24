@@ -5,6 +5,14 @@ use tauri::{AppHandle, Emitter};
 use tauri_plugin_updater::UpdaterExt;
 
 const PROGRESS_EVENT: &str = "update://progress";
+pub const DISABLED_REASON: &str =
+    "此构建未配置本项目的更新公钥，自动更新已禁用。请从本项目 Releases 手动下载。";
+
+pub fn public_key() -> Option<&'static str> {
+    option_env!("TAURI_UPDATER_PUBLIC_KEY")
+        .map(str::trim)
+        .filter(|key| !key.is_empty())
+}
 
 static INSTALLING: AtomicBool = AtomicBool::new(false);
 
@@ -12,6 +20,8 @@ static INSTALLING: AtomicBool = AtomicBool::new(false);
 #[serde(rename_all = "camelCase")]
 pub struct UpdateCheck {
     current_version: String,
+    enabled: bool,
+    disabled_reason: Option<String>,
     available: bool,
     version: Option<String>,
     notes: Option<String>,
@@ -33,18 +43,39 @@ impl Drop for InstallGuard {
 }
 
 pub async fn check(app: &AppHandle) -> Result<UpdateCheck, String> {
-    let updater = app.updater().map_err(|e| format!("更新组件未就绪：{e}"))?;
+    let current_version = env!("CARGO_PKG_VERSION").to_string();
+    if public_key().is_none() {
+        return Ok(UpdateCheck {
+            current_version,
+            enabled: false,
+            disabled_reason: Some(DISABLED_REASON.into()),
+            available: false,
+            version: None,
+            notes: None,
+        });
+    }
+    let updater = app
+        .updater_builder()
+        .endpoints(vec![crate::project::links()
+            .updater_endpoint
+            .parse()
+            .map_err(|e| format!("更新地址无效：{e}"))?])
+        .map_err(|e| format!("更新地址无效：{e}"))?
+        .timeout(std::time::Duration::from_secs(30))
+        .build()
+        .map_err(|e| format!("更新组件未就绪：{e}"))?;
     let update = updater
         .check()
         .await
         .map_err(|e| format!("检查更新失败：{e}"))?;
 
-    let current_version = env!("CARGO_PKG_VERSION").to_string();
     match update {
         Some(update) => {
             tracing::info!(version = %update.version, "发现新版本");
             Ok(UpdateCheck {
                 current_version,
+                enabled: true,
+                disabled_reason: None,
                 available: true,
                 version: Some(update.version),
                 notes: update.body,
@@ -52,6 +83,8 @@ pub async fn check(app: &AppHandle) -> Result<UpdateCheck, String> {
         }
         None => Ok(UpdateCheck {
             current_version,
+            enabled: true,
+            disabled_reason: None,
             available: false,
             version: None,
             notes: None,
@@ -60,12 +93,24 @@ pub async fn check(app: &AppHandle) -> Result<UpdateCheck, String> {
 }
 
 pub async fn install(app: &AppHandle) -> Result<String, String> {
+    if public_key().is_none() {
+        return Err(DISABLED_REASON.into());
+    }
     if INSTALLING.swap(true, Ordering::SeqCst) {
         return Err("正在更新，请稍候".into());
     }
     let _guard = InstallGuard;
 
-    let updater = app.updater().map_err(|e| format!("更新组件未就绪：{e}"))?;
+    let updater = app
+        .updater_builder()
+        .endpoints(vec![crate::project::links()
+            .updater_endpoint
+            .parse()
+            .map_err(|e| format!("更新地址无效：{e}"))?])
+        .map_err(|e| format!("更新地址无效：{e}"))?
+        .timeout(std::time::Duration::from_secs(300))
+        .build()
+        .map_err(|e| format!("更新组件未就绪：{e}"))?;
     let Some(update) = updater
         .check()
         .await

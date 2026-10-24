@@ -6,8 +6,31 @@ on:
   # SPEC §5.2：首次跑通前 MUST NOT 进发布流程，先手动触发验证整条链
   workflow_dispatch:
 
+permissions:
+  contents: read
+
+env:
+  TAURI_UPDATER_PUBLIC_KEY: ${{ vars.TAURI_UPDATER_PUBLIC_KEY }}
+  AUDIOSCRIPT_APTABASE_APP_KEY: ${{ vars.AUDIOSCRIPT_APTABASE_APP_KEY }}
+
 jobs:
+  release-config:
+    name: Validate release configuration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Validate signing configuration
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: |
+          node scripts/verify-project.mjs
+          node scripts/configure-release.mjs
+
   build-mac-arm:
+    needs: release-config
     name: Build (macOS ARM)
     runs-on: macos-latest
     timeout-minutes: 60
@@ -29,6 +52,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+
+      - name: Configure optional updater artifacts
+        id: release_config
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: node scripts/configure-release.mjs
 
       # 钉版本：torch 要求 Python >= 3.10，runner 自带的 3.9 会让 pip 报「(from versions: none)」
       - name: Setup Python
@@ -93,7 +122,7 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: pnpm tauri build --config src-tauri/tauri.updater.conf.json
+        run: pnpm tauri build --config .cache/tauri-release.conf.json
 
       - name: Upload DMG
         uses: actions/upload-artifact@v4
@@ -103,14 +132,16 @@ jobs:
           compression-level: 0
 
       - name: Upload updater artifacts
+        if: steps.release_config.outputs.updater_enabled == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: updater-macOS-ARM
           path: src-tauri/target/release/bundle/macos/*.app.tar.gz*
           compression-level: 0
 
-  # Windows/Linux 只验证过编译与打包，采集/置顶/托盘/热键未在真机验证。
+  # 发布前需记录各平台采集、置顶、托盘与热键的真机验收结果。
   build-windows:
+    needs: release-config
     name: Build (Windows)
     runs-on: windows-latest
     timeout-minutes: 60
@@ -129,6 +160,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+
+      - name: Configure optional updater artifacts
+        id: release_config
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: node scripts/configure-release.mjs
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -197,7 +234,7 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: pnpm tauri build --bundles nsis,msi --config src-tauri/tauri.updater.conf.json
+        run: pnpm tauri build --bundles nsis,msi --config .cache/tauri-release.conf.json
 
       - name: Upload installers
         uses: actions/upload-artifact@v4
@@ -209,6 +246,7 @@ jobs:
           compression-level: 0
 
       - name: Upload NSIS updater artifacts
+        if: steps.release_config.outputs.updater_enabled == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: updater-Windows-x64
@@ -216,6 +254,7 @@ jobs:
           compression-level: 0
 
       - name: Upload MSI updater artifacts
+        if: steps.release_config.outputs.updater_enabled == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: updater-Windows-x64-msi
@@ -223,6 +262,7 @@ jobs:
           compression-level: 0
 
   build-linux:
+    needs: release-config
     name: Build (Linux)
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -251,6 +291,12 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+
+      - name: Configure optional updater artifacts
+        id: release_config
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+        run: node scripts/configure-release.mjs
 
       - name: Setup Rust
         uses: dtolnay/rust-toolchain@stable
@@ -320,7 +366,7 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-        run: pnpm tauri build --bundles deb,appimage --config src-tauri/tauri.updater.conf.json
+        run: pnpm tauri build --bundles deb,appimage --config .cache/tauri-release.conf.json
 
       - name: Upload installers
         uses: actions/upload-artifact@v4
@@ -332,6 +378,7 @@ jobs:
           compression-level: 0
 
       - name: Upload updater artifacts
+        if: steps.release_config.outputs.updater_enabled == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: updater-Linux-x64
@@ -339,6 +386,7 @@ jobs:
           compression-level: 0
 
       - name: Upload deb updater artifacts
+        if: steps.release_config.outputs.updater_enabled == 'true'
         uses: actions/upload-artifact@v4
         with:
           name: updater-Linux-x64-deb

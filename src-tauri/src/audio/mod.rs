@@ -182,13 +182,15 @@ fn resolve_device_name(kind: AudioSourceKind, wanted: Option<&str>) -> String {
         .unwrap_or_else(|| wanted.unwrap_or("(系统默认)").to_string())
 }
 
-pub fn start<S>(
+pub fn start<S, F>(
     kind: AudioSourceKind,
     device_id: Option<&str>,
     sink: S,
+    failed: F,
 ) -> Result<CaptureHandle, AudioError>
 where
-    S: FnMut(&[f32]) + Send + 'static,
+    S: FnMut(&[f32]) -> Result<(), String> + Send + 'static,
+    F: FnMut(String) + Send + 'static,
 {
     let config = StreamConfig {
         kind: kind.to_flexaudio(),
@@ -216,7 +218,7 @@ where
 
     let stop = Arc::new(AtomicBool::new(false));
 
-    let thread = spawn_worker(stream, Arc::clone(&stop), sink, None)?;
+    let thread = spawn_worker(stream, Arc::clone(&stop), sink, failed, None)?;
 
     Ok(CaptureHandle {
         stop,
@@ -230,10 +232,7 @@ fn open_started(config: &StreamConfig) -> Result<flexaudio::Stream, AudioError> 
     match open_and_start(config) {
         Ok(stream) => Ok(stream),
         #[cfg(target_os = "windows")]
-        Err(e)
-            if config.exclude_self
-                && e.kind() == flexaudio::ErrorKind::UnsupportedOsVersion =>
-        {
+        Err(e) if config.exclude_self && e.kind() == flexaudio::ErrorKind::UnsupportedOsVersion => {
             tracing::warn!("当前 Windows 版本不支持进程回环，改为采集整设备音频");
             let mut fallback = config.clone();
             fallback.exclude_self = false;
@@ -249,21 +248,24 @@ fn open_and_start(config: &StreamConfig) -> Result<flexaudio::Stream, flexaudio:
     Ok(stream)
 }
 
-fn spawn_worker<S>(
+fn spawn_worker<S, F>(
     mut stream: flexaudio::Stream,
     stop: Arc<AtomicBool>,
     mut sink: S,
+    mut failed: F,
     probe: Option<Arc<Mutex<ProbeAccum>>>,
 ) -> Result<std::thread::JoinHandle<()>, AudioError>
 where
-    S: FnMut(&[f32]) + Send + 'static,
+    S: FnMut(&[f32]) -> Result<(), String> + Send + 'static,
+    F: FnMut(String) + Send + 'static,
 {
     std::thread::Builder::new()
         .name("audio-worker".into())
         .spawn(move || {
             let mut buf: Vec<f32> = Vec::with_capacity(CHUNK_SAMPLES * 2);
+            let mut failure = None;
 
-            while !stop.load(Ordering::SeqCst) {
+            'capture: while !stop.load(Ordering::SeqCst) {
                 while let Some(event) = stream.poll_event() {
                     if let Some(acc) = &probe {
                         acc.lock()
@@ -282,7 +284,10 @@ where
                         for &s in &chunk.data {
                             buf.push(s);
                             if buf.len() == CHUNK_SAMPLES {
-                                sink(&buf);
+                                if let Err(error) = sink(&buf) {
+                                    failure = Some(error);
+                                    break 'capture;
+                                }
                                 buf.clear();
                             }
                         }
@@ -295,6 +300,7 @@ where
                                     .note_terminal(&e);
                             }
                             tracing::error!("采集终结性错误：{e}");
+                            failure = Some(format!("音频采集中断：{e}"));
                             break;
                         }
                         std::thread::sleep(POLL_IDLE);
@@ -302,6 +308,12 @@ where
                 }
             }
 
+            if failure.is_none() && !buf.is_empty() {
+                failure = sink(&buf).err();
+            }
+            if let Some(error) = failure {
+                failed(error);
+            }
             stream.stop();
             tracing::info!("采集工作线程退出");
         })
@@ -403,7 +415,17 @@ where
     let acc = Arc::new(Mutex::new(ProbeAccum::default()));
     let stop = Arc::new(AtomicBool::new(false));
 
-    let thread = spawn_worker(stream, Arc::clone(&stop), sink, Some(Arc::clone(&acc)))?;
+    let mut sink = sink;
+    let thread = spawn_worker(
+        stream,
+        Arc::clone(&stop),
+        move |chunk| {
+            sink(chunk);
+            Ok(())
+        },
+        |_| {},
+        Some(Arc::clone(&acc)),
+    )?;
 
     std::thread::sleep(window);
     stop.store(true, Ordering::SeqCst);

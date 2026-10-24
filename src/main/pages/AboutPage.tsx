@@ -8,10 +8,6 @@ import { Page } from '@/ui/Page'
 import { ProgressBar } from '@/ui/ProgressBar'
 import { SettingsGroup, SettingsRow } from '@/ui/Settings'
 
-const SITE_URL = 'https://niyongsheng.github.io/AudioScript/'
-
-const AFDIAN_BADGE = 'https://img.shields.io/badge/爱发电-Afdian-946ce6?style=for-the-badge&logo=github&logoColor=white'
-
 export function AboutPage() {
   const {
     info,
@@ -45,8 +41,9 @@ export function AboutPage() {
   }, [])
 
   async function openSite() {
+    if (!info) return
     try {
-      await openUrl(SITE_URL)
+      await openUrl(info.links.site)
     } catch (e) {
       setError(formatCmdError(e))
     }
@@ -61,12 +58,16 @@ export function AboutPage() {
   }
 
   const capturing = status === TaskStatus.Capturing
+  const updaterEnabled = info?.updaterEnabled === true && updateInfo?.enabled !== false
   const percent =
     updateProgress?.total != null
       ? Math.min(100, Math.floor((updateProgress.downloaded / updateProgress.total) * 100))
       : null
 
   const updateDescription = (() => {
+    if (info && !updaterEnabled) {
+      return updateInfo?.disabledReason ?? info.updaterDisabledReason ?? '自动更新已禁用'
+    }
     if (updatePhase === 'downloading') {
       return `正在下载并安装 v${updateInfo?.version ?? ''}${percent == null ? '' : `（${percent}%）`}…`
     }
@@ -114,7 +115,7 @@ export function AboutPage() {
                 variant="primary"
                 icon="download"
                 onClick={() => void installUpdate()}
-                disabled={capturing || updatePhase === 'checking'}
+                disabled={!updaterEnabled || capturing || updatePhase === 'checking'}
               >
                 下载并安装
               </Button>
@@ -123,7 +124,7 @@ export function AboutPage() {
                 size="sm"
                 icon="refresh"
                 onClick={() => void checkUpdate()}
-                disabled={!info || updatePhase === 'checking'}
+                disabled={!updaterEnabled || updatePhase === 'checking'}
                 pending={updatePhase === 'checking'}
               >
                 检查
@@ -148,13 +149,20 @@ export function AboutPage() {
         />
       </SettingsGroup>
 
-      <SettingsGroup title="支持开发">
+      <SettingsGroup title="原项目与作者">
+        <SettingsRow
+          icon="github"
+          title="基于 Nico 的 AudioScript 继续开发"
+          description="当前分支由 zyg0733 维护，保留原作者署名与 MIT 许可。"
+          onClick={() => info && void openUrl(info.links.upstreamRepository).catch((e) => setError(formatCmdError(e)))}
+          control={<Icon name="chevron" size={16} className="mt-0.5 text-[var(--color-ink-2)]" />}
+        />
         <SettingsRow
           icon="heart"
-          title="赞助"
-          description="如果 AudioScript 帮到了你，欢迎在爱发电支持后续开发。"
+          title="赞助原作者 Nico"
+          description="爱发电入口属于原作者，款项用于支持原作者。"
           onClick={() => void openSponsorPage()}
-          control={<img src={AFDIAN_BADGE} alt="爱发电" className="h-7 w-auto" />}
+          control={<Icon name="chevron" size={16} className="mt-0.5 text-[var(--color-ink-2)]" />}
         />
       </SettingsGroup>
 

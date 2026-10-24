@@ -2,10 +2,16 @@ use serde_json::Value;
 use tauri::AppHandle;
 use tauri_plugin_aptabase::EventTracker;
 
-pub const APP_KEY: &str = "A-US-2179981546";
+pub const DISABLED_REASON: &str = "此构建未配置维护者的统计服务，匿名使用统计已禁用。";
+
+pub fn app_key() -> Option<&'static str> {
+    option_env!("AUDIOSCRIPT_APTABASE_APP_KEY")
+        .map(str::trim)
+        .filter(|key| !key.is_empty())
+}
 
 pub fn track(app: &AppHandle, event: &str, props: Option<Value>) {
-    if !crate::prefs::load(app).analytics_enabled {
+    if app_key().is_none() || !crate::prefs::load(app).analytics_enabled {
         return;
     }
     if let Err(e) = app.track_event(event, props) {
@@ -14,7 +20,9 @@ pub fn track(app: &AppHandle, event: &str, props: Option<Value>) {
 }
 
 pub fn flush(app: &AppHandle) {
-    app.flush_events_blocking();
+    if app_key().is_some() {
+        app.flush_events_blocking();
+    }
 }
 
 pub fn duration_bucket(ms: u64) -> &'static str {

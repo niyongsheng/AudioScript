@@ -3,6 +3,7 @@ import { useStore } from '@/main/store'
 import { formatCmdError, revealPath, transcriptExport } from '@/shared/ipc'
 import { TaskStatus } from '@/shared/types'
 import { useTranscriptStream } from '@/shared/useTranscriptStream'
+import { Alert } from '@/ui/Alert'
 import { Button } from '@/ui/Button'
 import { Page } from '@/ui/Page'
 import { SegmentList } from '@/ui/SegmentList'
@@ -13,14 +14,18 @@ function exportStamp(d = new Date()): string {
 }
 
 export function TranscribePage() {
-  const { segments, clear } = useTranscriptStream()
+  const { segments, clear, error: streamError } = useTranscriptStream()
   const { status, clearAll, setError } = useStore()
   const capturing = status === TaskStatus.Capturing
   const canExport = segments.some((s) => s.state !== 'partial')
 
   async function handleClear() {
-    await clearAll()
-    clear()
+    try {
+      await clearAll()
+      clear()
+    } catch (e) {
+      setError(formatCmdError(e))
+    }
   }
 
   async function handleExport() {
@@ -40,6 +45,11 @@ export function TranscribePage() {
 
   return (
     <Page title="转写">
+      {streamError && (
+        <Alert tone="error" title="转写内容同步失败">
+          {streamError}
+        </Alert>
+      )}
       <div className="flex items-center gap-2">
         <Button onClick={handleClear} disabled={capturing || segments.length === 0} size="sm">
           清空

@@ -202,12 +202,19 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
 
         "overlay_debug" => overlay::debug_state(app).map_err(CmdError::Failed),
 
-        "prefs_get" => Ok(json!(prefs::load(app))),
+        "prefs_get" => {
+            let mut saved = prefs::load(app);
+            saved.analytics_enabled &= crate::telemetry::app_key().is_some();
+            Ok(json!(saved))
+        }
 
         "prefs_set" => {
             let patch: PrefsPatch = json_arg(args, "patch")?;
 
             patch.validate().map_err(CmdError::BadArgs)?;
+            if patch.analytics_enabled == Some(true) && crate::telemetry::app_key().is_none() {
+                return Err(CmdError::BadArgs(crate::telemetry::DISABLED_REASON.into()));
+            }
 
             prefs::update(app, |p| patch.apply_to(p))
                 .map(|p| json!(p))
@@ -249,12 +256,18 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
         }
 
         "open_repo" => {
-            open_with_system(std::ffi::OsStr::new(REPO_URL), "浏览器")?;
+            open_with_system(
+                std::ffi::OsStr::new(&crate::project::links().repository),
+                "浏览器",
+            )?;
             Ok(json!(null))
         }
 
         "open_sponsor" => {
-            open_with_system(std::ffi::OsStr::new(SPONSOR_URL), "浏览器")?;
+            open_with_system(
+                std::ffi::OsStr::new(&crate::project::links().upstream_sponsor),
+                "浏览器",
+            )?;
             Ok(json!(null))
         }
 
@@ -448,7 +461,7 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
         "session_status" => Ok(json!(app.state::<session::SessionState>().info())),
 
         "session_clear" => {
-            session::clear(app);
+            session::clear(app).map_err(CmdError::Failed)?;
             Ok(json!(null))
         }
 
@@ -490,13 +503,13 @@ fn app_info() -> Value {
         "platform": std::env::consts::OS,
         "arch": std::env::consts::ARCH,
         "builtAtMs": exe_mtime_ms(),
+        "analyticsAvailable": crate::telemetry::app_key().is_some(),
+        "analyticsDisabledReason": crate::telemetry::app_key().is_none().then_some(crate::telemetry::DISABLED_REASON),
+        "updaterEnabled": update::public_key().is_some(),
+        "updaterDisabledReason": update::public_key().is_none().then_some(update::DISABLED_REASON),
+        "links": crate::project::links(),
     })
 }
-
-const REPO_URL: &str = "https://github.com/niyongsheng/AudioScript";
-const SITE_URL: &str = "https://niyongsheng.github.io/AudioScript/";
-
-const SPONSOR_URL: &str = "https://ifdian.net/a/nico2026";
 
 fn export_dir(app: &AppHandle) -> Result<std::path::PathBuf, CmdError> {
     app.path()
@@ -531,9 +544,12 @@ fn export_transcript(
 }
 
 fn is_allowed_link(url: &str) -> bool {
-    const PREFIXES: [&str; 7] = [
-        REPO_URL,
-        SITE_URL,
+    let links = crate::project::links();
+    let prefixes: [&str; 9] = [
+        &links.repository,
+        &links.site,
+        &links.upstream_repository,
+        &links.upstream_sponsor,
         "https://github.com/k2-fsa/sherpa-onnx",
         "https://github.com/Helsinki-NLP/Opus-MT",
         "https://huggingface.co/Helsinki-NLP/",
@@ -541,7 +557,7 @@ fn is_allowed_link(url: &str) -> bool {
         "https://creativecommons.org/licenses/by/4.0/",
     ];
 
-    PREFIXES.iter().any(|prefix| {
+    prefixes.iter().any(|prefix| {
         if prefix.ends_with('/') {
             url.starts_with(prefix)
         } else {
@@ -750,11 +766,19 @@ mod tests {
     #[test]
     fn only_known_links_can_be_opened() {
         assert!(is_allowed_link(
-            "https://github.com/niyongsheng/AudioScript/releases/tag/v0.1.5"
+            "https://github.com/zyg0733/AudioScript/releases/tag/v0.1.5"
         ));
-        assert!(is_allowed_link("https://github.com/niyongsheng/AudioScript"));
-        assert!(is_allowed_link(SITE_URL));
-        assert!(!is_allowed_link("https://niyongsheng.github.io.evil/AudioScript/"));
+        assert!(is_allowed_link(&crate::project::links().repository));
+        assert!(is_allowed_link(&crate::project::links().site));
+        assert!(is_allowed_link(
+            &crate::project::links().upstream_repository
+        ));
+        assert!(!is_allowed_link(
+            "https://zyg0733.github.io.evil/AudioScript/"
+        ));
+        assert!(!is_allowed_link(
+            "https://github.com/zyg0733/AudioScript-evil"
+        ));
         assert!(is_allowed_link(
             "https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models"
         ));
@@ -765,10 +789,16 @@ mod tests {
             "https://creativecommons.org/licenses/by/4.0/"
         ));
         assert!(!is_allowed_link("https://github.com/niyongsheng/other"));
-        assert!(!is_allowed_link("https://github.com/niyongsheng/AudioScript-evil"));
-        assert!(!is_allowed_link("https://github.com/k2-fsa/sherpa-onnx-evil"));
+        assert!(!is_allowed_link(
+            "https://github.com/niyongsheng/AudioScript-evil"
+        ));
+        assert!(!is_allowed_link(
+            "https://github.com/k2-fsa/sherpa-onnx-evil"
+        ));
         assert!(!is_allowed_link("https://huggingface.co/other/model"));
-        assert!(!is_allowed_link("http://github.com/niyongsheng/AudioScript"));
+        assert!(!is_allowed_link(
+            "http://github.com/niyongsheng/AudioScript"
+        ));
         assert!(!is_allowed_link("javascript:alert(1)"));
     }
 }

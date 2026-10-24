@@ -5,6 +5,8 @@ on:
     branches: [main]
     paths:
       - "docs/**"
+      - "project.json"
+      - "scripts/verify-project.mjs"
       - ".github/workflows/pages.yml"
   workflow_dispatch:
 
@@ -27,10 +29,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
       - name: Check site files
         run: |
           set -euo pipefail
           test -f docs/index.html
+          node scripts/verify-project.mjs
 
       - name: Stage site
         run: |

@@ -11,8 +11,13 @@
     "dev": "pnpm gen:types && vite",
     "build": "pnpm gen:types && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc --project tsconfig.app.json --noEmit",
-    "lint": "biome check --write src/",
+    "typecheck": "tsc --project tsconfig.app.json --noEmit && tsc --project tsconfig.node.json --noEmit",
+    "lint": "biome check src/ vite.config.ts vitest.config.ts",
+    "lint:fix": "biome check --write src/ vite.config.ts vitest.config.ts",
+    "test": "vitest run",
+    "test:scripts": "node --test scripts/*.test.mjs",
+    "test:watch": "vitest",
+    "build:frontend": "vite build",
     "format": "biome format --write src/",
     "build:app": "tauri build --debug --bundles app",
     "release": "node scripts/release.mjs",
@@ -23,6 +28,7 @@
     "fetch:mt": "node scripts/fetch-mt-model.mjs",
     "fetch:mt:big": "node scripts/fetch-mt-model.mjs --tier big --print-catalog",
     "verify:models": "node scripts/verify-model-catalog.mjs",
+    "verify:project": "node scripts/verify-project.mjs",
     "prepare": "node scripts/fetch-model.mjs",
     "tauri": "tauri"
   },
@@ -42,8 +48,10 @@
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "@vitejs/plugin-react": "^6.0.3",
+    "jsdom": "^30.1.3",
     "tailwindcss": "^4.3.2",
     "typescript": "~6.0.2",
-    "vite": "^8.1.1"
+    "vite": "^8.1.1",
+    "vitest": "^5.0.5"
   }
 }

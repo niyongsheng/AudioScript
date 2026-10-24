@@ -127,7 +127,7 @@
         }
       },
       "archive": {
-        "url": "https://github.com/niyongsheng/AudioScript/releases/download/models-v1/opus-mt-tc-big-en-zh-zh-en-ct2-int8.tar.gz",
+        "url": "https://github.com/zyg0733/AudioScript/releases/download/models-v1/opus-mt-tc-big-en-zh-zh-en-ct2-int8.tar.gz",
         "format": "tar-gz",
         "sha256": "",
         "sizeBytes": 0,

@@ -140,6 +140,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<TaskStatus>(TaskStatus.Ready)
   const [activeDevice, setActiveDevice] = useState<string | null>(null)
   const [audio, setAudio] = useState<AudioStatus | null>(null)
+  const sessionVersion = useRef(0)
 
   const [devices, setDevices] = useState<InputDevice[]>([])
   const [deviceError, setDeviceError] = useState<string | null>(null)
@@ -184,21 +185,60 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       else unlisten.push(fn)
     }
 
+    const reportError = (e: unknown) => {
+      if (!disposed) setError(formatCmdError(e))
+    }
+    const refreshSession = async () => {
+      const version = ++sessionVersion.current
+      try {
+        const current = await sessionStatus()
+        if (disposed || version !== sessionVersion.current) return
+        setStatus(current.status)
+        setActiveDevice(current.device ?? null)
+        if (current.status !== TaskStatus.Capturing) setAudio(null)
+        if (current.error) setError(current.error)
+      } catch (e) {
+        if (version === sessionVersion.current) reportError(e)
+      }
+    }
+
     on<TaskStatus>(EVENT.taskState, (s) => {
+      if (disposed) return
       setStatus(s)
-      if (s !== TaskStatus.Capturing) setAudio(null)
-    }).then(keep)
+      if (s !== TaskStatus.Capturing) {
+        setAudio(null)
+        setActiveDevice(null)
+      }
+      void refreshSession()
+    })
+      .then((fn) => {
+        keep(fn)
+        if (!disposed) void refreshSession()
+      })
+      .catch(reportError)
 
-    on<AudioStatus>(EVENT.audio, setAudio).then(keep)
+    on<string>(EVENT.sessionError, (message) => {
+      if (disposed) return
+      sessionVersion.current++
+      setStatus(TaskStatus.Error)
+      setActiveDevice(null)
+      setAudio(null)
+      setError(message)
+    })
+      .then(keep)
+      .catch(reportError)
 
-    on<OverlayConfig>(EVENT.overlayState, setOverlayCfg).then(keep)
+    on<AudioStatus>(EVENT.audio, setAudio).then(keep).catch(reportError)
 
-    on<boolean>(EVENT.overlayVisibility, setOverlayVisible).then(keep)
+    on<OverlayConfig>(EVENT.overlayState, setOverlayCfg).then(keep).catch(reportError)
 
-    on<UpdateProgress>(EVENT.updateProgress, setUpdateProgress).then(keep)
+    on<boolean>(EVENT.overlayVisibility, setOverlayVisible).then(keep).catch(reportError)
+
+    on<UpdateProgress>(EVENT.updateProgress, setUpdateProgress).then(keep).catch(reportError)
 
     return () => {
       disposed = true
+      sessionVersion.current++
       for (const fn of unlisten) fn()
     }
   }, [])
@@ -214,10 +254,9 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setEndpoint(p.endpoint)
         setOnboardingDone(p.onboardingDone)
         setAnalyticsEnabledState(p.analyticsEnabled)
-        setTrackingEnabled(p.analyticsEnabled)
         if (p.deviceId) setDevice(p.deviceId)
       })
-      .catch(() => {})
+      .catch((e) => setError(`读取设置失败：${formatCmdError(e)}`))
       .finally(() => setPrefsReady(true))
 
     overlayConfigGet()
@@ -227,6 +266,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       .then(setOverlayVisible)
       .catch(() => {})
   }, [])
+
+  useEffect(() => {
+    setTrackingEnabled(prefsReady && analyticsEnabled && info?.analyticsAvailable === true)
+  }, [prefsReady, analyticsEnabled, info])
 
   const refreshPermission = useCallback(async () => {
     try {
@@ -283,13 +326,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const setAnalyticsEnabled = useCallback(
     (next: boolean) => {
-      if (!next) track('setting_changed', { key: 'analytics', value: 'off' })
-      setAnalyticsEnabledState(next)
-      setTrackingEnabled(next)
-      void patchPrefs({ analyticsEnabled: next })
-      if (next) track('setting_changed', { key: 'analytics', value: 'on' })
+      if (next && !info?.analyticsAvailable) {
+        setError(info?.analyticsDisabledReason ?? '此构建未配置匿名统计')
+        return
+      }
+      void prefsSet({ analyticsEnabled: next })
+        .then((p) => {
+          setAnalyticsEnabledState(p.analyticsEnabled)
+          setTrackingEnabled(p.analyticsEnabled && info?.analyticsAvailable === true)
+          if (p.analyticsEnabled) track('setting_changed', { key: 'analytics', value: 'on' })
+        })
+        .catch((e) => setError(formatCmdError(e)))
     },
-    [patchPrefs],
+    [info],
   )
 
   const refreshDevices = useCallback(async () => {
@@ -316,18 +365,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setPermissionError(null)
     try {
       if (status === TaskStatus.Capturing) {
-        setStatus(await withTimeout(sessionStop(), STOP_TIMEOUT_MS, '停止请求超时：请重试，或使用托盘「停止转写」'))
-        setActiveDevice(null)
+        await withTimeout(sessionStop(), STOP_TIMEOUT_MS, '停止请求超时：请重试，或使用托盘「停止转写」')
       } else {
-        setStatus(
-          await withTimeout(
-            sessionStart(device || undefined, translateEngine, sourceLang, zhScript, audioSource),
-            START_TIMEOUT_MS,
-            '开始转写超时，请重试',
-          ),
+        await withTimeout(
+          sessionStart(device || undefined, translateEngine, sourceLang, zhScript, audioSource),
+          START_TIMEOUT_MS,
+          '开始转写超时，请重试',
         )
-        setActiveDevice((await sessionStatus()).device ?? null)
         void refreshPermission()
+      }
+      const version = ++sessionVersion.current
+      const current = await sessionStatus()
+      if (version === sessionVersion.current) {
+        setStatus(current.status)
+        setActiveDevice(current.device ?? null)
+        if (current.status !== TaskStatus.Capturing) setAudio(null)
+        if (current.error) setError(current.error)
       }
     } catch (e) {
       const denied = permissionOf(e)
@@ -337,8 +390,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       } else {
         setError(formatCmdError(e))
       }
+      const version = ++sessionVersion.current
       sessionStatus()
-        .then((i) => setStatus(i.status))
+        .then((i) => {
+          if (version !== sessionVersion.current) return
+          setStatus(i.status)
+          setActiveDevice(i.device ?? null)
+          if (i.error) setError(i.error)
+        })
         .catch(() => {})
     } finally {
       pendingRef.current = false
@@ -450,6 +509,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const installUpdate = useCallback(async () => {
+    if (!info?.updaterEnabled || !updateInfo?.enabled || !updateInfo.available) {
+      setUpdateError(info?.updaterDisabledReason ?? updateInfo?.disabledReason ?? '当前没有可安装的更新')
+      setUpdatePhase('error')
+      return
+    }
     if (updateBusyRef.current) return
     updateBusyRef.current = true
     setUpdatePhase('downloading')
@@ -465,7 +529,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } finally {
       updateBusyRef.current = false
     }
-  }, [])
+  }, [info, updateInfo])
 
   const restartApp = useCallback(async () => {
     try {

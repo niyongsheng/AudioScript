@@ -20,11 +20,11 @@ export function SegmentList({ segments }: Props) {
     return () => el.removeEventListener('scroll', onScroll)
   }, [])
 
-  // biome-ignore lint/correctness/useExhaustiveDependencies: 意图是段落数变化时滚到底，体内无需读取
+  // biome-ignore lint/correctness/useExhaustiveDependencies: 同段原文增长和译文回填也会改变内容高度
   useLayoutEffect(() => {
     const el = ref.current?.parentElement
     if (el && atBottom.current) el.scrollTop = el.scrollHeight
-  }, [segments.length])
+  }, [segments])
 
   return (
     <ol ref={ref} className="space-y-3">

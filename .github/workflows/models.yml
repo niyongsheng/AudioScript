@@ -26,6 +26,9 @@ jobs:
         with:
           node-version: 22
 
+      - name: Verify fork model sources
+        run: node scripts/verify-project.mjs
+
       # fetch-mt-model.mjs 用 python3 -m venv 建环境，torch 要求 >= 3.10。
       - name: Setup Python
         uses: actions/setup-python@v5

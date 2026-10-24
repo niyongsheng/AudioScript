@@ -50,6 +50,7 @@ export async function call<T = unknown>(name: string, args: Record<string, unkno
 export const EVENT = {
   segments: 'transcript://segments',
   taskState: 'transcript://state',
+  sessionError: 'transcript://error',
   overlayState: 'overlay://state',
   overlayVisibility: 'overlay://visibility',
   audio: 'transcript://audio',
@@ -68,6 +69,18 @@ export interface AppInfo {
   platform: string
   arch: string
   builtAtMs: number | null
+  analyticsAvailable: boolean
+  analyticsDisabledReason: string | null
+  updaterEnabled: boolean
+  updaterDisabledReason: string | null
+  links: {
+    repository: string
+    site: string
+    upstreamRepository: string
+    upstreamSponsor: string
+    updaterEndpoint: string
+    modelsRelease: string
+  }
 }
 
 export interface AutostartState {
@@ -86,6 +99,8 @@ export function appInfo(): Promise<AppInfo> {
 
 export interface UpdateCheckResult {
   currentVersion: string
+  enabled: boolean
+  disabledReason: string | null
   available: boolean
   version: string | null
   notes: string | null
