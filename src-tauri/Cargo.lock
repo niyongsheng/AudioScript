@@ -2727,9 +2727,9 @@ dependencies = [
 
 [[package]]
 name = "intel-onemkl-prebuild"
-version = "0.2.1"
+version = "0.2.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "c4e792ac6318f0e9d39ed528b7bb580ed3bda2433344caaf139a0927a85b1814"
+checksum = "9c67c52dd8f34d3647cafa714c464033b91b9c892aad518f49bebb3f96c1f78f"
 dependencies = [
  "ureq 3.4.2",
 ]
