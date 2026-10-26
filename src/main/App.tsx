@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { hotkeyLabel } from '@/shared/hotkeys'
 import { useI18n } from '@/shared/i18n'
 import { TaskStatus } from '@/shared/types'
@@ -15,7 +15,6 @@ import { AudioPage } from './pages/AudioPage'
 import { GeneralPage } from './pages/GeneralPage'
 import { ModelsPage } from './pages/ModelsPage'
 import { OverlayPage } from './pages/OverlayPage'
-import { PermissionsPage } from './pages/PermissionsPage'
 import { TranscribePage } from './pages/TranscribePage'
 import { TranslatePage } from './pages/TranslatePage'
 import { StoreProvider, useStore } from './store'
@@ -48,11 +47,18 @@ function BootSplash() {
 
 function Shell() {
   const [page, setPage] = useState<PageId>('transcribe')
+  const [focusPermissions, setFocusPermissions] = useState(false)
   const { status } = useStore()
   const { locale } = useI18n()
   // biome-ignore lint/correctness/useExhaustiveDependencies: t() 读取模块级 locale，需要随 locale 重算
   const items = useMemo(() => navItems(), [locale])
   const capturing = status === TaskStatus.Capturing
+
+  const openPermissions = useCallback(() => {
+    setPage('general')
+    setFocusPermissions(true)
+  }, [])
+  const handlePermissionsFocused = useCallback(() => setFocusPermissions(false), [])
 
   return (
     <main className="flex h-full">
@@ -63,13 +69,18 @@ function Shell() {
 
         <Alerts
           page={page}
-          onOpenPermissions={() => setPage('permissions')}
+          onOpenPermissions={openPermissions}
           onOpenAbout={() => setPage('about')}
           onOpenTranslate={() => setPage('translate')}
         />
 
         <div className="flex-1 overflow-y-auto">
-          <PageSwitch page={page} onOpenPermissions={() => setPage('permissions')} />
+          <PageSwitch
+            page={page}
+            onOpenPermissions={openPermissions}
+            focusPermissions={focusPermissions}
+            onFocusPermissionsHandled={handlePermissionsFocused}
+          />
         </div>
 
         <footer className="border-[var(--color-border-subtle)] border-t py-2">
@@ -97,22 +108,22 @@ function PrimaryActionSlot() {
 interface PageSwitchProps {
   page: PageId
   onOpenPermissions: () => void
+  focusPermissions: boolean
+  onFocusPermissionsHandled: () => void
 }
 
-function PageSwitch({ page, onOpenPermissions }: PageSwitchProps) {
+function PageSwitch({ page, onOpenPermissions, focusPermissions, onFocusPermissionsHandled }: PageSwitchProps) {
   switch (page) {
     case 'transcribe':
       return <TranscribePage />
     case 'audio':
       return <AudioPage onOpenPermissions={onOpenPermissions} />
-    case 'permissions':
-      return <PermissionsPage />
     case 'translate':
       return <TranslatePage />
     case 'overlay':
       return <OverlayPage />
     case 'general':
-      return <GeneralPage />
+      return <GeneralPage focusPermissions={focusPermissions} onFocusPermissionsHandled={onFocusPermissionsHandled} />
     case 'models':
       return <ModelsPage />
     case 'about':

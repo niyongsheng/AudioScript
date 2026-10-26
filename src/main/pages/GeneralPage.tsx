@@ -1,4 +1,5 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
+import { PermissionPanel } from '@/main/permissions/PermissionPanel'
 import { useStore } from '@/main/store'
 import { track } from '@/shared/analytics'
 import { useI18n } from '@/shared/i18n'
@@ -19,7 +20,12 @@ import { Select } from '@/ui/Select'
 import { SettingsGroup, SettingsRow } from '@/ui/Settings'
 import { Switch } from '@/ui/Switch'
 
-export function GeneralPage() {
+interface Props {
+  focusPermissions: boolean
+  onFocusPermissionsHandled: () => void
+}
+
+export function GeneralPage({ focusPermissions, onFocusPermissionsHandled }: Props) {
   const { theme, changeTheme, prefsReady, analyticsEnabled, setAnalyticsEnabled, language, changeLanguage, setError } =
     useStore()
   const { t } = useI18n()
@@ -28,6 +34,13 @@ export function GeneralPage() {
   const [confirmingReset, setConfirmingReset] = useState(false)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+  const permissionsRef = useRef<HTMLDivElement>(null)
+
+  useLayoutEffect(() => {
+    if (!focusPermissions) return
+    permissionsRef.current?.scrollIntoView({ block: 'start' })
+    onFocusPermissionsHandled()
+  }, [focusPermissions, onFocusPermissionsHandled])
 
   const themeOptions = [
     { value: Theme.System, label: t('general.themeSystem') },
@@ -142,6 +155,10 @@ export function GeneralPage() {
           }
         />
       </SettingsGroup>
+
+      <div ref={permissionsRef} className="scroll-mt-6">
+        <PermissionPanel />
+      </div>
 
       <SettingsGroup title={t('general.privacy')} footer={t('general.privacyFooter')}>
         <SettingsRow

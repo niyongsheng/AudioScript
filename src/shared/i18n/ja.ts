@@ -36,7 +36,6 @@ export const ja: Messages = {
 
   'nav.transcribe': '文字起こし',
   'nav.audio': '音声',
-  'nav.permissions': '権限',
   'nav.translate': '翻訳',
   'nav.overlay': 'オーバーレイ',
   'nav.general': '一般',
@@ -56,7 +55,7 @@ export const ja: Messages = {
   'app.updateGoAbout': '「情報」ページで更新',
   'app.operationFailed': '操作に失敗しました',
   'app.permissionMissing': 'システム権限がありません',
-  'app.permissionGo': '「権限」ページで対処',
+  'app.permissionGo': '「一般 → 権限」で対処',
   'app.hotkeyFailed': '{count} 個のグローバルショートカットを登録できませんでした',
   'app.hotkeyFailedDetail':
     '。ショートカットでオーバーレイを操作できません。「オーバーレイ」ページで再割り当てしてください。',
@@ -71,7 +70,7 @@ export const ja: Messages = {
   'welcome.subtitle': '先にシステム権限を確認してください',
   'welcome.later': 'あとで',
   'welcome.start': 'はじめる',
-  'welcome.skipHint': 'スキップ後も「権限」ページで確認できます。',
+  'welcome.skipHint': 'スキップ後も「一般 → 権限」で確認できます。',
 
   'transcribe.title': '文字起こし',
   'transcribe.emptyCapturing': '認識中…',
@@ -98,7 +97,7 @@ export const ja: Messages = {
   'audio.enumerateHintDefault':
     '「システム既定」デバイスは引き続き使用できます。影響を受けるのは手動で指定したデバイスのみです。',
   'audio.enumerateHintPermission':
-    'マイクの権限が未決定の間、macOS はデバイス一覧全体を拒否します。先に「権限」ページを確認してください。',
+    'マイクの権限が未決定の間、macOS はデバイス一覧全体を拒否します。先に「一般 → 権限」を確認してください。',
   'audio.viewPermissions': '権限を確認',
   'audio.previewFailed': '入力レベルをプレビューできません',
   'audio.captureHint': 'キャプチャ中にデバイスを変更しても、次のセッションから適用されます。',
@@ -110,7 +109,7 @@ export const ja: Messages = {
   'audio.silenceVirtualDevice':
     '仮想オーディオデバイス（BlackHole など）を選んだ場合は、先に音声をそこへルーティングしてください。',
   'audio.silenceMic': 'マイクの権限を確認してください。仮想ループバックデバイスは実際のマイクに変更してください。',
-  'audio.silenceGoPermissions': '「権限」ページで検出',
+  'audio.silenceGoPermissions': '「一般 → 権限」で検出',
   'audio.silenceOpenSettings': 'システム設定を直接開く',
   'audio.deviceSelectPlaceholder': '入力デバイスを選択',
   'audio.deviceSelectNoDevices': '（デバイスが見つかりません）',
@@ -130,12 +129,9 @@ export const ja: Messages = {
   'permissions.verdictNoAudioPlaying': '未検出',
   'permissions.verdictUnsupportedOs': 'OS バージョンが古い',
   'permissions.verdictInconclusive': '不明',
-  'permissions.windowsUnsupported':
-    'Windows ではシステム音声の検出は提供されません。文字起こし時のシステム音声キャプチャは利用できます。',
   'permissions.probing': 'システム音声を検出しています。音声を再生したままにしてください。',
   'permissions.liveLevel': 'リアルタイムレベル',
   'permissions.peakRms': 'ピーク {peak} · 平均 {rms}',
-  'permissions.unavailable': '利用不可',
   'permissions.notDetected': '未検出',
   'permissions.detect': '検出',
   'permissions.requestPermission': '権限を要求',

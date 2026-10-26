@@ -182,13 +182,11 @@ export function PermissionPanel() {
           }
         />
 
-        <SettingsRow
-          icon="speaker"
-          title={t('permissions.systemAudio')}
-          description={
-            isWindows ? (
-              t('permissions.windowsUnsupported')
-            ) : (
+        {!isWindows && (
+          <SettingsRow
+            icon="speaker"
+            title={t('permissions.systemAudio')}
+            description={
               <>
                 {probing ? t('permissions.probing') : probeDescription(probe)}
                 {probing && (
@@ -209,12 +207,8 @@ export function PermissionPanel() {
                   </span>
                 )}
               </>
-            )
-          }
-          control={
-            isWindows ? (
-              <StatusBadge tone="muted">{t('permissions.unavailable')}</StatusBadge>
-            ) : (
+            }
+            control={
               <div className="flex items-center gap-1.5">
                 <StatusBadge tone={probe ? PROBE_TONE[probe.verdict] : 'muted'}>
                   {probe ? t(PROBE_TEXT[probe.verdict]) : t('permissions.notDetected')}
@@ -229,9 +223,9 @@ export function PermissionPanel() {
                   {t('permissions.detect')}
                 </Button>
               </div>
-            )
-          }
-        />
+            }
+          />
+        )}
       </SettingsGroup>
     </div>
   )

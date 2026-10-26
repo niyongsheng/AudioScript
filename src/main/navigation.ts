@@ -1,7 +1,7 @@
 import { t } from '@/shared/i18n'
 import type { SidebarItem } from '@/ui/Sidebar'
 
-export type PageId = 'transcribe' | 'audio' | 'permissions' | 'translate' | 'overlay' | 'general' | 'models' | 'about'
+export type PageId = 'transcribe' | 'audio' | 'translate' | 'overlay' | 'general' | 'models' | 'about'
 
 export function navItems(): SidebarItem<PageId>[] {
   return [
@@ -15,7 +15,6 @@ export function navItems(): SidebarItem<PageId>[] {
       label: t('nav.audio'),
       icon: 'speaker',
     },
-    { id: 'permissions', label: t('nav.permissions'), icon: 'shield' },
     {
       id: 'translate',
       label: t('nav.translate'),

@@ -235,10 +235,10 @@ messages! {
         ja: "コマンド実行スレッドが終了しました"
     },
     CmdMicDenied {
-        zh_cn: "麦克风权限已被拒绝，系统不会再弹窗。请到「权限」页打开系统设置重新允许。",
-        zh_tw: "麥克風權限已被拒絕，系統不會再彈出提示。請到「權限」頁開啟系統設定重新允許。",
-        en: "Microphone permission was denied and the system will not prompt again. Open System Settings from the Permissions page to allow it.",
-        ja: "マイクの権限が拒否されており、システムから再度確認されません。「権限」ページからシステム設定を開き、許可し直してください。"
+        zh_cn: "麦克风权限已被拒绝，系统不会再弹窗。请到「通用 → 权限」打开系统设置重新允许。",
+        zh_tw: "麥克風權限已被拒絕，系統不會再彈出提示。請到「一般 → 權限」開啟系統設定重新允許。",
+        en: "Microphone permission was denied and the system will not prompt again. Open System Settings from General → Permissions to allow it.",
+        ja: "マイクの権限が拒否されており、システムから再度確認されません。「一般 → 権限」からシステム設定を開き、許可し直してください。"
     },
     CmdConfigParseFailed {
         zh_cn: "config 解析失败：{0}",
