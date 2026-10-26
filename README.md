@@ -7,8 +7,8 @@
 <p>监听系统声音输出，把外语播客与外文视频实时转成「原文 + 中文译文」双语悬浮字幕。识别与翻译全部在本机完成。</p>
 
 <p>
-  <a href="https://niyongsheng.github.io/AudioScript/">官网</a> ·
-  <a href="https://github.com/niyongsheng/AudioScript/releases/latest">下载</a>
+  <a href="https://audioscript.looplooptech.com/">官网</a> ·
+  <a href="https://audioscript.looplooptech.com/#download">下载</a>
 </p>
 
 <p>
