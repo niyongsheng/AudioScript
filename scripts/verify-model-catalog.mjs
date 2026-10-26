@@ -29,6 +29,8 @@ for (const m of catalog.models) {
   check(!ids.has(m.id), `重复的模型 id：${m.id}`)
   ids.add(m.id)
   check(safeRel(m.install.dir), `${m.id} 的安装目录不安全：${m.install.dir}`)
+  check(typeof m.title === 'string' && m.title.trim().length > 0, `${m.id} 缺少 title`)
+  check(typeof m.description === 'string' && m.description.trim().length > 0, `${m.id} 缺少 description`)
   if (m.archive) {
     check(m.archive.url.startsWith('https://'), `${m.id} 的下载地址不是 HTTPS`)
     if (m.downloadable) {

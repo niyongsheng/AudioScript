@@ -4,6 +4,8 @@ use serde::Serialize;
 use tauri::{AppHandle, Emitter};
 use tauri_plugin_updater::UpdaterExt;
 
+use crate::i18n::{tf, tr, Key};
+
 const PROGRESS_EVENT: &str = "update://progress";
 
 static INSTALLING: AtomicBool = AtomicBool::new(false);
@@ -33,11 +35,13 @@ impl Drop for InstallGuard {
 }
 
 pub async fn check(app: &AppHandle) -> Result<UpdateCheck, String> {
-    let updater = app.updater().map_err(|e| format!("更新组件未就绪：{e}"))?;
+    let updater = app
+        .updater()
+        .map_err(|e| tf(Key::UpdateNotReady, &[&e.to_string()]))?;
     let update = updater
         .check()
         .await
-        .map_err(|e| format!("检查更新失败：{e}"))?;
+        .map_err(|e| tf(Key::UpdateCheckFailed, &[&e.to_string()]))?;
 
     let current_version = env!("CARGO_PKG_VERSION").to_string();
     match update {
@@ -61,17 +65,19 @@ pub async fn check(app: &AppHandle) -> Result<UpdateCheck, String> {
 
 pub async fn install(app: &AppHandle) -> Result<String, String> {
     if INSTALLING.swap(true, Ordering::SeqCst) {
-        return Err("正在更新，请稍候".into());
+        return Err(tr(Key::UpdateInProgress).into());
     }
     let _guard = InstallGuard;
 
-    let updater = app.updater().map_err(|e| format!("更新组件未就绪：{e}"))?;
+    let updater = app
+        .updater()
+        .map_err(|e| tf(Key::UpdateNotReady, &[&e.to_string()]))?;
     let Some(update) = updater
         .check()
         .await
-        .map_err(|e| format!("检查更新失败：{e}"))?
+        .map_err(|e| tf(Key::UpdateCheckFailed, &[&e.to_string()]))?
     else {
-        return Err("已是最新版本，无需更新".into());
+        return Err(tr(Key::UpdateLatest).into());
     };
 
     let version = update.version.clone();
@@ -93,7 +99,7 @@ pub async fn install(app: &AppHandle) -> Result<String, String> {
             || {},
         )
         .await
-        .map_err(|e| format!("安装更新失败：{e}"))?;
+        .map_err(|e| tf(Key::UpdateInstallFailed, &[&e.to_string()]))?;
 
     tracing::info!(version = %version, "更新已安装，重启后生效");
     Ok(version)

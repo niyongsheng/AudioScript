@@ -3,6 +3,8 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
+use crate::i18n::{tf, tr, Key};
+
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "camelCase")]
@@ -196,19 +198,35 @@ impl TranscriptStore {
     }
 }
 
-pub fn to_markdown(segments: &[TranscriptSegment], exported_at: &str, direction: Option<&str>) -> String {
-    let mut out = String::from("# AudioScript 转写记录\n\n");
-    out.push_str(&format!("- 导出时间：{exported_at}\n"));
+pub fn to_markdown(
+    segments: &[TranscriptSegment],
+    exported_at: &str,
+    direction: Option<&str>,
+) -> String {
+    let mut out = format!("{}\n\n", tr(Key::ExportTitle));
+    out.push_str(&format!("{}\n", tf(Key::ExportTime, &[exported_at])));
     if let Some(d) = direction {
-        out.push_str(&format!("- 翻译方向：{d}\n"));
+        out.push_str(&format!("{}\n", tf(Key::ExportDirection, &[d])));
     }
 
     let settled: Vec<&TranscriptSegment> = segments.iter().filter(|s| s.is_persistable()).collect();
-    out.push_str(&format!("- 段落数：{}\n\n---\n\n", settled.len()));
+    out.push_str(&format!(
+        "{}\n\n---\n\n",
+        tf(Key::ExportSegments, &[&settled.len().to_string()])
+    ));
 
     for s in settled {
-        out.push_str(&format!("**[{}]** {}\n\n", clock(s.start_ms), s.text.trim()));
-        if let Some(t) = s.translation.as_deref().map(str::trim).filter(|t| !t.is_empty()) {
+        out.push_str(&format!(
+            "**[{}]** {}\n\n",
+            clock(s.start_ms),
+            s.text.trim()
+        ));
+        if let Some(t) = s
+            .translation
+            .as_deref()
+            .map(str::trim)
+            .filter(|t| !t.is_empty())
+        {
             out.push_str(&format!("> {t}\n\n"));
         }
     }

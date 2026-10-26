@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { useStore } from '@/main/store'
+import { type MessageKey, useI18n } from '@/shared/i18n'
 import {
   EVENT,
   formatCmdError,
@@ -15,6 +16,7 @@ import {
   modelsList,
   on,
 } from '@/shared/ipc'
+import { modelTitle } from '@/shared/models'
 import { ModelKind, TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
 import { Button } from '@/ui/Button'
@@ -29,8 +31,32 @@ interface Failure {
   message: string
 }
 
+const PHASE_KEYS: Record<ModelPhase, MessageKey> = {
+  [ModelPhase.Downloading]: 'models.phaseDownloading',
+  [ModelPhase.Verifying]: 'models.phaseVerifying',
+  [ModelPhase.Extracting]: 'models.phaseExtracting',
+  [ModelPhase.Validating]: 'models.phaseValidating',
+  [ModelPhase.Done]: 'models.phaseDone',
+  [ModelPhase.Cancelled]: 'models.phaseCancelled',
+  [ModelPhase.Failed]: 'models.phaseFailed',
+}
+
+function statusBadgeInfo(model: ModelStatus): {
+  tone: 'ok' | 'warn' | 'danger' | 'muted'
+  key: MessageKey
+} {
+  if (model.complete) {
+    return { tone: 'ok', key: model.bundled ? 'models.bundled' : 'models.statusDownloaded' }
+  }
+  if (model.bundled) return { tone: 'danger', key: 'models.statusBundledMissing' }
+  if (model.installed) return { tone: 'danger', key: 'models.statusIncomplete' }
+  if (model.downloadable) return { tone: 'warn', key: 'models.statusNotInstalled' }
+  return { tone: 'muted', key: 'models.statusNotPublished' }
+}
+
 export function ModelsPage() {
   const { status, setError } = useStore()
+  const { t } = useI18n()
   const capturing = status === TaskStatus.Capturing
 
   const [list, setList] = useState<ModelsList | null>(null)
@@ -75,7 +101,7 @@ export function ModelsPage() {
       if (payload.phase === ModelPhase.Failed) {
         setFailure({
           modelId: payload.modelId,
-          message: payload.error ?? '下载失败',
+          message: payload.error ?? t('models.downloadFailedFallback'),
         })
       }
       setJob(null)
@@ -86,7 +112,7 @@ export function ModelsPage() {
       disposed = true
       void unlisten.then((fn) => fn())
     }
-  }, [refresh])
+  }, [refresh, t])
 
   async function download(modelId: string) {
     setFailure(null)
@@ -143,16 +169,21 @@ export function ModelsPage() {
 
   if (!list) {
     return (
-      <Page title="模型">
+      <Page title={t('models.title')}>
         {loadError ? (
-          <Alert tone="error" title="读取模型列表失败">
-            <p className="font-mono">{loadError}</p>
-            <Button size="sm" className="mt-2" onClick={retry}>
-              重试
-            </Button>
+          <Alert
+            tone="error"
+            title={t('models.loadFailed')}
+            actions={
+              <Button size="sm" onClick={retry}>
+                {t('common.retry')}
+              </Button>
+            }
+          >
+            <p className="break-words font-mono">{loadError}</p>
           </Alert>
         ) : (
-          <p className="text-[var(--color-ink-2)] text-sm">读取中…</p>
+          <p className="text-[var(--color-ink-2)] text-sm">{t('common.loading')}</p>
         )}
       </Page>
     )
@@ -162,42 +193,47 @@ export function ModelsPage() {
   const brokenSelected = [...list.asr, ...list.mt].find((m) => m.selected && !m.complete)
 
   return (
-    <Page title="模型">
+    <Page title={t('models.title')}>
       {loadError && (
-        <Alert tone="error" title="刷新模型列表失败">
-          <p className="font-mono">{loadError}</p>
-          <Button size="sm" className="mt-2" onClick={retry}>
-            重试
-          </Button>
+        <Alert
+          tone="error"
+          title={t('models.refreshFailed')}
+          onDismiss={() => setLoadError(null)}
+          actions={
+            <Button size="sm" onClick={retry}>
+              {t('common.retry')}
+            </Button>
+          }
+        >
+          <p className="break-words font-mono">{loadError}</p>
         </Alert>
       )}
 
       {brokenSelected && (
-        <Alert tone="error" title={`当前使用的「${brokenSelected.title}」文件缺失`}>
-          {brokenSelected.bundled
-            ? '内置模型文件缺失，请重新安装应用。'
-            : '请重新下载该模型，或切换到其他已安装的模型。'}
+        <Alert tone="error" title={t('models.brokenSelectedTitle', { title: modelTitle(brokenSelected, t) })}>
+          {brokenSelected.bundled ? t('models.brokenBundled') : t('models.brokenDownloaded')}
         </Alert>
       )}
 
       {capturing && (
-        <Alert tone="info" title="正在转写">
-          模型切换将在下次开始转写时生效；停止转写后才能删除模型。
+        <Alert tone="info" title={t('models.capturingTitle')}>
+          {t('models.capturingBody')}
         </Alert>
       )}
 
       {failure && (
-        <Alert tone="error" title={`${modelTitle(list, failure.modelId)} 下载失败`}>
-          {failure.message}
-          <button type="button" className="ml-2 underline underline-offset-2" onClick={() => setFailure(null)}>
-            知道了
-          </button>
+        <Alert
+          tone="error"
+          title={t('models.downloadFailedTitle', { title: modelTitleById(list, failure.modelId, t) })}
+          onDismiss={() => setFailure(null)}
+        >
+          <p className="break-words">{failure.message}</p>
         </Alert>
       )}
 
       {[
-        { title: '语音识别', items: list.asr },
-        { title: '机器翻译', items: list.mt },
+        { title: t('models.asrGroup'), items: list.asr },
+        { title: t('models.mtGroup'), items: list.mt },
       ].map((group) => (
         <SettingsGroup key={group.title} title={group.title}>
           {group.items.map((m) => (
@@ -219,10 +255,10 @@ export function ModelsPage() {
       ))}
 
       <p className="px-1 text-[var(--color-ink-2)] text-[0.7rem] leading-relaxed">
-        {connected ? '可选模型下载需联网。' : '无法解析模型存储目录，可选模型暂不可用。'}
+        {connected ? t('models.needsNetwork') : t('models.noStorage')}
         {connected && (
           <button type="button" className="ml-1 underline underline-offset-2" onClick={openModelsDir}>
-            打开模型目录
+            {t('models.openDir')}
           </button>
         )}
       </p>
@@ -255,38 +291,40 @@ function ModelRow({
   onRemove,
   onCancelRemove,
 }: RowProps) {
+  const { t } = useI18n()
   const activeJob = job && job.modelId === model.id ? job : null
   const licenses = [...new Set(model.licenses.map((l) => l.license))]
   const needsAttribution = model.licenses.some((l) => l.requiresAttribution)
   const canDelete = model.installed && !model.bundled && model.downloadable && !model.selected && !capturing && !job
+  const badge = statusBadgeInfo(model)
 
   return (
     <SettingsRow
       icon={model.kind === ModelKind.Asr ? 'waveform' : 'translate'}
       title={
         <span className="flex flex-wrap items-center gap-1.5">
-          {model.title}
+          {modelTitle(model, t)}
           {model.selected && (
             <span
               role="img"
-              aria-label="使用中"
-              title="使用中"
+              aria-label={t('models.inUse')}
+              title={t('models.inUse')}
               className="inline-flex items-center text-[var(--color-accent)]"
             >
               <Icon name="check" size={15} strokeWidth={2.25} />
             </span>
           )}
-          {model.bundled && <StatusBadge tone="muted">内置</StatusBadge>}
-          {!model.selected && statusBadge(model)}
+          {model.bundled && <StatusBadge tone="muted">{t('models.bundled')}</StatusBadge>}
+          {!model.selected && <StatusBadge tone={badge.tone}>{t(badge.key)}</StatusBadge>}
         </span>
       }
       description={
         <span>
-          约 {formatBytes(model.installedBytes)}
-          {licenses.length > 0 && ` · ${licenses.join(' / ')}${needsAttribution ? '（需署名）' : ''}`}
-          {!model.bundled && model.installed && !model.complete && ' · 文件不完整，请重新下载'}
-          {model.bundled && !model.complete && ' · 内置文件缺失，请重新安装应用'}
-          {!model.bundled && !model.downloadable && ' · 模型包尚未发布'}
+          {t('models.installedSize', { size: formatBytes(model.installedBytes) })}
+          {licenses.length > 0 && ` · ${licenses.join(' / ')}${needsAttribution ? t('models.licenseAttribution') : ''}`}
+          {!model.bundled && model.installed && !model.complete && t('models.incomplete')}
+          {model.bundled && !model.complete && t('models.bundledMissing')}
+          {!model.bundled && !model.downloadable && t('models.notPublished')}
         </span>
       }
       control={
@@ -294,21 +332,24 @@ function ModelRow({
           {activeJob ? (
             <>
               <div className="flex flex-col items-end gap-1">
-                <ProgressBar value={activeJob.percent ?? null} label={`${model.title} 下载进度`} />
+                <ProgressBar
+                  value={activeJob.percent ?? null}
+                  label={t('models.downloadProgress', { title: modelTitle(model, t) })}
+                />
                 <span className="font-mono text-[0.65rem] text-[var(--color-ink-2)]">
-                  {phaseLabel(activeJob.phase)}
+                  {t(PHASE_KEYS[activeJob.phase])}
                   {activeJob.percent != null && ` ${Math.round(activeJob.percent)}%`}
                 </span>
               </div>
               <Button size="sm" variant="ghost" onClick={onCancel}>
-                取消
+                {t('common.cancel')}
               </Button>
             </>
           ) : (
             <>
               {model.selected ? null : model.installed && model.complete ? (
                 <Button size="sm" onClick={onSelect} disabled={busy}>
-                  使用
+                  {t('common.use')}
                 </Button>
               ) : model.downloadable ? (
                 <Button
@@ -318,7 +359,7 @@ function ModelRow({
                   onClick={onDownload}
                   disabled={busy || job !== null}
                 >
-                  {model.installed ? '重新下载' : '下载'}
+                  {model.installed ? t('common.redownload') : t('common.download')}
                 </Button>
               ) : null}
 
@@ -326,15 +367,15 @@ function ModelRow({
                 (confirmRemove ? (
                   <>
                     <Button size="sm" variant="danger" onClick={onRemove} disabled={busy}>
-                      确认删除
+                      {t('common.confirmDelete')}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={onCancelRemove}>
-                      取消
+                      {t('common.cancel')}
                     </Button>
                   </>
                 ) : (
                   <Button size="sm" variant="ghost" onClick={onRemove} disabled={busy}>
-                    删除
+                    {t('common.delete')}
                   </Button>
                 ))}
             </>
@@ -345,35 +386,9 @@ function ModelRow({
   )
 }
 
-function statusBadge(model: ModelStatus) {
-  if (model.complete) return <StatusBadge tone="ok">{model.bundled ? '内置' : '已下载'}</StatusBadge>
-  if (model.bundled) return <StatusBadge tone="danger">内置文件缺失</StatusBadge>
-  if (model.installed) return <StatusBadge tone="danger">文件不完整</StatusBadge>
-  if (model.downloadable) return <StatusBadge tone="warn">未安装</StatusBadge>
-  return <StatusBadge tone="muted">资源尚未发布</StatusBadge>
-}
-
-function phaseLabel(phase: ModelPhase): string {
-  switch (phase) {
-    case ModelPhase.Downloading:
-      return '下载中'
-    case ModelPhase.Verifying:
-      return '校验中'
-    case ModelPhase.Extracting:
-      return '解压中'
-    case ModelPhase.Validating:
-      return '校验文件'
-    case ModelPhase.Done:
-      return '完成'
-    case ModelPhase.Cancelled:
-      return '已取消'
-    case ModelPhase.Failed:
-      return '失败'
-  }
-}
-
-function modelTitle(list: ModelsList, id: string): string {
-  return [...list.asr, ...list.mt].find((m) => m.id === id)?.title ?? id
+function modelTitleById(list: ModelsList, id: string, t: (key: MessageKey) => string): string {
+  const model = [...list.asr, ...list.mt].find((m) => m.id === id)
+  return model ? modelTitle(model, t) : id
 }
 
 function formatBytes(bytes: number): string {

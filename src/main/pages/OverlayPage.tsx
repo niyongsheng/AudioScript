@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useStore } from '@/main/store'
+import { hotkeyLabel } from '@/shared/hotkeys'
+import { useI18n } from '@/shared/i18n'
 import { formatCmdError, type OverlayConfig, overlaySetMode, shortcutsSet } from '@/shared/ipc'
 import { isMacOS } from '@/shared/platform'
 import { MAX_FONT_SIZE, MAX_OVERLAY_LINES, MIN_FONT_SIZE, OverlayMode } from '@/shared/types'
@@ -13,14 +15,15 @@ import { Switch } from '@/ui/Switch'
 
 export function OverlayPage() {
   const { overlayCfg, overlayVisible, toggleOverlay, updateOverlay, hotkeys, refreshHotkeys, setError } = useStore()
+  const { t } = useI18n()
 
   const [draft, setDraft] = useState<OverlayConfig | null>(overlayCfg)
   useEffect(() => setDraft(overlayCfg), [overlayCfg])
 
   if (!overlayCfg || !draft) {
     return (
-      <Page title="悬浮窗">
-        <p className="text-[var(--color-ink-2)] text-sm">读取配置中…</p>
+      <Page title={t('overlay.title')}>
+        <p className="text-[var(--color-ink-2)] text-sm">{t('overlay.loading')}</p>
       </Page>
     )
   }
@@ -35,28 +38,32 @@ export function OverlayPage() {
   }
 
   return (
-    <Page title="悬浮窗">
-      <SettingsGroup title="显示">
+    <Page title={t('overlay.title')}>
+      <SettingsGroup title={t('overlay.displayGroup')}>
         <SettingsRow
           icon="overlay"
-          title={overlayVisible ? '隐藏悬浮窗' : '显示悬浮窗'}
-          control={<Button onClick={() => void toggleOverlay()}>{overlayVisible ? '隐藏' : '显示'}</Button>}
+          title={overlayVisible ? t('overlay.hideOverlay') : t('overlay.showOverlay')}
+          control={
+            <Button onClick={() => void toggleOverlay()}>
+              {overlayVisible ? t('overlay.hide') : t('overlay.show')}
+            </Button>
+          }
         />
         <SettingsRow
           icon="keyboard"
-          title="交互模式"
+          title={t('overlay.mode')}
           description={
             overlayCfg.mode === OverlayMode.Locked
-              ? '鼠标完全穿透，仅能通过快捷键或托盘菜单操作。'
-              : '可拖动、缩放、选中文字，会遮挡下层操作。'
+              ? t('overlay.modeLockedDescription')
+              : t('overlay.modeEditDescription')
           }
           control={
             <Select
-              label="交互模式"
+              label={t('overlay.mode')}
               value={overlayCfg.mode}
               options={[
-                { value: OverlayMode.Locked, label: '锁定（穿透）' },
-                { value: OverlayMode.Edit, label: '编辑' },
+                { value: OverlayMode.Locked, label: t('overlay.modeLocked') },
+                { value: OverlayMode.Edit, label: t('overlay.modeEdit') },
               ]}
               onChange={(v) => void overlaySetMode(v)}
             />
@@ -64,28 +71,28 @@ export function OverlayPage() {
         />
         <SettingsRow
           icon="check"
-          title="始终置顶"
-          unavailableReason={isMacOS ? 'macOS 上强制开启。' : undefined}
-          control={<span className="text-[var(--color-ink-2)] text-xs">已开启</span>}
+          title={t('overlay.alwaysOnTop')}
+          unavailableReason={isMacOS ? t('overlay.alwaysOnTopMac') : undefined}
+          control={<span className="text-[var(--color-ink-2)] text-xs">{t('overlay.enabled')}</span>}
         />
       </SettingsGroup>
 
-      <SettingsGroup title="快捷键" footer="仅支持「修饰键 + 单键」组合，该类组合在 macOS 上无需辅助功能权限。">
+      <SettingsGroup title={t('overlay.shortcutsGroup')} footer={t('overlay.shortcutsFooter')}>
         {hotkeys.length === 0 ? (
-          <SettingsRow title="读取中…" />
+          <SettingsRow title={t('common.loading')} />
         ) : (
           hotkeys.map((h) => (
             <SettingsRow
               key={h.id}
               icon="keyboard"
-              title={h.label}
+              title={hotkeyLabel(h.id, t)}
               description={
                 h.registered ? (
                   h.customized ? (
-                    '已改过键位'
+                    t('overlay.customized')
                   ) : undefined
                 ) : (
-                  <span className="text-[var(--color-warn)]">注册失败，可能已被其他应用占用</span>
+                  <span className="text-[var(--color-warn)]">{t('overlay.registerFailed')}</span>
                 )
               }
               control={<ShortcutRecorder pretty={h.acceleratorPretty} onRecord={(accel) => void rebind(h.id, accel)} />}
@@ -94,14 +101,14 @@ export function OverlayPage() {
         )}
       </SettingsGroup>
 
-      <SettingsGroup title="外观" footer="仅背景透明，文字始终不透明。">
+      <SettingsGroup title={t('overlay.appearanceGroup')} footer={t('overlay.appearanceFooter')}>
         <SettingsRow
           icon="waveform"
-          title="字号"
+          title={t('overlay.fontSize')}
           control={
             <div className="w-56">
               <Slider
-                label="字号"
+                label={t('overlay.fontSize')}
                 value={draft.fontSize}
                 min={MIN_FONT_SIZE}
                 max={MAX_FONT_SIZE}
@@ -114,12 +121,12 @@ export function OverlayPage() {
         />
         <SettingsRow
           icon="overlay"
-          title="背景不透明度"
-          description="过高会遮挡画面。"
+          title={t('overlay.opacity')}
+          description={t('overlay.opacityDescription')}
           control={
             <div className="w-56">
               <Slider
-                label="背景不透明度"
+                label={t('overlay.opacity')}
                 value={draft.opacity}
                 min={0}
                 max={100}
@@ -132,16 +139,16 @@ export function OverlayPage() {
         />
         <SettingsRow
           icon="translate"
-          title="显示行数"
-          description="超出部分不可见。"
+          title={t('overlay.maxLines')}
+          description={t('overlay.maxLinesDescription')}
           control={
             <div className="w-56">
               <Slider
-                label="显示行数"
+                label={t('overlay.maxLines')}
                 value={draft.maxLines}
                 min={1}
                 max={MAX_OVERLAY_LINES}
-                format={(v) => `${v} 行`}
+                format={(v) => t('common.lines', { count: v })}
                 onChange={(v) => setDraft((d) => (d ? { ...d, maxLines: v } : d))}
                 onCommit={(v) => void updateOverlay({ maxLines: v })}
               />
@@ -150,19 +157,23 @@ export function OverlayPage() {
         />
         <SettingsRow
           icon="brush"
-          title="文字颜色"
+          title={t('overlay.fontColor')}
           control={<ColorField value={overlayCfg.fontColor} onCommit={(v) => void updateOverlay({ fontColor: v })} />}
         />
         <SettingsRow
-          icon="sparkle"
-          title="彩虹边框"
+          icon="border"
+          title={t('overlay.glow')}
           control={
-            <Switch label="彩虹边框" checked={overlayCfg.glow} onChange={(v) => void updateOverlay({ glow: v })} />
+            <Switch
+              label={t('overlay.glow')}
+              checked={overlayCfg.glow}
+              onChange={(v) => void updateOverlay({ glow: v })}
+            />
           }
         />
         <SettingsRow
           icon="swatch"
-          title="背景颜色"
+          title={t('overlay.bgColor')}
           control={<ColorField value={overlayCfg.bgColor} onCommit={(v) => void updateOverlay({ bgColor: v })} />}
         />
       </SettingsGroup>
@@ -173,6 +184,7 @@ export function OverlayPage() {
 const COLOR_COMMIT_DELAY_MS = 150
 
 function ColorField({ value, onCommit }: { value: string; onCommit: (v: string) => void }) {
+  const { t } = useI18n()
   const [local, setLocal] = useState(value)
   const timer = useRef<number | null>(null)
   const latest = useRef(value)
@@ -200,7 +212,7 @@ function ColorField({ value, onCommit }: { value: string; onCommit: (v: string) 
     <div className="flex items-center gap-2">
       <input
         type="color"
-        aria-label="颜色"
+        aria-label={t('overlay.color')}
         value={local}
         onChange={(e) => {
           const next = e.target.value

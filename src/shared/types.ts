@@ -165,6 +165,14 @@ export enum Theme {
 	Dark = "dark",
 }
 
+export enum Language {
+	System = "system",
+	ZhCn = "zh-CN",
+	ZhTw = "zh-TW",
+	En = "en",
+	Ja = "ja",
+}
+
 export interface WindowPos {
 	x: number;
 	y: number;
@@ -193,11 +201,15 @@ export enum MtModelTier {
 export interface Preferences {
 	audioSource: string;
 	deviceId?: string;
+	mixMicDeviceId?: string;
+	mixSystemDeviceId?: string;
 	translateEngine: TranslateEngine;
 	sourceLang: string;
+	targetLang: string;
 	zhScript: ZhScript;
 	overlay: OverlayConfig;
 	theme: Theme;
+	language: Language;
 	sidebarVisible: boolean;
 	shortcuts: Record<string, string>;
 	endpoint: EndpointConfig;
@@ -211,11 +223,15 @@ export interface Preferences {
 export interface PrefsPatch {
 	audioSource?: string;
 	deviceId?: string;
+	mixMicDeviceId?: string;
+	mixSystemDeviceId?: string;
 	translateEngine?: TranslateEngine;
 	sourceLang?: string;
+	targetLang?: string;
 	zhScript?: ZhScript;
 	endpoint?: EndpointConfig;
 	theme?: Theme;
+	language?: Language;
 	sidebarVisible?: boolean;
 	onboardingDone?: boolean;
 	asrModelTier?: AsrModelTier;

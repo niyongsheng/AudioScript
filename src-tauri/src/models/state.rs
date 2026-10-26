@@ -23,10 +23,7 @@ impl ModelState {
     }
 
     pub fn is_busy(&self) -> bool {
-        self.job
-            .lock()
-            .unwrap_or_else(|e| e.into_inner())
-            .is_some()
+        self.job.lock().unwrap_or_else(|e| e.into_inner()).is_some()
     }
 
     pub fn start(

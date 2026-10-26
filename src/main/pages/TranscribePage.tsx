@@ -1,5 +1,6 @@
 import { save } from '@tauri-apps/plugin-dialog'
 import { useStore } from '@/main/store'
+import { useI18n } from '@/shared/i18n'
 import { formatCmdError, revealPath, transcriptExport } from '@/shared/ipc'
 import { TaskStatus } from '@/shared/types'
 import { useTranscriptStream } from '@/shared/useTranscriptStream'
@@ -15,6 +16,7 @@ function exportStamp(d = new Date()): string {
 export function TranscribePage() {
   const { segments, clear } = useTranscriptStream()
   const { status, clearAll, setError } = useStore()
+  const { t } = useI18n()
   const capturing = status === TaskStatus.Capturing
   const canExport = segments.some((s) => s.state !== 'partial')
 
@@ -27,7 +29,7 @@ export function TranscribePage() {
     try {
       const stamp = exportStamp()
       const path = await save({
-        defaultPath: `AudioScript-转写-${stamp.replace(/:/g, '-')}.md`,
+        defaultPath: t('transcribe.exportFileName', { stamp: stamp.replace(/:/g, '-') }),
         filters: [{ name: 'Markdown', extensions: ['md'] }],
       })
       if (!path) return
@@ -39,21 +41,23 @@ export function TranscribePage() {
   }
 
   return (
-    <Page title="转写">
+    <Page title={t('transcribe.title')}>
       <div className="flex items-center gap-2">
         <Button onClick={handleClear} disabled={capturing || segments.length === 0} size="sm">
-          清空
+          {t('common.clear')}
         </Button>
         <Button icon="download" size="sm" disabled={!canExport} onClick={() => void handleExport()}>
-          导出
+          {t('common.export')}
         </Button>
-        <span className="ml-auto font-mono text-[var(--color-ink-2)] text-[0.7rem]">{segments.length} 段</span>
+        <span className="ml-auto font-mono text-[var(--color-ink-2)] text-[0.7rem]">
+          {t('common.segmentCount', { count: segments.length })}
+        </span>
       </div>
 
       <div className="max-h-[62vh] overflow-y-auto rounded-[var(--radius-panel)] border border-[var(--color-border-subtle)] bg-[var(--color-surface-0)] p-4">
         {segments.length === 0 ? (
           <p className="py-8 text-center text-[var(--color-ink-2)] text-sm">
-            {capturing ? '识别中…' : '点击左上角「开始转写」。'}
+            {capturing ? t('transcribe.emptyCapturing') : t('transcribe.emptyIdle')}
           </p>
         ) : (
           <SegmentList segments={segments} />
@@ -61,7 +65,7 @@ export function TranscribePage() {
       </div>
 
       {!capturing && segments.length > 0 && (
-        <p className="text-[var(--color-ink-2)] text-[0.7rem]">停止转写后内容保留，直至清空或退出应用。</p>
+        <p className="text-[var(--color-ink-2)] text-[0.7rem]">{t('transcribe.keepHint')}</p>
       )}
     </Page>
   )

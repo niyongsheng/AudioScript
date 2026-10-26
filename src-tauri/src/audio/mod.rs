@@ -2,6 +2,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+use crate::config::normalize_device;
+use crate::i18n::{tf, tr, Key};
 use flexaudio::{DeviceInfo, OutputFormat, SourceKind, StreamConfig};
 use typeshare::typeshare;
 
@@ -63,16 +65,16 @@ impl AudioSourceKind {
 
 #[derive(Debug, thiserror::Error)]
 pub enum AudioError {
-    #[error("未找到名为 {0} 的音频设备")]
+    #[error("{}", tf(Key::AudioDeviceNotFound, &[.0.as_str()]))]
     DeviceNotFound(String),
 
-    #[error("打开采集失败：{0}")]
+    #[error("{}", tf(Key::AudioOpenFailed, &[.0.as_str()]))]
     Open(String),
 
-    #[error("启动采集失败：{0}")]
+    #[error("{}", tf(Key::AudioStartFailed, &[.0.as_str()]))]
     Start(String),
 
-    #[error("设备枚举失败：{0}")]
+    #[error("{}", tf(Key::AudioEnumerateFailed, &[.0.as_str()]))]
     Enumerate(String),
 
     #[error("{message}")]
@@ -100,6 +102,10 @@ impl CaptureHandle {
 
     pub fn request_stop(&self) {
         self.stop.store(true, Ordering::SeqCst);
+    }
+
+    pub fn is_finished(&self) -> bool {
+        self.thread.as_ref().is_none_or(|t| t.is_finished())
     }
 }
 
@@ -165,7 +171,7 @@ fn to_input_device(d: DeviceInfo) -> InputDevice {
 
 fn resolve_device_name(kind: AudioSourceKind, wanted: Option<&str>) -> String {
     let Ok(devices) = devices_for(kind) else {
-        return wanted.unwrap_or("(系统默认)").to_string();
+        return wanted.unwrap_or(tr(Key::AudioDefaultDevice)).to_string();
     };
     let want = kind.to_flexaudio();
 
@@ -179,12 +185,47 @@ fn resolve_device_name(kind: AudioSourceKind, wanted: Option<&str>) -> String {
 
     found
         .map(|d| d.name.clone())
-        .unwrap_or_else(|| wanted.unwrap_or("(系统默认)").to_string())
+        .unwrap_or_else(|| wanted.unwrap_or(tr(Key::AudioDefaultDevice)).to_string())
+}
+
+#[derive(Debug, Clone, Default, PartialEq, Eq)]
+pub struct DeviceSelection {
+    pub device: Option<String>,
+    pub mix_mic: Option<String>,
+    pub mix_system: Option<String>,
+}
+
+impl DeviceSelection {
+    pub fn single(device: Option<String>) -> Self {
+        Self {
+            device: normalize_device(device),
+            ..Self::default()
+        }
+    }
+
+    pub fn mix(mic: Option<String>, system: Option<String>) -> Self {
+        Self {
+            device: None,
+            mix_mic: normalize_device(mic),
+            mix_system: normalize_device(system),
+        }
+    }
+}
+
+fn display_name(kind: AudioSourceKind, selection: &DeviceSelection) -> String {
+    if kind == AudioSourceKind::Mix {
+        return format!(
+            "{} + {}",
+            resolve_device_name(AudioSourceKind::Mic, selection.mix_mic.as_deref()),
+            resolve_device_name(AudioSourceKind::Loopback, selection.mix_system.as_deref())
+        );
+    }
+    resolve_device_name(kind, selection.device.as_deref())
 }
 
 pub fn start<S>(
     kind: AudioSourceKind,
-    device_id: Option<&str>,
+    selection: &DeviceSelection,
     sink: S,
 ) -> Result<CaptureHandle, AudioError>
 where
@@ -192,7 +233,9 @@ where
 {
     let config = StreamConfig {
         kind: kind.to_flexaudio(),
-        device_id: device_id.map(str::to_owned),
+        device_id: selection.device.clone(),
+        mix_mic_device_id: selection.mix_mic.clone(),
+        mix_system_device_id: selection.mix_system.clone(),
         exclude_self: true,
         output: OutputFormat {
             sample_rate: TARGET_SAMPLE_RATE,
@@ -204,7 +247,7 @@ where
     let stream = open_started(&config)?;
     let native_rate = stream.native_format().0;
 
-    let device_name = resolve_device_name(kind, device_id);
+    let device_name = display_name(kind, selection);
 
     tracing::info!(
         source = kind.as_str(),
@@ -230,10 +273,7 @@ fn open_started(config: &StreamConfig) -> Result<flexaudio::Stream, AudioError> 
     match open_and_start(config) {
         Ok(stream) => Ok(stream),
         #[cfg(target_os = "windows")]
-        Err(e)
-            if config.exclude_self
-                && e.kind() == flexaudio::ErrorKind::UnsupportedOsVersion =>
-        {
+        Err(e) if config.exclude_self && e.kind() == flexaudio::ErrorKind::UnsupportedOsVersion => {
             tracing::warn!("当前 Windows 版本不支持进程回环，改为采集整设备音频");
             let mut fallback = config.clone();
             fallback.exclude_self = false;
@@ -410,7 +450,7 @@ where
     let _ = thread.join();
 
     let acc = Arc::try_unwrap(acc)
-        .map_err(|_| AudioError::Open("检测累加器仍被占用".into()))?
+        .map_err(|_| AudioError::Open(tr(Key::AudioAccumulatorBusy).into()))?
         .into_inner()
         .unwrap_or_else(|e| e.into_inner());
 
@@ -450,6 +490,18 @@ mod tests {
             SourceKind::SystemLoopback
         );
         assert_eq!(AudioSourceKind::Mix.to_flexaudio(), SourceKind::Mix);
+    }
+
+    #[test]
+    fn device_selection_normalizes_empty_ids() {
+        assert_eq!(
+            DeviceSelection::single(Some(String::new())),
+            DeviceSelection::default()
+        );
+        let mix = DeviceSelection::mix(Some("mic-1".into()), Some(String::new()));
+        assert_eq!(mix.device, None);
+        assert_eq!(mix.mix_mic.as_deref(), Some("mic-1"));
+        assert_eq!(mix.mix_system, None);
     }
 
     #[test]

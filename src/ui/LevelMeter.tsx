@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import { EVENT, on } from '@/shared/ipc'
+import { useI18n } from '@/shared/i18n'
+import { type AudioSourceKind, type DeviceLevelEvent, EVENT, on } from '@/shared/ipc'
 import { cn } from './cn'
 
 const SEGMENTS = [0, 1, 2, 3, 4] as const
@@ -15,8 +16,9 @@ function levelRatio(value: number): number {
 }
 
 function Dots({ dots, animated }: { dots: number; animated?: boolean }) {
+  const { t } = useI18n()
   return (
-    <div className="flex items-center gap-1" role="img" aria-label="输入电平">
+    <div className="flex items-center gap-1" role="img" aria-label={t('common.inputLevel')}>
       {SEGMENTS.map((seg) => (
         <span
           key={seg}
@@ -35,21 +37,26 @@ export function LevelBars({ level }: { level: number }) {
   return <Dots dots={Math.ceil(levelRatio(level) * SEGMENTS.length)} />
 }
 
-export function LevelMeter({ active }: { active: boolean }) {
+function usePeakDots<T>(event: string, active: boolean, select: (payload: T) => number | null): number {
   const [dots, setDots] = useState(0)
   const peak = useRef(0)
+  const selectRef = useRef(select)
 
   useEffect(() => {
-    if (!active) {
-      peak.current = 0
-      setDots(0)
-      return
-    }
+    selectRef.current = select
+  }, [select])
+
+  useEffect(() => {
+    peak.current = 0
+    setDots(0)
+    if (!active) return
 
     let disposed = false
     let unlisten: (() => void) | undefined
 
-    on<number>(EVENT.level, (rms) => {
+    on<T>(event, (payload) => {
+      const rms = selectRef.current(payload)
+      if (rms === null) return
       const target = levelRatio(rms)
       peak.current = Math.max(target, peak.current * FALL)
       setDots(Math.ceil(peak.current * SEGMENTS.length))
@@ -62,7 +69,27 @@ export function LevelMeter({ active }: { active: boolean }) {
       disposed = true
       unlisten?.()
     }
-  }, [active])
+  }, [active, event])
 
+  return dots
+}
+
+export function DeviceLevelMeter({
+  device,
+  source,
+  active,
+}: {
+  device: string | null
+  source: AudioSourceKind
+  active: boolean
+}) {
+  const dots = usePeakDots<DeviceLevelEvent>(EVENT.deviceLevel, active, (e) =>
+    e.source === source && (e.device ?? null) === device ? e.rms : null,
+  )
+  return <Dots dots={dots} animated />
+}
+
+export function LevelMeter({ active }: { active: boolean }) {
+  const dots = usePeakDots<number>(EVENT.level, active, (rms) => (typeof rms === 'number' ? rms : null))
   return <Dots dots={dots} animated />
 }

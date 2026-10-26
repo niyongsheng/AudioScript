@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "AudioScript は音声のリアルタイム文字起こしにマイクを使用します。音声はオフラインモデルによりこの Mac 内でのみ処理され、サーバーには送信されません。";
+"NSAudioCaptureUsageDescription" = "AudioScript は再生中の動画やポッドキャストをリアルタイムで字幕にするため、システム音声を録音します。音声はオフラインモデルによりこの Mac 内でのみ処理され、サーバーには送信されません。";

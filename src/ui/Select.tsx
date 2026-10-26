@@ -1,8 +1,10 @@
+import { useI18n } from '@/shared/i18n'
 import { cn } from './cn'
 
 interface SelectOption<T extends string> {
   value: T
   label: string
+  disabled?: boolean
   unavailableReason?: string
 }
 
@@ -16,6 +18,7 @@ interface Props<T extends string> {
 }
 
 export function Select<T extends string>({ value, options, onChange, disabled, label, className }: Props<T>) {
+  const { t } = useI18n()
   return (
     <select
       aria-label={label}
@@ -30,9 +33,9 @@ export function Select<T extends string>({ value, options, onChange, disabled, l
       )}
     >
       {options.map((o) => (
-        <option key={o.value} value={o.value} disabled={!!o.unavailableReason}>
+        <option key={o.value} value={o.value} disabled={o.disabled || !!o.unavailableReason}>
           {o.label}
-          {o.unavailableReason ? `（${o.unavailableReason}）` : ''}
+          {o.unavailableReason ? t('common.unavailableOption', { reason: o.unavailableReason }) : ''}
         </option>
       ))}
     </select>

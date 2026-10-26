@@ -28,7 +28,7 @@ cd src-tauri && cargo test
 
 ## 约定
 
-- 用户可见文案、日志、错误信息用中文。
+- 用户可见文案走 `src/shared/i18n`（`t()` / `useI18n()`）；Rust 用户可见文案走 `crate::i18n::{tr, tf, Key}`。新增词条必须同步 zh-CN / zh-TW / en / ja 四份；日志与测试断言保持中文。
 - 注释只保留功能性警告和约束，不写解释性内容。
 - TS 格式由 Biome 决定：单引号、无分号、2 空格、120 列。`src/shared/types.ts` 由 typeshare 生成，不要手改。
 - Rust 只格式化本次改动的文件；全仓 `cargo fmt` 会带出无关改动。

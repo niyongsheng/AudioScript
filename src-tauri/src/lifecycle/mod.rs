@@ -2,6 +2,8 @@ use std::sync::atomic::{AtomicBool, Ordering};
 
 use tauri::{AppHandle, Manager, WindowEvent};
 
+use crate::monitor;
+
 pub const MAIN_LABEL: &str = "main";
 
 #[derive(Debug, Default)]
@@ -43,6 +45,8 @@ pub fn show_main(app: &AppHandle) {
     let _ = window.unminimize();
     if let Err(e) = window.show().and_then(|_| window.set_focus()) {
         tracing::error!("唤回主窗口失败：{e}");
+    } else {
+        monitor::on_window_shown(app);
     }
 }
 
@@ -74,6 +78,9 @@ pub fn on_window_event(window: &tauri::Window, event: &WindowEvent) {
     if let Err(e) = window.hide() {
         tracing::error!(label = window.label(), "隐藏窗口失败：{e}");
     } else {
+        if window.label() == MAIN_LABEL {
+            monitor::on_window_hidden(window.app_handle());
+        }
         #[cfg(target_os = "macos")]
         {
             if window.label() == MAIN_LABEL {

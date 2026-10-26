@@ -10,7 +10,8 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
-use crate::config::{MAX_OVERLAY_HEIGHT, MIN_OVERLAY_HEIGHT, OverlayConfig, OverlayMode};
+use crate::config::{OverlayConfig, OverlayMode, MAX_OVERLAY_HEIGHT, MIN_OVERLAY_HEIGHT};
+use crate::i18n::{tf, tr, Key};
 
 pub const LABEL: &str = "overlay";
 
@@ -91,7 +92,7 @@ impl Frame {
 
         app.get_webview_window(LABEL)
             .map(|w| Self::Window(Box::new(w)))
-            .ok_or_else(|| format!("悬浮窗（label={LABEL}）不存在"))
+            .ok_or_else(|| tf(Key::OverlayNotFound, &[LABEL]))
     }
 
     fn show(&self) -> Result<(), String> {
@@ -101,7 +102,9 @@ impl Frame {
                 p.show();
                 Ok(())
             }
-            Self::Window(w) => w.show().map_err(|e| format!("显示悬浮窗失败：{e}")),
+            Self::Window(w) => w
+                .show()
+                .map_err(|e| tf(Key::OverlayShowFailed, &[&e.to_string()])),
         }
     }
 
@@ -112,7 +115,9 @@ impl Frame {
                 p.hide();
                 Ok(())
             }
-            Self::Window(w) => w.hide().map_err(|e| format!("隐藏悬浮窗失败：{e}")),
+            Self::Window(w) => w
+                .hide()
+                .map_err(|e| tf(Key::OverlayHideFailed, &[&e.to_string()])),
         }
     }
 
@@ -133,7 +138,7 @@ impl Frame {
             }
             Self::Window(w) => w
                 .set_ignore_cursor_events(on)
-                .map_err(|e| format!("设置鼠标穿透失败：{e}")),
+                .map_err(|e| tf(Key::OverlayClickThroughFailed, &[&e.to_string()])),
         }
     }
 
@@ -174,17 +179,17 @@ pub(crate) fn set_geometry(
     app: &AppHandle,
     g: &crate::config::WindowGeometry,
 ) -> Result<(), String> {
-    let w = window(app).ok_or("悬浮窗底层窗口不可用")?;
+    let w = window(app).ok_or_else(|| tr(Key::OverlayWindowUnavailable))?;
     w.set_size(tauri::LogicalSize::new(
         g.size.width as f64,
         g.size.height as f64,
     ))
-    .map_err(|e| format!("设置悬浮窗尺寸失败：{e}"))?;
+    .map_err(|e| tf(Key::OverlaySizeFailed, &[&e.to_string()]))?;
     w.set_position(tauri::LogicalPosition::new(
         g.position.x as f64,
         g.position.y as f64,
     ))
-    .map_err(|e| format!("设置悬浮窗位置失败：{e}"))?;
+    .map_err(|e| tf(Key::OverlayPositionFailed, &[&e.to_string()]))?;
     Ok(())
 }
 

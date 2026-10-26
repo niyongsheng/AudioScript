@@ -1,4 +1,5 @@
 import { memo, useEffect, useLayoutEffect, useRef } from 'react'
+import { useI18n } from '@/shared/i18n'
 import { SegmentState, type TranscriptSegment, TranslationState } from '@/shared/types'
 import { cn } from './cn'
 
@@ -36,6 +37,7 @@ export function SegmentList({ segments }: Props) {
 }
 
 const SegmentItem = memo(function SegmentItem({ seg }: { seg: TranscriptSegment }) {
+  const { t } = useI18n()
   return (
     <li className={cn(seg.state === SegmentState.Edited && 'border-[var(--color-accent)] border-l-2 pl-3')}>
       <p className="m-0 text-[0.78em] leading-relaxed" style={{ color: 'var(--color-segment-partial)' }}>
@@ -50,7 +52,9 @@ const SegmentItem = memo(function SegmentItem({ seg }: { seg: TranscriptSegment 
       )}
 
       {seg.translationState === TranslationState.Failed && (
-        <p className="m-0 text-[0.78em] text-[var(--color-warn)] italic opacity-70">翻译失败</p>
+        <p className="m-0 text-[0.78em] text-[var(--color-warn)] italic opacity-70">
+          {t('overlayWindow.translationFailed')}
+        </p>
       )}
     </li>
   )

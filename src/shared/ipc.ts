@@ -1,5 +1,6 @@
 import { invoke } from '@tauri-apps/api/core'
 import { listen, type UnlistenFn } from '@tauri-apps/api/event'
+import { t } from './i18n'
 import { withTimeout } from './timeout'
 import type {
   AudioStatus,
@@ -20,6 +21,7 @@ import type {
 } from './types'
 import {
   AudioSourceKind,
+  Language,
   MicPermission,
   ModelPhase,
   type OverlayMode,
@@ -41,7 +43,7 @@ export type {
   PrefsPatch,
   SystemAudioProbe,
 }
-export { AudioSourceKind, MicPermission, ModelPhase, SystemAudioVerdict, Theme, TranslateEngine, ZhScript }
+export { AudioSourceKind, Language, MicPermission, ModelPhase, SystemAudioVerdict, Theme, TranslateEngine, ZhScript }
 
 export async function call<T = unknown>(name: string, args: Record<string, unknown> = {}): Promise<T> {
   return invoke<T>('dispatch', { name, args })
@@ -54,8 +56,11 @@ export const EVENT = {
   overlayVisibility: 'overlay://visibility',
   audio: 'transcript://audio',
   level: 'transcript://level',
+  languageMismatch: 'transcript://language-mismatch',
+  deviceLevel: 'transcript://device-level',
   modelsProgress: 'models://progress',
   updateProgress: 'update://progress',
+  locale: 'app://locale',
 } as const
 
 export function on<T>(event: string, handler: (payload: T) => void): Promise<UnlistenFn> {
@@ -84,6 +89,10 @@ export function appInfo(): Promise<AppInfo> {
   return call<AppInfo>('app_info')
 }
 
+export function localeGet(): Promise<string> {
+  return call<string>('locale_get')
+}
+
 export interface UpdateCheckResult {
   currentVersion: string
   available: boolean
@@ -108,22 +117,52 @@ export function updateRestart(): Promise<null> {
   return call<null>('update_restart')
 }
 
+export interface SessionDevices {
+  device?: string
+  mixMicDeviceId?: string
+  mixSystemDeviceId?: string
+}
+
 export function sessionStart(
-  device?: string,
+  devices: SessionDevices = {},
   translate: TranslateEngine = TranslateEngine.LocalNmt,
   sourceLang = 'en',
+  targetLang = 'zh',
   zhScript: ZhScript = ZhScript.Simplified,
   source: AudioSourceKind = AudioSourceKind.Loopback,
 ): Promise<TaskStatus> {
   return call<TaskStatus>('session_start', {
-    device: device ?? null,
+    device: devices.device || null,
+    mixMicDeviceId: devices.mixMicDeviceId || null,
+    mixSystemDeviceId: devices.mixSystemDeviceId || null,
     source,
-    config: { translate: { engine: translate, sourceLang, zhScript } },
+    config: { translate: { engine: translate, sourceLang, targetLang, zhScript } },
   })
 }
 
 export function audioDevices(source: AudioSourceKind = AudioSourceKind.Loopback): Promise<InputDevice[]> {
   return call<InputDevice[]>('audio_devices', { source })
+}
+
+export interface DeviceLevelEvent {
+  source: AudioSourceKind
+  device: string | null
+  rms: number
+}
+
+export interface MonitorTarget {
+  source: AudioSourceKind
+  device: string | null
+}
+
+export function monitorStart(targets: MonitorTarget[]): Promise<null> {
+  return call<null>('monitor_start', {
+    targets: targets.map((target) => ({ source: target.source, device: target.device || null })),
+  })
+}
+
+export function monitorStop(): Promise<null> {
+  return call<null>('monitor_stop')
 }
 
 export function prefsGet(): Promise<Preferences> {
@@ -145,7 +184,7 @@ export function configDefaults(): Promise<ConfigDefaults> {
 const MODELS_TIMEOUT_MS = 10_000
 
 export function modelsList(): Promise<ModelsList> {
-  return withTimeout(call<ModelsList>('models_list'), MODELS_TIMEOUT_MS, '读取模型列表超时，请重试')
+  return withTimeout(call<ModelsList>('models_list'), MODELS_TIMEOUT_MS, t('error.modelsTimeout'))
 }
 
 export function modelDownload(modelId: string): Promise<{ jobId: string }> {
@@ -178,7 +217,6 @@ export function autostartSet(enabled: boolean): Promise<AutostartState> {
 
 export interface HotkeyInfo {
   id: string
-  label: string
   accelerator: string
   acceleratorPretty: string
   defaultAccelerator: string
@@ -293,7 +331,6 @@ export function sessionClear(): Promise<void> {
 export interface HotkeyFailure {
   id: string
   accelerator: string
-  label: string
 }
 
 export function hotkeyFailures(): Promise<HotkeyFailure[]> {

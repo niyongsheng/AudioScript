@@ -341,6 +341,22 @@ pub enum Theme {
 }
 
 #[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+pub enum Language {
+    #[default]
+    #[serde(rename = "system")]
+    System,
+    #[serde(rename = "zh-CN")]
+    ZhCn,
+    #[serde(rename = "zh-TW")]
+    ZhTw,
+    #[serde(rename = "en")]
+    En,
+    #[serde(rename = "ja")]
+    Ja,
+}
+
+#[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct WindowPos {
@@ -417,11 +433,15 @@ fn normalize_color(raw: &str, fallback: &str) -> String {
 pub struct Preferences {
     pub audio_source: String,
     pub device_id: Option<String>,
+    pub mix_mic_device_id: Option<String>,
+    pub mix_system_device_id: Option<String>,
     pub translate_engine: TranslateEngine,
     pub source_lang: String,
+    pub target_lang: String,
     pub zh_script: ZhScript,
     pub overlay: OverlayConfig,
     pub theme: Theme,
+    pub language: Language,
     pub sidebar_visible: bool,
     pub shortcuts: std::collections::HashMap<String, String>,
     pub endpoint: EndpointConfig,
@@ -437,11 +457,15 @@ impl Default for Preferences {
         Self {
             audio_source: "loopback".into(),
             device_id: None,
+            mix_mic_device_id: None,
+            mix_system_device_id: None,
             translate_engine: TranslateEngine::default(),
             source_lang: "en".into(),
+            target_lang: "zh".into(),
             zh_script: ZhScript::default(),
             overlay: OverlayConfig::default(),
             theme: Theme::default(),
+            language: Language::default(),
             sidebar_visible: true,
             endpoint: EndpointConfig::default(),
             shortcuts: std::collections::HashMap::new(),
@@ -460,11 +484,15 @@ impl Default for Preferences {
 pub struct PrefsPatch {
     pub audio_source: Option<String>,
     pub device_id: Option<String>,
+    pub mix_mic_device_id: Option<String>,
+    pub mix_system_device_id: Option<String>,
     pub translate_engine: Option<TranslateEngine>,
     pub source_lang: Option<String>,
+    pub target_lang: Option<String>,
     pub zh_script: Option<ZhScript>,
     pub endpoint: Option<EndpointConfig>,
     pub theme: Option<Theme>,
+    pub language: Option<Language>,
     pub sidebar_visible: Option<bool>,
     pub onboarding_done: Option<bool>,
     pub asr_model_tier: Option<AsrModelTier>,
@@ -476,12 +504,26 @@ impl PrefsPatch {
     pub fn validate(&self) -> Result<(), String> {
         if let Some(s) = &self.audio_source {
             if !matches!(s.as_str(), "mic" | "loopback" | "mix") {
-                return Err(format!("未知音源 {s}"));
+                return Err(crate::i18n::tf(
+                    crate::i18n::Key::PrefsUnknownAudioSource,
+                    &[s],
+                ));
             }
         }
         if let Some(s) = &self.source_lang {
-            if !matches!(s.as_str(), "en" | "zh") {
-                return Err(format!("未知源语言 {s}（auto 尚未实现）"));
+            if !is_supported_lang(s) {
+                return Err(crate::i18n::tf(
+                    crate::i18n::Key::PrefsUnknownSourceLang,
+                    &[s],
+                ));
+            }
+        }
+        if let Some(s) = &self.target_lang {
+            if !is_supported_lang(s) {
+                return Err(crate::i18n::tf(
+                    crate::i18n::Key::PrefsUnknownTargetLang,
+                    &[s],
+                ));
             }
         }
         Ok(())
@@ -492,7 +534,13 @@ impl PrefsPatch {
             p.audio_source = v;
         }
         if let Some(v) = self.device_id {
-            p.device_id = Some(v);
+            p.device_id = normalize_device(Some(v));
+        }
+        if let Some(v) = self.mix_mic_device_id {
+            p.mix_mic_device_id = normalize_device(Some(v));
+        }
+        if let Some(v) = self.mix_system_device_id {
+            p.mix_system_device_id = normalize_device(Some(v));
         }
         if let Some(v) = self.translate_engine {
             p.translate_engine = v;
@@ -500,8 +548,14 @@ impl PrefsPatch {
         if let Some(v) = self.source_lang {
             p.source_lang = v;
         }
+        if let Some(v) = self.target_lang {
+            p.target_lang = v;
+        }
         if let Some(v) = self.zh_script {
             p.zh_script = v;
+        }
+        if let Some(v) = self.language {
+            p.language = v;
         }
         if let Some(v) = self.endpoint {
             p.endpoint = v;
@@ -534,10 +588,14 @@ impl Preferences {
         if !matches!(self.audio_source.as_str(), "mic" | "loopback" | "mix") {
             self.audio_source = d.audio_source;
         }
-        if !matches!(self.source_lang.as_str(), "en" | "zh") {
+        if !is_supported_lang(&self.source_lang) {
             self.source_lang = d.source_lang;
         }
-        self.device_id = self.device_id.filter(|s| !s.is_empty());
+        let target_lang = effective_target_lang(&self.source_lang, &self.target_lang).to_owned();
+        self.target_lang = target_lang;
+        self.device_id = normalize_device(self.device_id.take());
+        self.mix_mic_device_id = normalize_device(self.mix_mic_device_id.take());
+        self.mix_system_device_id = normalize_device(self.mix_system_device_id.take());
 
         self.endpoint = self.endpoint.sanitized();
 
@@ -551,20 +609,22 @@ impl Preferences {
 
     pub fn apply_session(&mut self, source: &str, device: Option<String>) {
         self.audio_source = source.to_owned();
-        self.device_id = device.filter(|s| !s.is_empty());
+        self.device_id = normalize_device(device);
     }
 
-    pub fn target_lang(&self) -> &'static str {
-        target_lang_for(&self.source_lang)
+    pub fn apply_mix_devices(&mut self, mic: Option<String>, system: Option<String>) {
+        self.mix_mic_device_id = normalize_device(mic);
+        self.mix_system_device_id = normalize_device(system);
     }
 }
 
 pub fn direction_label(source_lang: &str, zh_script: ZhScript) -> &'static str {
+    use crate::i18n::{tr, Key};
     match (source_lang.starts_with("zh"), zh_script) {
-        (true, ZhScript::Traditional) => "繁体中文 → 英语",
-        (true, ZhScript::Simplified) => "简体中文 → 英语",
-        (false, ZhScript::Traditional) => "英语 → 繁体中文",
-        (false, ZhScript::Simplified) => "英语 → 简体中文",
+        (true, ZhScript::Traditional) => tr(Key::DirectionZhTwEn),
+        (true, ZhScript::Simplified) => tr(Key::DirectionZhCnEn),
+        (false, ZhScript::Traditional) => tr(Key::DirectionEnZhTw),
+        (false, ZhScript::Simplified) => tr(Key::DirectionEnZhCn),
     }
 }
 
@@ -573,6 +633,22 @@ pub fn target_lang_for(source_lang: &str) -> &'static str {
         "en"
     } else {
         "zh"
+    }
+}
+
+pub fn is_supported_lang(lang: &str) -> bool {
+    matches!(lang, "en" | "zh")
+}
+
+pub fn normalize_device(id: Option<String>) -> Option<String> {
+    id.filter(|s| !s.is_empty())
+}
+
+pub fn effective_target_lang<'a>(source_lang: &str, target_lang: &'a str) -> &'a str {
+    if is_supported_lang(target_lang) && target_lang != source_lang {
+        target_lang
+    } else {
+        target_lang_for(source_lang)
     }
 }
 
@@ -679,6 +755,33 @@ mod tests {
     }
 
     #[test]
+    fn sanitize_repairs_unsupported_or_same_target_language() {
+        let same = Preferences {
+            source_lang: "zh".into(),
+            target_lang: "zh".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(same.target_lang, "en");
+
+        let unknown = Preferences {
+            source_lang: "en".into(),
+            target_lang: "xx".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(unknown.target_lang, "zh");
+
+        let valid = Preferences {
+            source_lang: "zh".into(),
+            target_lang: "en".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(valid.target_lang, "en");
+    }
+
+    #[test]
     fn empty_device_id_means_system_default() {
         let p = Preferences {
             device_id: Some(String::new()),
@@ -768,6 +871,22 @@ mod tests {
         let mut p = Preferences::default();
         p.apply_session("loopback", Some(String::new()));
         assert_eq!(p.device_id, None);
+    }
+
+    #[test]
+    fn apply_mix_devices_keeps_single_device_untouched() {
+        let mut p = Preferences {
+            device_id: Some("dev-1".into()),
+            ..Default::default()
+        };
+        p.apply_mix_devices(Some("mic-1".into()), Some("out-1".into()));
+        assert_eq!(p.mix_mic_device_id.as_deref(), Some("mic-1"));
+        assert_eq!(p.mix_system_device_id.as_deref(), Some("out-1"));
+        assert_eq!(p.device_id.as_deref(), Some("dev-1"));
+
+        p.apply_mix_devices(Some(String::new()), None);
+        assert_eq!(p.mix_mic_device_id, None);
+        assert_eq!(p.mix_system_device_id, None);
     }
 
     #[test]

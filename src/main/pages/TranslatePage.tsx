@@ -1,6 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '@/main/store'
-import { type ConfigDefaults, configDefaults, TranslateEngine, ZhScript } from '@/shared/ipc'
+import { useI18n } from '@/shared/i18n'
+import { type ConfigDefaults, configDefaults, TranslateEngine } from '@/shared/ipc'
+import {
+  isSupportedPair,
+  LANGUAGES,
+  type LanguageChoice,
+  languageById,
+  languageIdFor,
+  preferredSource,
+  preferredTarget,
+  scriptForPair,
+} from '@/shared/languages'
 import {
   MAX_MAX_UTTERANCE_MS,
   MAX_TRAILING_SILENCE_MS,
@@ -9,41 +20,72 @@ import {
   TaskStatus,
 } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
+import { Icon } from '@/ui/Icon'
 import { Page } from '@/ui/Page'
 import { Select } from '@/ui/Select'
 import { SettingsGroup, SettingsRow } from '@/ui/Settings'
 import { Slider } from '@/ui/Slider'
 
-const ENGINE_OPTIONS = [
-  { value: TranslateEngine.LocalNmt, label: '本地离线（opus-mt）' },
-  { value: TranslateEngine.Off, label: '关闭（只看原文）' },
-  {
-    value: TranslateEngine.RemoteApi,
-    label: '在线 API',
-    unavailableReason: '未接入',
-  },
-]
-
-const MOCK_OPTION = { value: TranslateEngine.Mock, label: '开发用假引擎' }
-
-const DIRECTIONS = [
-  { lang: 'en', script: ZhScript.Simplified, label: '英语 → 简体中文' },
-  { lang: 'zh', script: ZhScript.Simplified, label: '简体中文 → 英语' },
-  { lang: 'en', script: ZhScript.Traditional, label: '英语 → 繁体中文' },
-  { lang: 'zh', script: ZhScript.Traditional, label: '繁体中文 → 英语' },
-]
-
-const directionValue = (lang: string, script: ZhScript) => `${lang}:${script}`
-
-const DIRECTION_OPTIONS = DIRECTIONS.map((d) => ({
-  value: directionValue(d.lang, d.script),
-  label: d.label,
-}))
-
 export function TranslatePage() {
-  const { translateEngine, setTranslateEngine, sourceLang, zhScript, setDirection, endpoint, setEndpoint, status } =
-    useStore()
+  const {
+    translateEngine,
+    setTranslateEngine,
+    sourceLang,
+    targetLang,
+    zhScript,
+    setDirection,
+    endpoint,
+    setEndpoint,
+    status,
+  } = useStore()
+  const { t } = useI18n()
   const capturing = status === TaskStatus.Capturing
+
+  const engineOptions = [
+    { value: TranslateEngine.LocalNmt, label: t('translate.engineLocal') },
+    { value: TranslateEngine.Off, label: t('translate.engineOff') },
+    {
+      value: TranslateEngine.RemoteApi,
+      label: t('translate.engineRemote'),
+      unavailableReason: t('translate.engineRemoteUnavailable'),
+    },
+  ]
+
+  const mockOption = { value: TranslateEngine.Mock, label: t('translate.engineMock') }
+
+  const sourceChoice = languageById(languageIdFor(sourceLang, zhScript)) ?? LANGUAGES[0]
+  const targetChoice = languageById(languageIdFor(targetLang, zhScript)) ?? LANGUAGES[0]
+
+  const sourceOptions = LANGUAGES.map((language) => ({
+    value: language.id,
+    label: t(language.labelKey),
+  }))
+
+  const targetOptions = LANGUAGES.map((language) => ({
+    value: language.id,
+    label: t(language.labelKey),
+    disabled: !isSupportedPair(sourceChoice, language),
+  }))
+
+  const directionDisabled = capturing || translateEngine === TranslateEngine.Off
+
+  function applyPair(source: LanguageChoice, target: LanguageChoice) {
+    setDirection(source.backend, target.backend, scriptForPair(source, target, zhScript))
+  }
+
+  function changeSource(id: string) {
+    const next = languageById(id)
+    if (!next) return
+    const target = isSupportedPair(next, targetChoice) ? targetChoice : preferredTarget(next, zhScript)
+    if (target) applyPair(next, target)
+  }
+
+  function changeTarget(id: string) {
+    const next = languageById(id)
+    if (!next) return
+    const source = isSupportedPair(sourceChoice, next) ? sourceChoice : preferredSource(next, zhScript)
+    if (source) applyPair(source, next)
+  }
 
   const [defaults, setDefaults] = useState<ConfigDefaults | null>(null)
   useEffect(() => {
@@ -56,52 +98,59 @@ export function TranslatePage() {
   useEffect(() => setDraft(endpoint), [endpoint])
 
   return (
-    <Page title="翻译">
-      {capturing && <Alert tone="info">断句参数仅下次开始转写时生效。</Alert>}
+    <Page title={t('translate.title')}>
+      {capturing && <Alert tone="info">{t('translate.capturingHint')}</Alert>}
 
-      <SettingsGroup title="引擎">
+      <SettingsGroup title={t('translate.engineGroup')}>
         <SettingsRow
           icon="translate"
-          title="翻译引擎"
-          description="本地离线运行，音频与文本不出本机。"
+          title={t('translate.engine')}
+          description={t('translate.engineDescription')}
           control={
             <Select
-              label="翻译引擎"
+              label={t('translate.engine')}
               value={translateEngine}
-              options={translateEngine === TranslateEngine.Mock ? [...ENGINE_OPTIONS, MOCK_OPTION] : ENGINE_OPTIONS}
+              options={translateEngine === TranslateEngine.Mock ? [...engineOptions, mockOption] : engineOptions}
               onChange={setTranslateEngine}
               disabled={capturing}
             />
           }
         />
         <SettingsRow
-          icon="external"
-          title="翻译方向"
-          description="支持简体/繁体；方向选错时译文会错乱，且不会报错。"
+          icon="translate"
+          title={t('translate.direction')}
+          description={t('translate.directionDescription')}
           control={
-            <Select
-              label="翻译方向"
-              value={directionValue(sourceLang, zhScript)}
-              options={DIRECTION_OPTIONS}
-              onChange={(v) => {
-                const d = DIRECTIONS.find((d) => directionValue(d.lang, d.script) === v)
-                if (d) setDirection(d.lang, d.script)
-              }}
-              disabled={capturing || translateEngine === TranslateEngine.Off}
-            />
+            <div className="flex items-center gap-1.5">
+              <Select
+                label={t('translate.sourceLanguage')}
+                value={sourceChoice.id}
+                options={sourceOptions}
+                onChange={changeSource}
+                disabled={directionDisabled}
+              />
+              <Icon name="arrowRight" size={14} className="shrink-0 text-[var(--color-ink-2)]" />
+              <Select
+                label={t('translate.targetLanguage')}
+                value={targetChoice.id}
+                options={targetOptions}
+                onChange={changeTarget}
+                disabled={directionDisabled}
+              />
+            </div>
           }
         />
       </SettingsGroup>
 
-      <SettingsGroup title="断句" footer="段落越长，译文出现越晚。">
+      <SettingsGroup title={t('translate.segmentation')} footer={t('translate.footer')}>
         <SettingsRow
           icon="waveform"
-          title="说完多久算一句"
-          description="调小可让译文更早出现，但句子更碎。"
+          title={t('translate.trailingTitle')}
+          description={t('translate.trailingDescription')}
           control={
             <div className="w-64">
               <Slider
-                label="尾部静音"
+                label={t('translate.trailingLabel')}
                 value={draft.trailingSilenceMs}
                 min={MIN_TRAILING_SILENCE_MS}
                 max={MAX_TRAILING_SILENCE_MS}
@@ -117,12 +166,12 @@ export function TranslatePage() {
         />
         <SettingsRow
           icon="alert"
-          title="最长一句"
-          description="超过此长度强制断句；设得比上一项短会使上一项失效。"
+          title={t('translate.maxTitle')}
+          description={t('translate.maxDescription')}
           control={
             <div className="w-64">
               <Slider
-                label="最长句"
+                label={t('translate.maxLabel')}
                 value={draft.maxUtteranceMs}
                 min={MIN_MAX_UTTERANCE_MS}
                 max={MAX_MAX_UTTERANCE_MS}
@@ -138,7 +187,7 @@ export function TranslatePage() {
         />
         <SettingsRow
           icon="chip"
-          title="预设"
+          title={t('translate.preset')}
           control={
             <div className="flex gap-1.5">
               <button
@@ -147,7 +196,7 @@ export function TranslatePage() {
                 onClick={() => defaults && void setEndpoint(defaults.endpointProfiles.interpretation)}
                 className="rounded-[var(--radius-ctl)] border border-[var(--color-border-subtle)] px-2 py-1 text-[var(--color-ink-1)] text-xs transition hover:bg-[var(--color-surface-2)] disabled:opacity-40"
               >
-                同传
+                {t('translate.presetInterpretation')}
               </button>
               <button
                 type="button"
@@ -155,7 +204,7 @@ export function TranslatePage() {
                 onClick={() => defaults && void setEndpoint(defaults.endpointProfiles.dictation)}
                 className="rounded-[var(--radius-ctl)] border border-[var(--color-border-subtle)] px-2 py-1 text-[var(--color-ink-1)] text-xs transition hover:bg-[var(--color-surface-2)] disabled:opacity-40"
               >
-                听写
+                {t('translate.presetDictation')}
               </button>
             </div>
           }

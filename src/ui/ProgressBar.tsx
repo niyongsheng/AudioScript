@@ -1,3 +1,4 @@
+import { useI18n } from '@/shared/i18n'
 import { cn } from './cn'
 
 interface Props {
@@ -6,13 +7,14 @@ interface Props {
 }
 
 export function ProgressBar({ value, label }: Props) {
+  const { t } = useI18n()
   const indeterminate = value == null
   const clamped = indeterminate ? 0 : Math.max(0, Math.min(100, value))
 
   return (
     <div
       role="progressbar"
-      aria-label={label ?? '下载进度'}
+      aria-label={label ?? t('common.downloadProgress')}
       aria-valuemin={0}
       aria-valuemax={100}
       aria-valuenow={indeterminate ? undefined : Math.round(clamped)}

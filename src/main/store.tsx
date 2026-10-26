@@ -1,5 +1,6 @@
 import { createContext, type ReactNode, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react'
 import { setTrackingEnabled, track } from '@/shared/analytics'
+import { t } from '@/shared/i18n'
 import {
   type AppInfo,
   AudioSourceKind,
@@ -13,6 +14,7 @@ import {
   type HotkeyInfo,
   hotkeyFailures,
   type InputDevice,
+  Language,
   type OverlayConfig,
   on,
   overlayConfigGet,
@@ -40,6 +42,7 @@ import {
   updateRestart,
   ZhScript,
 } from '@/shared/ipc'
+import { initLocale } from '@/shared/locale'
 import { withTimeout } from '@/shared/timeout'
 import { TaskStatus } from '@/shared/types'
 
@@ -51,19 +54,27 @@ interface Store {
   info: AppInfo | null
 
   prefsReady: boolean
+  devicesLoading: boolean
   audioSource: AudioSourceKind
   device: string
+  mixMicDevice: string
+  mixSystemDevice: string
   translateEngine: TranslateEngine
   sourceLang: string
+  targetLang: string
   zhScript: ZhScript
   theme: Theme
+  language: Language
   endpoint: EndpointConfig
 
   status: TaskStatus
   activeDevice: string | null
   audio: AudioStatus | null
+  languageMismatch: boolean
 
   devices: InputDevice[]
+  mixMicDevices: InputDevice[]
+  mixSystemDevices: InputDevice[]
   deviceError: string | null
 
   overlayCfg: OverlayConfig | null
@@ -100,9 +111,12 @@ interface Store {
   clearAll: () => Promise<void>
   setAudioSource: (v: AudioSourceKind) => void
   setDevice: (v: string) => void
+  setMixMicDevice: (v: string) => void
+  setMixSystemDevice: (v: string) => void
   setTranslateEngine: (v: TranslateEngine) => void
-  setDirection: (lang: string, script: ZhScript) => void
+  setDirection: (source: string, target: string, script: ZhScript) => void
   changeTheme: (v: Theme) => Promise<void>
+  changeLanguage: (v: Language) => Promise<void>
   setEndpoint: (v: EndpointConfig) => Promise<void>
   updateOverlay: (patch: Partial<OverlayConfig>) => Promise<void>
   toggleOverlay: () => Promise<void>
@@ -128,10 +142,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const [audioSource, setAudioSource] = useState<AudioSourceKind>(AudioSourceKind.Loopback)
   const [device, setDevice] = useState('')
+  const [mixMicDevice, setMixMicDevice] = useState('')
+  const [mixSystemDevice, setMixSystemDevice] = useState('')
   const [translateEngine, setTranslateEngine] = useState<TranslateEngine>(TranslateEngine.LocalNmt)
   const [sourceLang, setSourceLang] = useState('en')
+  const [targetLang, setTargetLang] = useState('zh')
   const [zhScript, setZhScript] = useState(ZhScript.Simplified)
   const [theme, setTheme] = useState<Theme>(Theme.System)
+  const [language, setLanguage] = useState<Language>(Language.System)
   const [endpoint, setEndpoint] = useState<EndpointConfig>({
     trailingSilenceMs: 800,
     maxUtteranceMs: 8000,
@@ -140,8 +158,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [status, setStatus] = useState<TaskStatus>(TaskStatus.Ready)
   const [activeDevice, setActiveDevice] = useState<string | null>(null)
   const [audio, setAudio] = useState<AudioStatus | null>(null)
+  const [languageMismatch, setLanguageMismatch] = useState(false)
 
   const [devices, setDevices] = useState<InputDevice[]>([])
+  const [mixMicDevices, setMixMicDevices] = useState<InputDevice[]>([])
+  const [mixSystemDevices, setMixSystemDevices] = useState<InputDevice[]>([])
+  const [devicesLoading, setDevicesLoading] = useState(false)
   const [deviceError, setDeviceError] = useState<string | null>(null)
 
   const [overlayCfg, setOverlayCfg] = useState<OverlayConfig | null>(null)
@@ -170,6 +192,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     appInfo()
       .then(setInfo)
       .catch((e) => setError(formatCmdError(e)))
+    void initLocale()
     hotkeyFailures()
       .then(setHotkeyProblems)
       .catch(() => {})
@@ -186,10 +209,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
     on<TaskStatus>(EVENT.taskState, (s) => {
       setStatus(s)
-      if (s !== TaskStatus.Capturing) setAudio(null)
+      if (s !== TaskStatus.Capturing) {
+        setAudio(null)
+        setLanguageMismatch(false)
+      }
     }).then(keep)
 
     on<AudioStatus>(EVENT.audio, setAudio).then(keep)
+
+    on<boolean>(EVENT.languageMismatch, setLanguageMismatch).then(keep)
 
     on<OverlayConfig>(EVENT.overlayState, setOverlayCfg).then(keep)
 
@@ -209,13 +237,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setAudioSource(p.audioSource as AudioSourceKind)
         setTranslateEngine(p.translateEngine)
         setSourceLang(p.sourceLang)
+        setTargetLang(p.targetLang)
         setZhScript(p.zhScript)
         setTheme(p.theme)
+        setLanguage(p.language)
         setEndpoint(p.endpoint)
         setOnboardingDone(p.onboardingDone)
         setAnalyticsEnabledState(p.analyticsEnabled)
         setTrackingEnabled(p.analyticsEnabled)
         if (p.deviceId) setDevice(p.deviceId)
+        if (p.mixMicDeviceId) setMixMicDevice(p.mixMicDeviceId)
+        if (p.mixSystemDeviceId) setMixSystemDevice(p.mixSystemDeviceId)
       })
       .catch(() => {})
       .finally(() => setPrefsReady(true))
@@ -293,13 +325,42 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   )
 
   const refreshDevices = useCallback(async () => {
+    setDevicesLoading(true)
+    const load = async (
+      source: AudioSourceKind,
+      label: string,
+      setList: (list: InputDevice[]) => void,
+      setSelected: (update: (cur: string) => string) => void,
+    ): Promise<string | null> => {
+      try {
+        const list = await audioDevices(source)
+        setList(list)
+        setSelected((cur) => cur || (list.find((d) => d.isDefault)?.id ?? ''))
+        return null
+      } catch (e) {
+        return t('common.labeledError', { label, error: formatCmdError(e) })
+      }
+    }
+
     try {
-      const list = await audioDevices(audioSource)
-      setDevices(list)
-      setDeviceError(null)
-      setDevice((cur) => cur || (list.find((d) => d.isDefault)?.id ?? ''))
+      if (audioSource === AudioSourceKind.Mix) {
+        const errors = (
+          await Promise.all([
+            load(AudioSourceKind.Mic, t('permissions.mic'), setMixMicDevices, setMixMicDevice),
+            load(AudioSourceKind.Loopback, t('audio.sourceLoopbackLabel'), setMixSystemDevices, setMixSystemDevice),
+          ])
+        ).filter((error): error is string => error !== null)
+        setDeviceError(errors.length > 0 ? errors.join('\n') : null)
+      } else {
+        const list = await audioDevices(audioSource)
+        setDevices(list)
+        setDeviceError(null)
+        setDevice((cur) => cur || (list.find((d) => d.isDefault)?.id ?? ''))
+      }
     } catch (e) {
       setDeviceError(formatCmdError(e))
+    } finally {
+      setDevicesLoading(false)
     }
   }, [audioSource])
 
@@ -316,14 +377,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setPermissionError(null)
     try {
       if (status === TaskStatus.Capturing) {
-        setStatus(await withTimeout(sessionStop(), STOP_TIMEOUT_MS, '停止请求超时：请重试，或使用托盘「停止转写」'))
+        setStatus(await withTimeout(sessionStop(), STOP_TIMEOUT_MS, t('error.stopTimeout')))
         setActiveDevice(null)
       } else {
+        const selection =
+          audioSource === AudioSourceKind.Mix
+            ? { mixMicDeviceId: mixMicDevice, mixSystemDeviceId: mixSystemDevice }
+            : { device }
         setStatus(
           await withTimeout(
-            sessionStart(device || undefined, translateEngine, sourceLang, zhScript, audioSource),
+            sessionStart(selection, translateEngine, sourceLang, targetLang, zhScript, audioSource),
             START_TIMEOUT_MS,
-            '开始转写超时，请重试',
+            t('error.startTimeout'),
           ),
         )
         setActiveDevice((await sessionStatus()).device ?? null)
@@ -344,7 +409,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       pendingRef.current = false
       setPending(false)
     }
-  }, [status, device, translateEngine, sourceLang, zhScript, audioSource, refreshPermission])
+  }, [
+    status,
+    device,
+    mixMicDevice,
+    mixSystemDevice,
+    translateEngine,
+    sourceLang,
+    targetLang,
+    zhScript,
+    audioSource,
+    refreshPermission,
+  ])
 
   const clearAll = useCallback(async () => {
     await sessionClear()
@@ -406,6 +482,22 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [patchPrefs],
   )
 
+  const changeMixMicDevice = useCallback(
+    (v: string) => {
+      setMixMicDevice(v)
+      void patchPrefs({ mixMicDeviceId: v })
+    },
+    [patchPrefs],
+  )
+
+  const changeMixSystemDevice = useCallback(
+    (v: string) => {
+      setMixSystemDevice(v)
+      void patchPrefs({ mixSystemDeviceId: v })
+    },
+    [patchPrefs],
+  )
+
   const changeTranslateEngine = useCallback(
     (v: TranslateEngine) => {
       setTranslateEngine(v)
@@ -416,11 +508,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   )
 
   const changeDirection = useCallback(
-    (lang: string, script: ZhScript) => {
-      setSourceLang(lang)
+    (source: string, target: string, script: ZhScript) => {
+      setSourceLang(source)
+      setTargetLang(target)
       setZhScript(script)
-      void patchPrefs({ sourceLang: lang, zhScript: script })
-      track('setting_changed', { key: 'translate_direction', value: `${lang}:${script}` })
+      void patchPrefs({ sourceLang: source, targetLang: target, zhScript: script })
+      track('setting_changed', { key: 'translate_direction', value: `${source}:${target}:${script}` })
     },
     [patchPrefs],
   )
@@ -429,6 +522,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     async (v: EndpointConfig) => {
       setEndpoint(v)
       await patchPrefs({ endpoint: v })
+    },
+    [patchPrefs],
+  )
+
+  const changeLanguage = useCallback(
+    async (v: Language) => {
+      setLanguage(v)
+      await patchPrefs({ language: v })
+      track('setting_changed', { key: 'language', value: v })
     },
     [patchPrefs],
   )
@@ -495,17 +597,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       installUpdate,
       restartApp,
       prefsReady,
+      devicesLoading,
       audioSource,
       device,
+      mixMicDevice,
+      mixSystemDevice,
       translateEngine,
       sourceLang,
+      targetLang,
       zhScript,
       theme,
+      language,
       endpoint,
       status,
       activeDevice,
       audio,
+      languageMismatch,
       devices,
+      mixMicDevices,
+      mixSystemDevices,
       deviceError,
       overlayCfg,
       overlayVisible,
@@ -526,9 +636,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       clearAll,
       setAudioSource: changeAudioSource,
       setDevice: changeDevice,
+      setMixMicDevice: changeMixMicDevice,
+      setMixSystemDevice: changeMixSystemDevice,
       setTranslateEngine: changeTranslateEngine,
       setDirection: changeDirection,
       changeTheme,
+      changeLanguage,
       setEndpoint: changeEndpoint,
       updateOverlay,
       toggleOverlay,
@@ -546,17 +659,25 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       installUpdate,
       restartApp,
       prefsReady,
+      devicesLoading,
       audioSource,
       device,
+      mixMicDevice,
+      mixSystemDevice,
       translateEngine,
       sourceLang,
+      targetLang,
       zhScript,
       theme,
+      language,
       endpoint,
       status,
       activeDevice,
       audio,
+      languageMismatch,
       devices,
+      mixMicDevices,
+      mixSystemDevices,
       deviceError,
       overlayCfg,
       overlayVisible,
@@ -575,9 +696,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       clearAll,
       changeAudioSource,
       changeDevice,
+      changeMixMicDevice,
+      changeMixSystemDevice,
       changeTranslateEngine,
       changeDirection,
       changeTheme,
+      changeLanguage,
       changeEndpoint,
       updateOverlay,
       toggleOverlay,

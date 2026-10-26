@@ -23,7 +23,12 @@ pub fn available_space(path: &Path) -> Option<u64> {
         .collect();
     let mut free = 0u64;
     let ok = unsafe {
-        GetDiskFreeSpaceExW(wide.as_ptr(), &mut free, std::ptr::null_mut(), std::ptr::null_mut())
+        GetDiskFreeSpaceExW(
+            wide.as_ptr(),
+            &mut free,
+            std::ptr::null_mut(),
+            std::ptr::null_mut(),
+        )
     };
     (ok != 0).then_some(free)
 }

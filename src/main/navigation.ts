@@ -1,30 +1,33 @@
+import { t } from '@/shared/i18n'
 import type { SidebarItem } from '@/ui/Sidebar'
 
 export type PageId = 'transcribe' | 'audio' | 'permissions' | 'translate' | 'overlay' | 'general' | 'models' | 'about'
 
-export const NAV: SidebarItem<PageId>[] = [
-  {
-    id: 'transcribe',
-    label: '转写',
-    icon: 'waveform',
-  },
-  {
-    id: 'audio',
-    label: '音频',
-    icon: 'speaker',
-  },
-  { id: 'permissions', label: '权限', icon: 'shield' },
-  {
-    id: 'translate',
-    label: '翻译',
-    icon: 'translate',
-  },
-  {
-    id: 'overlay',
-    label: '悬浮窗',
-    icon: 'overlay',
-  },
-  { id: 'general', label: '通用', icon: 'settings' },
-  { id: 'models', label: '模型', icon: 'chip' },
-  { id: 'about', label: '关于', icon: 'info' },
-]
+export function navItems(): SidebarItem<PageId>[] {
+  return [
+    {
+      id: 'transcribe',
+      label: t('nav.transcribe'),
+      icon: 'waveform',
+    },
+    {
+      id: 'audio',
+      label: t('nav.audio'),
+      icon: 'speaker',
+    },
+    { id: 'permissions', label: t('nav.permissions'), icon: 'shield' },
+    {
+      id: 'translate',
+      label: t('nav.translate'),
+      icon: 'translate',
+    },
+    {
+      id: 'overlay',
+      label: t('nav.overlay'),
+      icon: 'overlay',
+    },
+    { id: 'general', label: t('nav.general'), icon: 'settings' },
+    { id: 'models', label: t('nav.models'), icon: 'chip' },
+    { id: 'about', label: t('nav.about'), icon: 'info' },
+  ]
+}

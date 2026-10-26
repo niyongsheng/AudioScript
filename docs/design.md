@@ -54,7 +54,8 @@
 - **主操作（`PrimaryAction`）**：默认 `--as-success` 实心绿（绿=开始），采集中换 `--as-danger` 实心红（红=停止）。全应用**仅有两处**整块铺色的控件：它，与欢迎页的 `Button variant="cta"`（同为实心绿，同「开始」语义）。其余按钮一律描边或纯文字；`--as-accent` 只留给选中态、焦点与编辑标记，MUST NOT 挪回来当主操作底色。
 - **卡片分层 MUST 靠纯色差**，MUST NOT 描边或投影；边栏与内容区之间同理 MUST NOT 加分隔线。
 - **分组卡片里的行间分隔线**：左右各内缩 16px（与行内 `px-4` 对齐）+ `opacity-60`。MUST NOT 用 `divide-y`——它的线撑满整行宽，会顶到卡片圆角上。
-- **电平表（`LevelMeter`）**：5 颗 6px 圆点，亮 `--as-success` / 灭 `--as-surface-2`；只在采集中刷新（100ms，SPEC §6）。映射按 dBFS（-60…-6）而不是线性 RMS——线性乘出来永远只亮第一颗；回落包络只为了不让它闪。
+- **电平表（`LevelMeter`）**：5 颗 6px 圆点，亮 `--as-success` / 灭 `--as-surface-2`；会话采集中与「音频」页预览时刷新（200ms，SPEC §6.1）——离开页面或主窗口隐藏即停。映射按 dBFS（-60…-6）而不是线性 RMS——线性乘出来永远只亮第一颗；回落包络只为了不让它闪。
+- **输入设备选择器（`DeviceSelect`）**：自定义浮层，MUST NOT 用原生 `<select>`——`<option>` 渲染不了动态电平。每个选项是「5 点电平 + 设备名 + 声道/采样率」，展开时显示全列表电平，收起时只留选中设备。浮层 MUST 用 portal 渲染：分组卡片带 `overflow-hidden`，就地绝对定位会被裁掉。Mix 模式下拆成「麦克风」「系统声音」两行，各自一个选择器，MUST NOT 用一个下拉表达两个选中值。
 - **`ChoiceCard` / `ChoiceGroup`**：选中框 MUST 用 `border-2` + **未选中时透明**，MUST NOT "选中才加边框"——边框必须内嵌，否则整组会抖一下。MUST 走 `role="radio"` / `aria-checked`，MUST NOT 用 `<button aria-pressed>`（互斥选项，读屏器要能念出"共 3 项、第 2 项"）。
 - **`StatusBadge`**：四档**同一个形状**（淡底 + 同色系深字），没有实心档——颜色只承担语义，不承担音量。参考图的实心绿在一屏三颗、淡灰底上是整页最响的东西，而它表达的是"一切正常"。
 - **`SidebarToggle`（暂时下线）**：组件与入口已移除，边栏恒显。重做时按原来的两条：收起后 MUST 在内容区左上角**重新渲染一个**入口，MUST NOT 只把边栏 `display:none`——跟着一起消失就再也打不开了；可见性 MUST 持久化在 `Preferences.sidebarVisible` 而非只存前端（「重置所有设置」得能把它清掉）。

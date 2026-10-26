@@ -1,0 +1,2 @@
+"NSMicrophoneUsageDescription" = "AudioScript 需要使用麦克风进行实时语音转写。音频仅在本机由离线模型处理，不会上传到任何服务器。";
+"NSAudioCaptureUsageDescription" = "AudioScript 需要录制系统声音，才能把正在播放的视频或播客实时转成字幕。音频仅在本机由离线模型处理，不会上传到任何服务器。";

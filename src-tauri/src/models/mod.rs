@@ -8,6 +8,8 @@ pub mod status;
 
 use serde::{Deserialize, Serialize};
 
+use crate::i18n::{tf, tr, Key};
+
 pub const EVENT_MODEL_PROGRESS: &str = "models://progress";
 
 pub(crate) const IO_CHUNK: usize = 64 * 1024;
@@ -31,52 +33,52 @@ impl ModelKind {
 
 #[derive(Debug, thiserror::Error)]
 pub enum ModelError {
-    #[error("未知模型：{0}")]
+    #[error("{}", tf(Key::ModelUnknown, &[.0.as_str()]))]
     UnknownModel(String),
 
-    #[error("模型 {0} 暂不提供下载")]
+    #[error("{}", tf(Key::ModelNotDownloadable, &[.0.as_str()]))]
     NotDownloadable(String),
 
-    #[error("模型 {0} 已安装，如需修复请先删除")]
+    #[error("{}", tf(Key::ModelAlreadyInstalled, &[.0.as_str()]))]
     AlreadyInstalled(String),
 
-    #[error("内置模型随应用分发，不能删除")]
+    #[error("{}", tr(Key::ModelBundled))]
     Bundled,
 
-    #[error("该模型当前被选中，请先切换到其他模型再删除")]
+    #[error("{}", tr(Key::ModelSelected))]
     Selected,
 
-    #[error("正在转写，请先停止再删除模型")]
+    #[error("{}", tr(Key::ModelInUse))]
     InUse,
 
-    #[error("已有模型下载任务进行中")]
+    #[error("{}", tr(Key::ModelJobInProgress))]
     JobInProgress,
 
-    #[error("下载失败：{0}")]
+    #[error("{}", tf(Key::ModelDownloadFailed, &[.0.as_str()]))]
     Network(String),
 
-    #[error("下载失败：HTTP {0}")]
+    #[error("{}", tf(Key::ModelHttpFailed, &[&.0.to_string()]))]
     Http(u16),
 
-    #[error("校验失败：期望 {expected}，实际 {actual}")]
+    #[error("{}", tf(Key::ModelChecksumFailed, &[.expected.as_str(), .actual.as_str()]))]
     Checksum { expected: String, actual: String },
 
-    #[error("归档内容不安全：{0}")]
+    #[error("{}", tf(Key::ModelUnsafeArchive, &[.0.as_str()]))]
     UnsafeArchive(String),
 
-    #[error("解压失败：{0}")]
+    #[error("{}", tf(Key::ModelExtractFailed, &[.0.as_str()]))]
     Extract(String),
 
-    #[error("磁盘空间不足：需要约 {} MB，可用约 {} MB", .need / 1048576, .available / 1048576)]
+    #[error("{}", tf(Key::ModelDiskFull, &[&(.need / 1048576).to_string(), &(.available / 1048576).to_string()]))]
     DiskSpace { need: u64, available: u64 },
 
-    #[error("模型文件不完整：{0}")]
+    #[error("{}", tf(Key::ModelIncomplete, &[.0.as_str()]))]
     Incomplete(String),
 
-    #[error("文件操作失败：{0}")]
+    #[error("{}", tf(Key::ModelFileOpFailed, &[.0.as_str()]))]
     Io(String),
 
-    #[error("下载已取消")]
+    #[error("{}", tr(Key::ModelCancelled))]
     Cancelled,
 
     #[error("{0}")]

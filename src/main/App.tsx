@@ -1,4 +1,6 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
+import { hotkeyLabel } from '@/shared/hotkeys'
+import { useI18n } from '@/shared/i18n'
 import { TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
 import { Button } from '@/ui/Button'
@@ -7,7 +9,7 @@ import { PrimaryAction } from '@/ui/PrimaryAction'
 import { Sidebar } from '@/ui/Sidebar'
 import { TitleBarSpacer } from '@/ui/TitleBarSpacer'
 import { Brand } from './Brand'
-import { NAV, type PageId } from './navigation'
+import { navItems, type PageId } from './navigation'
 import { AboutPage } from './pages/AboutPage'
 import { AudioPage } from './pages/AudioPage'
 import { GeneralPage } from './pages/GeneralPage'
@@ -47,16 +49,24 @@ function BootSplash() {
 function Shell() {
   const [page, setPage] = useState<PageId>('transcribe')
   const { status } = useStore()
+  const { locale } = useI18n()
+  // biome-ignore lint/correctness/useExhaustiveDependencies: t() 读取模块级 locale，需要随 locale 重算
+  const items = useMemo(() => navItems(), [locale])
   const capturing = status === TaskStatus.Capturing
 
   return (
     <main className="flex h-full">
-      <Sidebar items={NAV} current={page} onNavigate={setPage} brand={<Brand />} header={<PrimaryActionSlot />} />
+      <Sidebar items={items} current={page} onNavigate={setPage} brand={<Brand />} header={<PrimaryActionSlot />} />
 
       <section className="flex min-w-0 flex-1 flex-col bg-[var(--color-surface-0)]">
         <TitleBarSpacer />
 
-        <Alerts page={page} onOpenPermissions={() => setPage('permissions')} onOpenAbout={() => setPage('about')} />
+        <Alerts
+          page={page}
+          onOpenPermissions={() => setPage('permissions')}
+          onOpenAbout={() => setPage('about')}
+          onOpenTranslate={() => setPage('translate')}
+        />
 
         <div className="flex-1 overflow-y-auto">
           <PageSwitch page={page} onOpenPermissions={() => setPage('permissions')} />
@@ -114,14 +124,17 @@ interface AlertsProps {
   page: PageId
   onOpenPermissions: () => void
   onOpenAbout: () => void
+  onOpenTranslate: () => void
 }
 
-function Alerts({ page, onOpenPermissions, onOpenAbout }: AlertsProps) {
+function Alerts({ page, onOpenPermissions, onOpenAbout, onOpenTranslate }: AlertsProps) {
+  const { t } = useI18n()
   const {
     error,
     setError,
     hotkeyProblems,
     audio,
+    languageMismatch,
     status,
     permissionError,
     setPermissionError,
@@ -129,51 +142,77 @@ function Alerts({ page, onOpenPermissions, onOpenAbout }: AlertsProps) {
     updatePhase,
   } = useStore()
 
+  const showUpdate = Boolean(
+    updateInfo?.available && page !== 'about' && updatePhase !== 'downloading' && updatePhase !== 'ready',
+  )
+  const showMismatch = languageMismatch && status === TaskStatus.Capturing
+  const showSilent = Boolean(audio?.silent && audio.segments === 0 && status === TaskStatus.Capturing)
+  const hasAlerts =
+    showUpdate || Boolean(error) || Boolean(permissionError) || showMismatch || hotkeyProblems.length > 0 || showSilent
+
+  if (!hasAlerts) return null
+
   return (
-    <>
-      {updateInfo?.available && page !== 'about' && updatePhase !== 'downloading' && updatePhase !== 'ready' && (
-        <Alert tone="info" title={`发现新版本 v${updateInfo.version ?? ''}`}>
-          <Button size="sm" onClick={onOpenAbout}>
-            去「关于」页更新
-          </Button>
-        </Alert>
+    <div className="mx-auto w-full max-w-2xl space-y-2 px-6 pt-4">
+      {showUpdate && (
+        <Alert
+          tone="info"
+          title={t('app.updateAvailable', { version: updateInfo?.version ?? '' })}
+          actions={
+            <Button size="sm" onClick={onOpenAbout}>
+              {t('app.updateGoAbout')}
+            </Button>
+          }
+        />
       )}
 
       {error && (
-        <Alert tone="error" title="操作失败">
-          <p className="font-mono">{error}</p>
-          <button type="button" onClick={() => setError(null)} className="mt-1 underline opacity-70 hover:opacity-100">
-            关闭
-          </button>
+        <Alert tone="error" title={t('app.operationFailed')} onDismiss={() => setError(null)}>
+          <p className="break-words font-mono">{error}</p>
         </Alert>
       )}
 
       {permissionError && (
-        <Alert tone="warn" title="缺少系统权限">
-          <p>{permissionError.message}</p>
-          <div className="mt-1.5 flex gap-1.5">
+        <Alert
+          tone="warn"
+          title={t('app.permissionMissing')}
+          onDismiss={() => setPermissionError(null)}
+          actions={
             <Button size="sm" onClick={onOpenPermissions}>
-              去「权限」页处理
+              {t('app.permissionGo')}
             </Button>
-            <Button size="sm" variant="ghost" onClick={() => setPermissionError(null)}>
-              关闭
+          }
+        >
+          <p>{permissionError.message}</p>
+        </Alert>
+      )}
+
+      {showMismatch && (
+        <Alert
+          tone="warn"
+          title={t('app.languageMismatch')}
+          actions={
+            <Button size="sm" onClick={onOpenTranslate}>
+              {t('app.languageMismatchGo')}
             </Button>
-          </div>
+          }
+        >
+          {t('app.languageMismatchDetail')}
         </Alert>
       )}
 
       {hotkeyProblems.length > 0 && (
-        <Alert tone="warn" title={`${hotkeyProblems.length} 个全局热键注册失败`}>
-          {hotkeyProblems.map((h) => `${h.accelerator} ${h.label}`).join('、')}
-          。悬浮窗将无法用热键操作，请在「悬浮窗」页重新绑定。
+        <Alert tone="warn" title={t('app.hotkeyFailed', { count: hotkeyProblems.length })}>
+          {hotkeyProblems.map((h) => `${h.accelerator} ${hotkeyLabel(h.id, t)}`).join(t('common.listSeparator'))}
+          {t('app.hotkeyFailedDetail')}
         </Alert>
       )}
 
-      {audio?.silent && audio.segments === 0 && status === TaskStatus.Capturing && (
-        <Alert tone="warn" title="收不到声音（电平 ≈ 0）">
-          到「音频」页查看排查步骤。
+      {showSilent && (
+        <Alert tone="warn" title={t('app.audioSilent')}>
+          {t('app.audioSilentDetail')}
         </Alert>
       )}
-    </>
+    </div>
   )
 }

@@ -5,6 +5,7 @@ use sherpa_onnx::{OnlineRecognizer, OnlineRecognizerConfig, OnlineStream};
 use super::segment::SegmentBuilder;
 use super::{AsrEngine, AsrError, EngineCaps, TARGET_SAMPLE_RATE};
 use crate::config::AsrConfig;
+use crate::i18n::{tf, tr, Key};
 use crate::transcript::TranscriptSegment;
 
 const TAIL_SILENCE_SECONDS: f32 = 0.3;
@@ -33,8 +34,12 @@ impl Precision {
 }
 
 pub fn discover_model_files(dir: &Path) -> Result<ModelFiles, AsrError> {
-    let entries = std::fs::read_dir(dir)
-        .map_err(|e| AsrError::ModelLoad(format!("无法读取模型目录 {}：{e}", dir.display())))?;
+    let entries = std::fs::read_dir(dir).map_err(|e| {
+        AsrError::ModelLoad(tf(
+            Key::AsrReadModelDirFailed,
+            &[&dir.display().to_string(), &e.to_string()],
+        ))
+    })?;
 
     let names: Vec<String> = entries
         .filter_map(|e| e.ok())
@@ -53,15 +58,17 @@ pub fn discover_model_files(dir: &Path) -> Result<ModelFiles, AsrError> {
             .find(|n| prefer.matches(n))
             .or_else(|| candidates.first())
             .ok_or_else(|| {
-                AsrError::MissingModelFile(format!(
-                    "{}/{}*.onnx\n目录实际内容：{}",
-                    dir.display(),
-                    prefix,
-                    if names.is_empty() {
-                        "(空)".to_string()
-                    } else {
-                        names.join(", ")
-                    }
+                AsrError::MissingModelFile(tf(
+                    Key::AsrMissingPattern,
+                    &[
+                        &dir.display().to_string(),
+                        prefix,
+                        &if names.is_empty() {
+                            tr(Key::AsrEmptyFolder).to_string()
+                        } else {
+                            names.join(", ")
+                        },
+                    ],
                 ))
             })?;
 
@@ -70,10 +77,9 @@ pub fn discover_model_files(dir: &Path) -> Result<ModelFiles, AsrError> {
 
     let tokens = dir.join("tokens.txt");
     if !tokens.is_file() {
-        return Err(AsrError::MissingModelFile(format!(
-            "{}\n目录实际内容：{}",
-            tokens.display(),
-            names.join(", ")
+        return Err(AsrError::MissingModelFile(tf(
+            Key::AsrMissingFile,
+            &[&tokens.display().to_string(), &names.join(", ")],
         )));
     }
 
@@ -171,7 +177,7 @@ impl AsrEngine for StreamingAdapter {
         let dir = cfg
             .model_dir
             .as_ref()
-            .ok_or_else(|| AsrError::InvalidConfig("model_dir 未设置".into()))?;
+            .ok_or_else(|| AsrError::InvalidConfig(tr(Key::AsrModelDirNotSet).into()))?;
         let files = discover_model_files(Path::new(dir))?;
 
         let mut config = OnlineRecognizerConfig::default();
@@ -191,9 +197,9 @@ impl AsrEngine for StreamingAdapter {
         config.rule3_min_utterance_length = rule3;
 
         let recognizer = OnlineRecognizer::create(&config).ok_or_else(|| {
-            AsrError::ModelLoad(format!(
-                "OnlineRecognizer::create 返回 None（模型目录 {}）",
-                Path::new(dir).display()
+            AsrError::ModelLoad(tf(
+                Key::AsrRecognizerNone,
+                &[&Path::new(dir).display().to_string()],
             ))
         })?;
 

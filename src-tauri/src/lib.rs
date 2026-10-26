@@ -2,9 +2,11 @@ pub mod asr;
 pub mod audio;
 pub mod commands;
 pub mod config;
+pub mod i18n;
 pub mod lifecycle;
 pub mod log;
 pub mod models;
+pub mod monitor;
 pub mod overlay;
 pub mod paths;
 pub mod permission;
@@ -20,9 +22,29 @@ pub mod update;
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::time::{Duration, SystemTime, UNIX_EPOCH};
 
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
+
+pub const EVENT_LOCALE: &str = "app://locale";
 
 static MAIN_TICK_MS: AtomicU64 = AtomicU64::new(0);
+
+fn update_window_titles(app: &AppHandle) {
+    if let Some(window) = app.get_webview_window(lifecycle::MAIN_LABEL) {
+        let _ = window.set_title(i18n::tr(i18n::Key::AppWindowTitle));
+    }
+}
+
+pub fn apply_language(app: &AppHandle, language: config::Language) {
+    let locale = i18n::Locale::from_language(language);
+    if !i18n::set_locale(locale) {
+        return;
+    }
+    update_window_titles(app);
+    tray::relocalize(app);
+    if let Err(e) = app.emit(EVENT_LOCALE, locale.as_str()) {
+        tracing::warn!("广播界面语言失败：{e}");
+    }
+}
 
 fn now_ms() -> u64 {
     SystemTime::now()
@@ -90,6 +112,7 @@ pub fn run() {
         .manage(overlay::OverlayState::default())
         .manage(shortcut::HotkeyState::default())
         .manage(models::state::ModelState::default())
+        .manage(monitor::MonitorState::default())
         .manage(session::SessionState::default())
         .invoke_handler(tauri::generate_handler![commands::dispatch])
         .on_window_event(lifecycle::on_window_event)
@@ -134,6 +157,8 @@ pub fn run() {
             }
 
             let saved_prefs = prefs::load(&handle);
+            i18n::set_locale(i18n::Locale::from_language(saved_prefs.language));
+            update_window_titles(&handle);
             telemetry::track(
                 &handle,
                 "app_started",
@@ -142,6 +167,7 @@ pub fn run() {
                     "mt_model_tier": saved_prefs.mt_model_tier.as_str(),
                     "translate_engine": saved_prefs.translate_engine.as_str(),
                     "source_lang": saved_prefs.source_lang,
+                    "target_lang": saved_prefs.target_lang,
                     "onboarding_done": if saved_prefs.onboarding_done { 1 } else { 0 },
                 })),
             );
@@ -161,9 +187,7 @@ pub fn run() {
 
             if std::env::var("AUDIOSCRIPT_SMOKE_ROUTE").is_ok() {
                 let source = audio::source_from_env();
-                let device = std::env::var(audio::ENV_DEVICE)
-                    .ok()
-                    .filter(|s| !s.is_empty());
+                let device = config::normalize_device(std::env::var(audio::ENV_DEVICE).ok());
 
                 let args = serde_json::json!({
                     "device": device,
@@ -255,9 +279,7 @@ pub fn run() {
             }
 
             if std::env::var("AUDIOSCRIPT_AUTOSTART").is_ok() {
-                let device = std::env::var(audio::ENV_DEVICE)
-                    .ok()
-                    .filter(|s| !s.is_empty());
+                let device = config::normalize_device(std::env::var(audio::ENV_DEVICE).ok());
                 let source = audio::source_from_env();
                 let translate_source = std::env::var("AUDIOSCRIPT_SOURCE_LANG")
                     .ok()
@@ -287,7 +309,7 @@ pub fn run() {
                         },
                     },
                     source,
-                    device,
+                    audio::DeviceSelection::single(device),
                 ) {
                     Ok(()) => tracing::info!("自动开始转写：成功"),
                     Err(e) => tracing::error!("自动开始转写失败：{e}"),

@@ -61,6 +61,8 @@ tokio = { version = "1", features = ["sync", "time"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
+# 系统语言探测（跟随系统界面语言）。Cargo.lock 里本来就有这个传递依赖。
+sys-locale = "0.3"
 
 typeshare = "1"
 uuid = { version = "1", features = ["v4"] }

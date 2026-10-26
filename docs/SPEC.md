@@ -283,7 +283,7 @@ interface OverlayConfig {
   fontColor: string
   bgColor: string                // 支持 rgba 半透明
   maxLines: number
-  glow: boolean                  // 默认 true：2px 彩虹渐变描边，无外发光
+  glow: boolean                  // 默认 true：2px 彩色渐变描边，无外发光
 }
 ```
 
@@ -456,13 +456,18 @@ TranscriptStore ← 状态机在此
 1. **MUST 提供输入设备选择**。枚举时同时给出 `isDefault` 与 `isVirtual` 标志。
    - `isVirtual` 是**启发式**（按名称匹配 `BlackHole` / `Loopback` / `Soundflower` / `Virtual` / `Aggregate`）——CoreAudio 没有"这是虚拟设备"的标志位。
    - **MUST NOT 自动切换设备**，只做视觉提示——真的想录系统声音的用户会被自动切换误伤。
+   - 设备选择器 MUST 用自定义浮层：每个选项同时给出设备名与实时电平；原生 `<select>` 的 `<option>` 渲染不了动态内容。
+   - 「麦克风 + 系统声音」下 MUST 提供**两个**独立选择器（麦克风 / 系统声音），分别写入 `Preferences.mixMicDeviceId` 与 `mixSystemDeviceId`，并映射到 flexaudio 的 `mix_mic_device_id` / `mix_system_device_id`；MUST NOT 复用单设备 `device_id`——flexaudio 对 Mix 会忽略它。
 2. **MUST 有音频心跳**：每 5 秒统计最近窗口的 RMS。
    - `rms < 1e-4`（约 -80 dBFS）判定为静音并记 **WARN**，日志文案 MUST 明确写出"电平接近零"而不是含糊的"正常"。
    - 阈值刻意留低：真实环境即使安静也有本底噪声，而全零缓冲、被 deny 的麦克风、选错的设备都会精确给出接近 0 的值——宁可漏报，也不要把"很安静的房间"误报成故障。
 3. **静音状态变化时 MUST 广播给 UI**（事件 `transcript://audio`），UI 提示用户换设备。**只在状态变化时播报**——每 5 秒弹一次提示会变成骚扰。
-4. **电平表**：采集中 MUST 广播输入电平（事件 `transcript://level`，负载是裸 RMS），间隔取节流上限 100ms。
-   - 它和静音判定 MUST NOT 共用累加窗口：判定要 5 秒平均值（抗瞬时停顿），表要 100ms 快照（跟手）。
-   - 只在采集中广播，**没有"归零"事件**——UI 在会话结束 MUST 自己把表清零。
+4. **电平表**：会话采集中 MUST 广播输入电平（事件 `transcript://level`，负载是裸 RMS，间隔 200ms）。
+   - 「音频」设置页打开期间 MUST 提供输入电平预览（事件 `transcript://device-level`，负载 `{ source, device, rms }`，间隔 200ms；`device` 为 `null` 表示系统默认）：进入页面自动开始；音源或设备变化时 MUST 重启；离开页面、开始转写或主窗口隐藏时 MUST 停止。预览 MUST NOT 在后台常驻。
+   - 预览目标 MUST 以 `(source, device)` 唯一标识；Mix 下 MUST 同时覆盖麦克风侧与系统侧。任一下拉展开期间 MUST 额外预览该侧列表中的全部设备，让用户一眼看出哪一路有输出；收起后 MUST 只保留当前选中设备。单个设备启动失败 MUST 只让该路没有电平，MUST NOT 影响其余设备。
+   - 预览与转写 MUST NOT 同时持有采集设备：转写开始前 MUST 先停止预览，转写失败或结束后按页面状态恢复。macOS 的采集指示灯随采集流常亮，预览必须严格跟随页面与主窗口可见性。
+   - 它和静音判定 MUST NOT 共用累加窗口：判定要 5 秒平均值（抗瞬时停顿），表要 200ms 快照（跟手）。
+   - **没有"归零"事件**——电平广播停止（会话结束、离开预览页或主窗口隐藏）时，UI MUST 自己把表清零。
 
 ---
 

@@ -2,6 +2,7 @@ pub mod segment;
 pub mod streaming;
 
 use crate::config::AsrConfig;
+use crate::i18n::{tf, tr, Key};
 use crate::transcript::TranscriptSegment;
 
 pub const TARGET_SAMPLE_RATE: u32 = 16_000;
@@ -10,16 +11,16 @@ pub mod latin_case;
 
 #[derive(Debug, thiserror::Error)]
 pub enum AsrError {
-    #[error("引擎未初始化")]
+    #[error("{}", tr(Key::AsrNotInitialized))]
     NotInitialized,
 
-    #[error("配置无效：{0}")]
+    #[error("{}", tf(Key::AsrInvalidConfig, &[.0.as_str()]))]
     InvalidConfig(String),
 
-    #[error("模型加载失败：{0}")]
+    #[error("{}", tf(Key::AsrModelLoadFailed, &[.0.as_str()]))]
     ModelLoad(String),
 
-    #[error("模型目录缺少文件：{0}")]
+    #[error("{}", tf(Key::AsrModelDirMissing, &[.0.as_str()]))]
     MissingModelFile(String),
 }
 

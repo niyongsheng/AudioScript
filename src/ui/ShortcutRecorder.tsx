@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useI18n } from '@/shared/i18n'
 import { isMacOS } from '@/shared/platform'
 import { Button } from './Button'
 import { cn } from './cn'
@@ -9,6 +10,7 @@ interface Props {
 }
 
 export function ShortcutRecorder({ pretty, onRecord }: Props) {
+  const { t } = useI18n()
   const [recording, setRecording] = useState(false)
 
   useEffect(() => {
@@ -56,15 +58,15 @@ export function ShortcutRecorder({ pretty, onRecord }: Props) {
             : 'border-[var(--color-border-subtle)] text-[var(--color-ink-1)]',
         )}
       >
-        {recording ? '按下组合键…' : pretty}
+        {recording ? t('overlay.pressKeys') : pretty}
       </span>
       {recording ? (
         <Button size="sm" onClick={() => setRecording(false)}>
-          取消
+          {t('common.cancel')}
         </Button>
       ) : (
         <Button size="sm" onClick={() => setRecording(true)}>
-          修改
+          {t('overlay.change')}
         </Button>
       )}
     </div>

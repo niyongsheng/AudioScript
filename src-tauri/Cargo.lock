@@ -347,6 +347,7 @@ dependencies = [
  "serde_json",
  "sha2",
  "sherpa-onnx",
+ "sys-locale",
  "tar",
  "tauri",
  "tauri-build",

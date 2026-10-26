@@ -4,6 +4,7 @@ use ct2rs::tokenizers::hf::Tokenizer as HfTokenizer;
 
 use super::{script, TranslateCaps, TranslateError, Translator};
 use crate::config::{MtModelTier, TranslateConfig, ZhScript};
+use crate::i18n::{tf, tr, Key};
 use crate::models::catalog;
 
 const SOURCE_TOKENIZER: &str = "source-tokenizer.json";
@@ -75,7 +76,7 @@ impl Direction {
 
         if from == "auto" {
             return Err(TranslateError::UnsupportedPair {
-                from: "auto（尚未实现，请显式指定源语言）".into(),
+                from: tr(Key::TranslateAutoUnsupported).into(),
                 to: to.to_string(),
             });
         }
@@ -128,22 +129,22 @@ impl LocalNmt {
 
     fn check_model_dir(dir: &Path, tier: MtModelTier) -> Result<(), TranslateError> {
         let remedy = match tier {
-            MtModelTier::Base => "→ 运行 `pnpm fetch:mt` 补齐内置翻译模型",
-            MtModelTier::Big => "→ 打开「模型」页下载大模型，或切换回基础模型",
+            MtModelTier::Base => tr(Key::TranslateRemedyFetchMt),
+            MtModelTier::Big => tr(Key::TranslateRemedyBig),
         };
 
         if !dir.is_dir() {
-            return Err(TranslateError::MissingModelFile(format!(
-                "{} 不存在。\n{remedy}",
-                dir.display()
+            return Err(TranslateError::MissingModelFile(tf(
+                Key::TranslatePathMissing,
+                &[&dir.display().to_string(), remedy],
             )));
         }
 
         for f in ["model.bin", SOURCE_TOKENIZER, TARGET_TOKENIZER] {
             if !dir.join(f).is_file() {
-                return Err(TranslateError::MissingModelFile(format!(
-                    "{}/{f} 不存在。\n{remedy}",
-                    dir.display()
+                return Err(TranslateError::MissingModelFile(tf(
+                    Key::TranslateFileMissing,
+                    &[&dir.display().to_string(), f, remedy],
                 )));
             }
         }
@@ -205,7 +206,7 @@ impl Translator for LocalNmt {
         let (translated, _) = results
             .into_iter()
             .next()
-            .ok_or_else(|| TranslateError::Internal("引擎返回了空结果".into()))?;
+            .ok_or_else(|| TranslateError::Internal(tr(Key::TranslateEmptyResult).into()))?;
 
         if let Some(reason) = crate::translate::degenerate_translation(&translated) {
             return Err(TranslateError::Degenerate { reason });
@@ -264,8 +265,14 @@ mod tests {
 
     #[test]
     fn tiers_map_to_their_direction_directories() {
-        assert_eq!(Direction::EnZh.dir_name(MtModelTier::Base), "opus-mt-en-zh-ct2");
-        assert_eq!(Direction::ZhEn.dir_name(MtModelTier::Base), "opus-mt-zh-en-ct2");
+        assert_eq!(
+            Direction::EnZh.dir_name(MtModelTier::Base),
+            "opus-mt-en-zh-ct2"
+        );
+        assert_eq!(
+            Direction::ZhEn.dir_name(MtModelTier::Base),
+            "opus-mt-zh-en-ct2"
+        );
         assert_eq!(
             Direction::EnZh.dir_name(MtModelTier::Big),
             "opus-mt-tc-big-en-zh-ct2"

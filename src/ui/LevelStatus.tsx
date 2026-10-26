@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { useI18n } from '@/shared/i18n'
 import { EVENT, on } from '@/shared/ipc'
 import { cn } from './cn'
 
@@ -40,6 +41,7 @@ function Dots({ dots }: { dots: number }) {
 type Bar = { id: number; level: number }
 
 export function LevelStatus({ active }: { active: boolean }) {
+  const { t } = useI18n()
   const nextId = useRef(0)
   const [meter, setMeter] = useState(() => ({
     peak: 0,
@@ -80,7 +82,7 @@ export function LevelStatus({ active }: { active: boolean }) {
     <div
       className={cn('flex items-center gap-3', !active && 'opacity-40')}
       role="img"
-      aria-label={`输入电平 ${formatDb(meter.peak)}`}
+      aria-label={`${t('common.inputLevel')} ${formatDb(meter.peak)}`}
     >
       <Dots dots={Math.ceil(meter.peak * SEGMENTS.length)} />
       <span className="w-[4.6rem] font-mono text-[var(--color-ink-2)] text-[0.7rem] tabular-nums">

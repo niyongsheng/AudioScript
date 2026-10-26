@@ -5,6 +5,7 @@ use tauri::{AppHandle, Emitter};
 use typeshare::typeshare;
 
 use crate::audio;
+use crate::i18n::{tr, Key};
 
 #[cfg(target_os = "macos")]
 mod macos;
@@ -92,7 +93,7 @@ pub fn request_mic() -> Result<MicRequestResult, String> {
 pub fn probe_system_audio(app: &AppHandle) -> SystemAudioProbe {
     let _guard = match PROBING.try_lock() {
         Ok(g) => g,
-        Err(_) => return SystemAudioProbe::inconclusive(None, "检测已在进行中"),
+        Err(_) => return SystemAudioProbe::inconclusive(None, tr(Key::PermissionProbing)),
     };
 
     let active = match audio::any_output_active() {
@@ -166,17 +167,12 @@ fn emit_level(app: &AppHandle, chunk: &[f32]) {
 
 fn inconclusive_reason(samples: u64, promptable: bool) -> String {
     if samples > 0 {
-        return "收到了音频帧，但没有任何进程在输出 I/O。请先播放一段音频再检测。".to_string();
+        return tr(Key::PermissionNoIo).to_string();
     }
     if promptable {
-        "整个检测窗口没有收到任何音频帧，通常意味着系统授权弹窗还停在屏幕上没被处理。\
-         请允许后再点一次「检测」。"
-            .to_string()
+        tr(Key::PermissionPromptUnhandled).to_string()
     } else {
-        "整个检测窗口没有收到任何音频帧。当前运行的不是打包后的 .app\
-         （Info.plist 里没有 NSAudioCaptureUsageDescription），系统既不会弹窗也不授权——\
-         请用 `pnpm build:app` 构建后从 .app 启动。"
-            .to_string()
+        tr(Key::PermissionUnbundled).to_string()
     }
 }
 

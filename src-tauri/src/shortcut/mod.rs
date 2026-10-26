@@ -4,11 +4,11 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
 
 use crate::config::OverlayMode;
+use crate::i18n::{tf, tr, Key};
 use crate::{overlay, prefs};
 
 pub struct Binding {
     pub id: &'static str,
-    pub label: &'static str,
     pub default_accelerator: &'static str,
     pub action: fn(&AppHandle),
 }
@@ -23,14 +23,12 @@ pub struct HotkeyState {
 pub struct ShortcutFailure {
     pub id: String,
     pub accelerator: String,
-    pub label: String,
 }
 
 #[derive(Debug, Clone, serde::Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HotkeyInfo {
     pub id: String,
-    pub label: String,
     pub accelerator: String,
     pub accelerator_pretty: String,
     pub default_accelerator: String,
@@ -65,7 +63,6 @@ pub fn bindings() -> Vec<Binding> {
     vec![
         Binding {
             id: "overlay.toggleMode",
-            label: "切换悬浮窗锁定 / 编辑",
             default_accelerator: "CmdOrControl+Shift+L",
             action: |app| {
                 let current = app.state::<overlay::OverlayState>().mode();
@@ -81,7 +78,6 @@ pub fn bindings() -> Vec<Binding> {
         },
         Binding {
             id: "overlay.toggleVisible",
-            label: "显示 / 隐藏悬浮窗",
             default_accelerator: "CmdOrControl+Shift+H",
             action: |app| match overlay::toggle(app) {
                 Ok(visible) => tracing::info!(visible, "热键切换悬浮窗可见性"),
@@ -132,7 +128,6 @@ pub fn list(app: &AppHandle) -> Vec<HotkeyInfo> {
             let accel = accelerator_from(&saved, &b);
             HotkeyInfo {
                 id: b.id.to_owned(),
-                label: b.label.to_owned(),
                 registered: gs.is_registered(accel.as_str()),
                 accelerator_pretty: pretty(&accel),
                 accelerator: accel,
@@ -146,20 +141,20 @@ pub fn list(app: &AppHandle) -> Vec<HotkeyInfo> {
 pub fn rebind(app: &AppHandle, id: &str, accelerator: &str) -> Result<Vec<HotkeyInfo>, String> {
     let accel = accelerator.trim();
     if accel.is_empty() {
-        return Err("加速键不能为空".into());
+        return Err(tr(Key::ShortcutEmpty).into());
     }
 
     let bindings = bindings();
     let b = bindings
         .iter()
         .find(|b| b.id == id)
-        .ok_or_else(|| format!("未知的热键 id：{id}"))?;
+        .ok_or_else(|| tf(Key::ShortcutUnknownId, &[id]))?;
 
     let old = accelerator_from(&prefs::load(app).shortcuts, b);
 
     accel
         .parse::<Shortcut>()
-        .map_err(|e| format!("加速键 {accel} 无法解析：{e}"))?;
+        .map_err(|e| tf(Key::ShortcutParseFailed, &[accel, &e.to_string()]))?;
 
     let gs = app.global_shortcut();
 
@@ -170,7 +165,7 @@ pub fn rebind(app: &AppHandle, id: &str, accelerator: &str) -> Result<Vec<Hotkey
                 action(app);
             }
         })
-        .map_err(|e| format!("键位 {accel} 注册失败（可能已被其他应用占用）：{e}"))?;
+        .map_err(|e| tf(Key::ShortcutRegisterFailed, &[accel, &e.to_string()]))?;
 
         if let Err(e) = gs.unregister(old.as_str()) {
             tracing::warn!(old = %old, "旧热键注销失败，它可能仍然生效：{e}");
@@ -198,7 +193,6 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
     for b in bindings() {
         let action = b.action;
         let id = b.id;
-        let label = b.label;
         let accel = accelerator_from(&saved, &b);
 
         let result = app
@@ -220,7 +214,6 @@ pub fn init(app: &AppHandle) -> Result<(), String> {
                 state.push(ShortcutFailure {
                     id: id.to_string(),
                     accelerator: pretty(&accel),
-                    label: label.to_string(),
                 });
             }
         }
@@ -252,7 +245,10 @@ mod tests {
 
     #[test]
     fn pretty_strips_the_key_prefix() {
-        assert!(!pretty("CmdOrControl+KeyL").contains("Key"), "不该露出内部写法");
+        assert!(
+            !pretty("CmdOrControl+KeyL").contains("Key"),
+            "不该露出内部写法"
+        );
     }
 
     #[test]

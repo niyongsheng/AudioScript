@@ -7,6 +7,7 @@ use std::time::{Duration, Instant};
 use sha2::{Digest, Sha256};
 
 use super::{ModelError, IO_CHUNK};
+use crate::i18n::{tf, Key};
 
 const PROGRESS_INTERVAL: Duration = Duration::from_millis(150);
 
@@ -59,8 +60,9 @@ pub fn download_verified(
         received += read as u64;
 
         if expected_size > 0 && received > expected_size + OVERSHOOT {
-            return Err(ModelError::Network(format!(
-                "服务器返回的体积超过预期（已下载 {received} 字节）"
+            return Err(ModelError::Network(tf(
+                Key::ModelDownloadTooLarge,
+                &[&received.to_string()],
             )));
         }
 
@@ -107,15 +109,8 @@ mod tests {
     fn cancel_before_start_is_observed() {
         let cancel = AtomicBool::new(true);
         let dest = std::env::temp_dir().join(format!("dl-{}", uuid::Uuid::new_v4()));
-        let e = download_verified(
-            "http://127.0.0.1:9/never",
-            "",
-            0,
-            &dest,
-            &cancel,
-            |_, _| {},
-        )
-        .unwrap_err();
+        let e = download_verified("http://127.0.0.1:9/never", "", 0, &dest, &cancel, |_, _| {})
+            .unwrap_err();
         assert!(matches!(e, ModelError::Cancelled), "{e}");
     }
 }

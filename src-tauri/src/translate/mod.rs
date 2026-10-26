@@ -4,25 +4,26 @@ pub mod queue;
 pub mod script;
 
 use crate::config::TranslateConfig;
+use crate::i18n::{tf, tr, Key};
 
 #[derive(Debug, thiserror::Error)]
 pub enum TranslateError {
-    #[error("翻译引擎未初始化")]
+    #[error("{}", tr(Key::TranslateNotInitialized))]
     NotInitialized,
 
-    #[error("模型加载失败：{0}")]
+    #[error("{}", tf(Key::TranslateModelLoadFailed, &[.0.as_str()]))]
     ModelLoad(String),
 
-    #[error("模型目录缺少文件：{0}")]
+    #[error("{}", tf(Key::TranslateModelDirMissing, &[.0.as_str()]))]
     MissingModelFile(String),
 
-    #[error("语言对不支持：{from} → {to}")]
+    #[error("{}", tf(Key::TranslateUnsupportedPair, &[.from.as_str(), .to.as_str()]))]
     UnsupportedPair { from: String, to: String },
 
-    #[error("译文无效（{reason}）：翻译方向可能设置错误")]
+    #[error("{}", tf(Key::TranslateInvalidOutput, &[.reason.as_str()]))]
     Degenerate { reason: String },
 
-    #[error("引擎内部错误：{0}")]
+    #[error("{}", tf(Key::TranslateInternal, &[.0.as_str()]))]
     Internal(String),
 }
 
@@ -54,7 +55,10 @@ pub fn degenerate_translation(text: &str) -> Option<String> {
     for c in &chars {
         *counts.entry(*c).or_default() += 1;
     }
-    let (top, n) = counts.iter().map(|(c, n)| (*c, *n)).max_by_key(|(_, n)| *n)?;
+    let (top, n) = counts
+        .iter()
+        .map(|(c, n)| (*c, *n))
+        .max_by_key(|(_, n)| *n)?;
     let ratio = n as f32 / chars.len() as f32;
 
     if n == chars.len() {

@@ -29,9 +29,8 @@ pub fn init(app: &AppHandle) -> PathBuf {
     let (writer, guard) = tracing_appender::non_blocking(file);
     app.manage(LogGuard(guard));
 
-    let filter = EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-        EnvFilter::new("info,app_lib=debug")
-    });
+    let filter =
+        EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("info,app_lib=debug"));
 
     let file_layer = tracing_subscriber::fmt::layer()
         .with_writer(writer)

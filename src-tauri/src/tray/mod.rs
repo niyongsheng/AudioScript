@@ -7,6 +7,7 @@ use tauri::{
 };
 
 use crate::config::OverlayMode;
+use crate::i18n::{tr, Key};
 use crate::session::{SessionState, TaskStatus};
 use crate::{lifecycle, overlay};
 
@@ -21,15 +22,15 @@ mod id {
 }
 
 pub struct TrayState {
-    #[allow(dead_code)]
     icon: Mutex<tauri::tray::TrayIcon<tauri::Wry>>,
+    show_main_item: MenuItem<tauri::Wry>,
     locked_item: tauri::menu::CheckMenuItem<tauri::Wry>,
     session_item: MenuItem<tauri::Wry>,
     visibility_item: MenuItem<tauri::Wry>,
 }
 
 pub fn init(app: &AppHandle) -> tauri::Result<()> {
-    let show_main = MenuItemBuilder::with_id(id::SHOW_MAIN, "显示主窗口").build(app)?;
+    let show_main = MenuItemBuilder::with_id(id::SHOW_MAIN, tr(Key::TrayShowMain)).build(app)?;
 
     let capturing = app.state::<SessionState>().status() == TaskStatus::Capturing;
     let session_item =
@@ -41,11 +42,11 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
     )
     .build(app)?;
 
-    let locked_item = CheckMenuItemBuilder::with_id(id::OVERLAY_LOCKED, "点击穿透（锁定）")
+    let locked_item = CheckMenuItemBuilder::with_id(id::OVERLAY_LOCKED, tr(Key::TrayLocked))
         .checked(app.state::<overlay::OverlayState>().mode_is_click_through())
         .build(app)?;
 
-    let quit = MenuItemBuilder::with_id(id::QUIT, "退出 AudioScript").build(app)?;
+    let quit = MenuItemBuilder::with_id(id::QUIT, tr(Key::TrayQuit)).build(app)?;
     let sep1 = PredefinedMenuItem::separator(app)?;
     let sep2 = PredefinedMenuItem::separator(app)?;
 
@@ -64,7 +65,7 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
     let icon = TrayIconBuilder::with_id(TRAY_ID)
         .icon(tray_icon(app)?)
         .icon_as_template(true)
-        .tooltip("AudioScript 声稿")
+        .tooltip(tr(Key::TrayTooltip))
         .menu(&menu)
         .show_menu_on_left_click(false)
         .on_menu_event(on_menu_event)
@@ -73,6 +74,7 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
 
     app.manage(TrayState {
         icon: Mutex::new(icon),
+        show_main_item: show_main,
         locked_item,
         session_item,
         visibility_item,
@@ -83,18 +85,37 @@ pub fn init(app: &AppHandle) -> tauri::Result<()> {
 
 fn session_text(capturing: bool) -> &'static str {
     if capturing {
-        "停止转写"
+        tr(Key::TraySessionStop)
     } else {
-        "开始转写"
+        tr(Key::TraySessionStart)
     }
 }
 
 fn visibility_text(visible: bool) -> &'static str {
     if visible {
-        "隐藏悬浮窗"
+        tr(Key::TrayHideOverlay)
     } else {
-        "显示悬浮窗"
+        tr(Key::TrayShowOverlay)
     }
+}
+
+pub fn relocalize(app: &AppHandle) {
+    let Some(state) = app.try_state::<TrayState>() else {
+        return;
+    };
+    if let Err(e) = state.show_main_item.set_text(tr(Key::TrayShowMain)) {
+        tracing::error!("同步托盘主窗口项失败：{e}");
+    }
+    if let Err(e) = state.locked_item.set_text(tr(Key::TrayLocked)) {
+        tracing::error!("同步托盘勾选项失败：{e}");
+    }
+    sync_task_state(app, app.state::<SessionState>().status());
+    sync_visibility(app, overlay::is_visible(app));
+    if let Ok(icon) = state.icon.lock() {
+        if let Err(e) = icon.set_tooltip(Some(tr(Key::TrayTooltip))) {
+            tracing::error!("同步托盘提示文字失败：{e}");
+        }
+    };
 }
 
 pub fn sync_mode(app: &AppHandle, mode: OverlayMode) {
@@ -137,7 +158,7 @@ fn tray_icon(app: &AppHandle) -> tauri::Result<tauri::image::Image<'static>> {
     tracing::warn!("托盘模板图加载失败，退回应用图标（在菜单栏里可能显示异常）");
     let icon = app
         .default_window_icon()
-        .ok_or_else(|| tauri::Error::AssetNotFound("没有可用的托盘图标".into()))?;
+        .ok_or_else(|| tauri::Error::AssetNotFound(tr(Key::OverlayNoTrayIcon).into()))?;
 
     Ok(tauri::image::Image::new_owned(
         icon.rgba().to_vec(),
@@ -155,6 +176,7 @@ fn start_session(app: &AppHandle) {
             "translate": {
                 "engine": p.translate_engine,
                 "sourceLang": p.source_lang,
+                "targetLang": p.target_lang,
                 "zhScript": p.zh_script
             }
         }

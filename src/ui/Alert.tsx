@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
+import { useI18n } from '@/shared/i18n'
 import { cn } from './cn'
-import { Icon } from './Icon'
+import { Icon, type IconName } from './Icon'
 
 type Tone = 'error' | 'warn' | 'info'
 
@@ -8,38 +9,69 @@ interface Props {
   tone: Tone
   title?: ReactNode
   children?: ReactNode
+  actions?: ReactNode
+  onDismiss?: () => void
+  className?: string
 }
 
-export function Alert({ tone, title, children }: Props) {
+export function Alert({ tone, title, children, actions, onDismiss, className }: Props) {
+  const { t } = useI18n()
+  const style = TONE[tone]
+
   return (
-    <div role={tone === 'error' ? 'alert' : 'status'} className={cn('border-b px-6 py-2.5', TONE[tone].wrap)}>
-      {title && (
-        <p className={cn('flex items-center gap-1.5 text-xs', TONE[tone].title)}>
-          <Icon name="alert" size={13} />
-          {title}
-        </p>
+    <div
+      role={tone === 'error' ? 'alert' : 'status'}
+      className={cn(
+        'flex items-start gap-2.5 rounded-[var(--radius-panel)] border-l-[3px] px-3 py-2.5',
+        style.wrap,
+        className,
       )}
-      {children && (
-        <div className={cn('text-xs leading-relaxed', TONE[tone].body, title && 'mt-1 pl-[1.15rem]')}>{children}</div>
+    >
+      <Icon name={style.icon} size={14} strokeWidth={2} className={cn('mt-0.5 shrink-0', style.iconColor)} />
+
+      <div className="min-w-0 flex-1">
+        {title && <p className={cn('font-medium text-xs', style.title)}>{title}</p>}
+        {children && <div className={cn('text-xs leading-relaxed', style.body, title && 'mt-0.5')}>{children}</div>}
+        {actions && <div className="mt-2 flex flex-wrap items-center gap-1.5">{actions}</div>}
+      </div>
+
+      {onDismiss && (
+        <button
+          type="button"
+          onClick={onDismiss}
+          aria-label={t('common.close')}
+          className={cn(
+            '-mr-1 -mt-1 flex size-5 shrink-0 items-center justify-center rounded opacity-60 transition hover:opacity-100',
+            style.iconColor,
+          )}
+        >
+          <Icon name="close" size={12} strokeWidth={2.25} />
+        </button>
       )}
     </div>
   )
 }
 
-const TONE: Record<Tone, { wrap: string; title: string; body: string }> = {
+const TONE: Record<Tone, { wrap: string; icon: IconName; iconColor: string; title: string; body: string }> = {
   error: {
-    wrap: 'border-[var(--color-danger)] bg-[var(--color-danger-bg)]',
-    title: 'font-medium text-[var(--color-danger-ink)]',
+    wrap: 'border-l-[var(--color-danger)] bg-[var(--color-danger-bg)]',
+    icon: 'error',
+    iconColor: 'text-[var(--color-danger-ink)]',
+    title: 'text-[var(--color-danger-ink)]',
     body: 'text-[var(--color-danger-ink)]',
   },
   warn: {
-    wrap: 'border-[var(--color-warn)] bg-[var(--color-warn-bg)]',
-    title: 'font-medium text-[var(--color-warn-ink)]',
+    wrap: 'border-l-[var(--color-warn)] bg-[var(--color-warn-bg)]',
+    icon: 'alert',
+    iconColor: 'text-[var(--color-warn-ink)]',
+    title: 'text-[var(--color-warn-ink)]',
     body: 'text-[var(--color-warn-ink)]',
   },
   info: {
-    wrap: 'border-[var(--color-border-subtle)] bg-[var(--color-surface-1)]',
-    title: 'font-medium text-[var(--color-ink-1)]',
-    body: 'text-[var(--color-ink-2)]',
+    wrap: 'border-l-[var(--color-accent)] bg-[var(--color-surface-1)]',
+    icon: 'info',
+    iconColor: 'text-[var(--color-accent)]',
+    title: 'text-[var(--color-ink-0)]',
+    body: 'text-[var(--color-ink-1)]',
   },
 }

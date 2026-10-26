@@ -1,12 +1,15 @@
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
+  ArrowRightIcon,
   ArrowTopRightOnSquareIcon,
   ArrowUturnLeftIcon,
   CheckIcon,
+  ChevronDownIcon,
   ChevronRightIcon,
   Cog6ToothIcon,
   CpuChipIcon,
+  ExclamationCircleIcon,
   ExclamationTriangleIcon,
   FolderOpenIcon,
   HeartIcon,
@@ -16,11 +19,12 @@ import {
   PaintBrushIcon,
   PlayIcon,
   ShieldCheckIcon,
-  SparklesIcon,
   SpeakerWaveIcon,
+  Square2StackIcon,
   StopIcon,
   SwatchIcon,
   WindowIcon,
+  XMarkIcon,
 } from '@heroicons/react/24/outline'
 import type { ComponentType, SVGProps } from 'react'
 
@@ -40,15 +44,19 @@ export type IconName =
   | 'folder'
   | 'external'
   | 'alert'
+  | 'error'
   | 'check'
+  | 'close'
   | 'brush'
   | 'swatch'
-  | 'sparkle'
+  | 'border'
   | 'shield'
   | 'github'
   | 'heart'
   | 'download'
+  | 'arrowRight'
   | 'chevron'
+  | 'chevronDown'
 
 type IconComponent = ComponentType<SVGProps<SVGSVGElement>>
 
@@ -94,15 +102,19 @@ const ICONS: Record<IconName, IconComponent> = {
   folder: FolderOpenIcon,
   external: ArrowTopRightOnSquareIcon,
   alert: ExclamationTriangleIcon,
+  error: ExclamationCircleIcon,
   check: CheckIcon,
+  close: XMarkIcon,
   brush: PaintBrushIcon,
   swatch: SwatchIcon,
-  sparkle: SparklesIcon,
+  border: Square2StackIcon,
   shield: ShieldCheckIcon,
   github: GitHubGlyph,
   heart: HeartIcon,
   download: ArrowDownTrayIcon,
+  arrowRight: ArrowRightIcon,
   chevron: ChevronRightIcon,
+  chevronDown: ChevronDownIcon,
 }
 
 interface Props {

@@ -2,7 +2,9 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { StrictMode, useEffect, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@/shared/theme.css'
+import { useI18n } from '@/shared/i18n'
 import { EVENT, on, overlayConfigGet } from '@/shared/ipc'
+import { initLocale } from '@/shared/locale'
 import { type OverlayConfig, OverlayMode } from '@/shared/types'
 import { useTranscriptStream } from '@/shared/useTranscriptStream'
 import { StreamView } from './StreamView'
@@ -18,6 +20,8 @@ const DEFAULT_CONFIG: OverlayConfig = {
   maxLines: 6,
   glow: true,
 }
+
+void initLocale()
 
 function OverlayApp() {
   const { segments } = useTranscriptStream()
@@ -64,6 +68,7 @@ function OverlayApp() {
 }
 
 function EditChrome() {
+  const { t } = useI18n()
   const win = getCurrentWindow()
 
   const drag = (e: React.MouseEvent) => {
@@ -84,7 +89,7 @@ function EditChrome() {
 
       <button
         type="button"
-        aria-label="移动悬浮窗"
+        aria-label={t('overlayWindow.move')}
         onMouseDown={drag}
         className="absolute inset-x-0 top-0 z-10 flex h-4 cursor-move items-center justify-center border-0 bg-transparent p-0"
       >
@@ -93,7 +98,7 @@ function EditChrome() {
 
       <button
         type="button"
-        aria-label="调整悬浮窗大小"
+        aria-label={t('overlayWindow.resize')}
         onMouseDown={resize}
         className="absolute right-0 bottom-0 z-10 size-5 cursor-nwse-resize border-0 bg-transparent p-0"
       >

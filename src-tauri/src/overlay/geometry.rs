@@ -3,9 +3,7 @@ use std::time::Duration;
 use tauri::{AppHandle, Manager};
 
 use super::{Frame, LABEL};
-use crate::config::{
-    MIN_OVERLAY_HEIGHT, MIN_OVERLAY_WIDTH, WindowGeometry, WindowPos, WindowSize,
-};
+use crate::config::{WindowGeometry, WindowPos, WindowSize, MIN_OVERLAY_HEIGHT, MIN_OVERLAY_WIDTH};
 
 const POLL: Duration = Duration::from_millis(2_000);
 
@@ -108,7 +106,13 @@ fn save(app: &AppHandle, g: WindowGeometry) {
     if let Err(e) = crate::prefs::update(app, |p| p.overlay_geometry = Some(g)) {
         tracing::error!("悬浮窗位置保存失败，下次启动不会记住它：{e}");
     } else {
-        tracing::debug!(x = g.position.x, y = g.position.y, w = g.size.width, h = g.size.height, "悬浮窗几何已保存");
+        tracing::debug!(
+            x = g.position.x,
+            y = g.position.y,
+            w = g.size.width,
+            h = g.size.height,
+            "悬浮窗几何已保存"
+        );
     }
 }
 

@@ -1,4 +1,5 @@
 import { type CSSProperties, memo, useLayoutEffect, useRef } from 'react'
+import { useI18n } from '@/shared/i18n'
 import { SegmentState, type TranscriptSegment, TranslationState } from '@/shared/types'
 
 const SOURCE_SCALE = 0.8
@@ -17,6 +18,7 @@ interface Props {
 }
 
 export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, glow }: Props) {
+  const { t } = useI18n()
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const tail = segments.at(-1)
@@ -45,7 +47,7 @@ export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, gl
       >
         {segments.length === 0 ? (
           <p className="m-0 text-[0.8em]" style={{ color: fontColor, opacity: 0.45 }}>
-            等待识别…
+            {t('overlayWindow.waiting')}
           </p>
         ) : (
           segments.map((s) => <BilingualSegment key={s.id} seg={s} />)
@@ -80,6 +82,7 @@ function rainbowRing(padding: number): CSSProperties {
 }
 
 const BilingualSegment = memo(function BilingualSegment({ seg }: { seg: TranscriptSegment }) {
+  const { t } = useI18n()
   const isPartial = seg.state === SegmentState.Partial
 
   return (
@@ -100,7 +103,7 @@ const BilingualSegment = memo(function BilingualSegment({ seg }: { seg: Transcri
       {seg.translationState === TranslationState.Done && seg.translation && <p className="m-0">{seg.translation}</p>}
       {seg.translationState === TranslationState.Failed && (
         <p className="m-0 opacity-40" style={{ fontSize: `${SOURCE_SCALE}em` }}>
-          <span className="italic">翻译失败</span>
+          <span className="italic">{t('overlayWindow.translationFailed')}</span>
         </p>
       )}
     </div>

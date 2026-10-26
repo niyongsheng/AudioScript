@@ -5,6 +5,7 @@ use serde::Deserialize;
 
 use super::ModelKind;
 use crate::config::{AsrModelTier, MtModelTier};
+use crate::i18n::{tr, Key};
 
 #[derive(Debug, Deserialize)]
 pub struct Catalog {
@@ -145,6 +146,20 @@ fn by_tier(kind: ModelKind, tier: &str) -> &'static CatalogEntry {
 }
 
 impl CatalogEntry {
+    pub fn localized_title(&self) -> &str {
+        let key = match self.id.as_str() {
+            "asr-builtin" => Some(Key::ModelAsrBuiltinTitle),
+            "asr-high-accuracy" => Some(Key::ModelAsrHighTitle),
+            "mt-base" => Some(Key::ModelMtBaseTitle),
+            "mt-big" => Some(Key::ModelMtBigTitle),
+            _ => None,
+        };
+        match key {
+            Some(key) => tr(key),
+            None => self.title.as_str(),
+        }
+    }
+
     pub fn installed_dir(&self) -> &str {
         &self.install.dir
     }
@@ -195,7 +210,9 @@ pub fn validate(c: &Catalog) -> Result<(), String> {
         if !is_safe_relative(&m.install.dir) {
             return Err(format!("模型 {} 的安装目录不安全：{}", m.id, m.install.dir));
         }
-        if !m.bundled && m.install.directions.is_empty() && m.install.archive_roots.is_empty()
+        if !m.bundled
+            && m.install.directions.is_empty()
+            && m.install.archive_roots.is_empty()
             && m.install.archive_root.is_none()
         {
             return Err(format!("模型 {} 既没有方向目录也没有归档根目录", m.id));
@@ -232,7 +249,11 @@ pub fn validate(c: &Catalog) -> Result<(), String> {
             .filter(|m| m.kind == kind && m.tier == tier)
             .count();
         if count != 1 {
-            return Err(format!("{}/{} 档必须恰好有一个模型（当前 {count}）", kind.as_str(), tier));
+            return Err(format!(
+                "{}/{} 档必须恰好有一个模型（当前 {count}）",
+                kind.as_str(),
+                tier
+            ));
         }
     }
 
@@ -251,7 +272,10 @@ mod tests {
     #[test]
     fn every_tier_has_an_entry() {
         assert_eq!(asr_entry(AsrModelTier::Builtin).id, "asr-builtin");
-        assert_eq!(asr_entry(AsrModelTier::HighAccuracy).id, "asr-high-accuracy");
+        assert_eq!(
+            asr_entry(AsrModelTier::HighAccuracy).id,
+            "asr-high-accuracy"
+        );
         assert_eq!(mt_entry(MtModelTier::Base).id, "mt-base");
         assert_eq!(mt_entry(MtModelTier::Big).id, "mt-big");
     }

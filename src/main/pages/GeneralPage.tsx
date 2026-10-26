@@ -1,7 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useStore } from '@/main/store'
 import { track } from '@/shared/analytics'
-import { autostartGet, autostartSet, formatCmdError, logsExport, prefsReset, revealPath, Theme } from '@/shared/ipc'
+import { useI18n } from '@/shared/i18n'
+import {
+  autostartGet,
+  autostartSet,
+  formatCmdError,
+  Language,
+  logsExport,
+  prefsReset,
+  revealPath,
+  Theme,
+} from '@/shared/ipc'
 import { Alert } from '@/ui/Alert'
 import { Button } from '@/ui/Button'
 import { Page } from '@/ui/Page'
@@ -9,19 +19,29 @@ import { Select } from '@/ui/Select'
 import { SettingsGroup, SettingsRow } from '@/ui/Settings'
 import { Switch } from '@/ui/Switch'
 
-const THEME_OPTIONS = [
-  { value: Theme.System, label: '跟随系统' },
-  { value: Theme.Light, label: '浅色' },
-  { value: Theme.Dark, label: '深色' },
-]
-
 export function GeneralPage() {
-  const { theme, changeTheme, prefsReady, analyticsEnabled, setAnalyticsEnabled, setError } = useStore()
+  const { theme, changeTheme, prefsReady, analyticsEnabled, setAnalyticsEnabled, language, changeLanguage, setError } =
+    useStore()
+  const { t } = useI18n()
 
   const [autostart, setAutostart] = useState<boolean | null>(null)
   const [confirmingReset, setConfirmingReset] = useState(false)
   const [busy, setBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
+
+  const themeOptions = [
+    { value: Theme.System, label: t('general.themeSystem') },
+    { value: Theme.Light, label: t('general.themeLight') },
+    { value: Theme.Dark, label: t('general.themeDark') },
+  ]
+
+  const languageOptions = [
+    { value: Language.System, label: t('language.system') },
+    { value: Language.ZhCn, label: t('language.zhCn') },
+    { value: Language.ZhTw, label: t('language.zhTw') },
+    { value: Language.En, label: t('language.en') },
+    { value: Language.Ja, label: t('language.ja') },
+  ]
 
   useEffect(() => {
     autostartGet()
@@ -44,7 +64,7 @@ export function GeneralPage() {
     setNote(null)
     try {
       await prefsReset()
-      setNote('已恢复默认设置。部分改动需重启应用生效。')
+      setNote(t('general.resetDone'))
     } catch (e) {
       setError(formatCmdError(e))
     } finally {
@@ -59,7 +79,7 @@ export function GeneralPage() {
     try {
       const { path } = await logsExport()
       await revealPath(path)
-      setNote(`日志已导出到 ${path}`)
+      setNote(t('general.logsExported', { path }))
     } catch (e) {
       setError(formatCmdError(e))
     } finally {
@@ -68,26 +88,53 @@ export function GeneralPage() {
   }
 
   return (
-    <Page title="通用">
-      {note && <Alert tone="info">{note}</Alert>}
+    <Page title={t('general.title')}>
+      {note && (
+        <Alert tone="info" onDismiss={() => setNote(null)}>
+          {note}
+        </Alert>
+      )}
 
-      <SettingsGroup title="外观">
+      <SettingsGroup title={t('general.appearance')}>
         <SettingsRow
           icon="settings"
-          title="主题"
-          description="悬浮窗始终为深色。"
-          control={<Select label="主题" value={theme} options={THEME_OPTIONS} onChange={(v) => void changeTheme(v)} />}
+          title={t('general.theme')}
+          description={t('general.themeDescription')}
+          control={
+            <Select
+              label={t('general.theme')}
+              value={theme}
+              options={themeOptions}
+              onChange={(v) => void changeTheme(v)}
+            />
+          }
         />
       </SettingsGroup>
 
-      <SettingsGroup title="启动">
+      <SettingsGroup title={t('language.title')}>
+        <SettingsRow
+          icon="translate"
+          title={t('language.title')}
+          description={t('language.description')}
+          control={
+            <Select
+              label={t('language.title')}
+              value={language}
+              options={languageOptions}
+              onChange={(v) => void changeLanguage(v)}
+            />
+          }
+        />
+      </SettingsGroup>
+
+      <SettingsGroup title={t('general.startup')}>
         <SettingsRow
           icon="play"
-          title="登录时启动"
-          description="关闭主窗口后应用继续驻留托盘。"
+          title={t('general.autostart')}
+          description={t('general.autostartDescription')}
           control={
             <Switch
-              label="登录时启动"
+              label={t('general.autostart')}
               checked={autostart === true}
               disabled={autostart === null}
               onChange={(v) => void toggleAutostart(v)}
@@ -96,14 +143,14 @@ export function GeneralPage() {
         />
       </SettingsGroup>
 
-      <SettingsGroup title="隐私" footer="统计仅包含事件名与少量枚举属性，不含转写文本、设备名称或文件路径。">
+      <SettingsGroup title={t('general.privacy')} footer={t('general.privacyFooter')}>
         <SettingsRow
           icon="shield"
-          title="匿名使用统计"
-          description="通过 Aptabase 发送功能使用情况，帮助改进 AudioScript。"
+          title={t('general.analytics')}
+          description={t('general.analyticsDescription')}
           control={
             <Switch
-              label="匿名使用统计"
+              label={t('general.analytics')}
               checked={analyticsEnabled}
               disabled={!prefsReady}
               onChange={setAnalyticsEnabled}
@@ -112,43 +159,43 @@ export function GeneralPage() {
         />
       </SettingsGroup>
 
-      <SettingsGroup title="诊断">
+      <SettingsGroup title={t('general.diagnostics')}>
         <SettingsRow
           icon="folder"
-          title="导出日志"
-          description="复制到桌面并以日期命名，随后自动打开。"
+          title={t('general.exportLogs')}
+          description={t('general.exportLogsDescription')}
           control={
             <Button icon="external" size="sm" disabled={busy} onClick={() => void doExportLogs()}>
-              导出
+              {t('common.export')}
             </Button>
           }
         />
         <SettingsRow
           icon="folder"
-          title="打开日志文件夹"
-          description="直接定位到原始日志目录。"
+          title={t('general.openLogs')}
+          description={t('general.openLogsDescription')}
           onClick={() => void revealPath().catch((e) => setError(formatCmdError(e)))}
         />
       </SettingsGroup>
 
-      <SettingsGroup title="设置管理">
+      <SettingsGroup title={t('general.manage')}>
         <SettingsRow
           icon="reset"
-          title="重置所有设置"
-          description="清除全部设置，不可撤销。下次启动会重新显示欢迎页。"
+          title={t('general.resetAll')}
+          description={t('general.resetAllDescription')}
           control={
             confirmingReset ? (
               <div className="flex gap-1.5">
                 <Button variant="danger" size="sm" disabled={busy} onClick={() => void doReset()}>
-                  确认重置
+                  {t('common.confirmReset')}
                 </Button>
                 <Button size="sm" onClick={() => setConfirmingReset(false)}>
-                  取消
+                  {t('common.cancel')}
                 </Button>
               </div>
             ) : (
               <Button variant="danger" size="sm" onClick={() => setConfirmingReset(true)}>
-                重置
+                {t('common.reset')}
               </Button>
             )
           }

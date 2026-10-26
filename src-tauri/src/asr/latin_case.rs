@@ -119,7 +119,11 @@ mod tests {
 
     #[test]
     fn leaves_chinese_alone() {
-        for s in ["这个方案最大的问题在于延迟。", "AI 很重要。", "他说 GDP 增长了。"] {
+        for s in [
+            "这个方案最大的问题在于延迟。",
+            "AI 很重要。",
+            "他说 GDP 增长了。",
+        ] {
             assert_eq!(restore_sentence_case(s), s, "不该动：{s}");
         }
     }
