@@ -1,6 +1,6 @@
 [package]
 name = "audioscript"
-version = "0.2.10"
+version = "0.2.11"
 description = "AudioScript 声稿 — 离线优先语音转写，带悬浮流式字幕窗"
 authors = ["Nico"]
 license = "MIT"
