@@ -11,6 +11,7 @@ pub struct ExtractSpec<'a> {
     pub format: ArchiveFormat,
     pub roots: Vec<&'a str>,
     pub prune_asr: bool,
+    pub allowed: Vec<&'a str>,
     pub max_bytes: u64,
 }
 
@@ -20,10 +21,18 @@ impl<'a> ExtractSpec<'a> {
             .archive
             .as_ref()
             .ok_or_else(|| ModelError::Internal(tf(Key::ModelNoArchiveInfo, &[&entry.id])))?;
+        let mut allowed = Vec::new();
+        if let Some(asr) = &entry.required.asr {
+            allowed.extend(asr.files.iter().map(String::as_str));
+        }
+        if let Some(mt) = &entry.required.mt {
+            allowed.extend(mt.files.iter().map(String::as_str));
+        }
         Ok(Self {
             format: archive.format,
             roots: entry.archive_roots(),
             prune_asr: entry.prune_profile.as_deref() == Some("sherpa-asr-mixed-int8"),
+            allowed,
             max_bytes: archive.max_extracted_bytes,
         })
     }
@@ -123,13 +132,23 @@ pub fn extract_archive(
             continue;
         };
         let components: Vec<_> = rel.components().collect();
-        if components.len() != 1 {
-            continue;
-        }
-        let Some(name) = components[0].as_os_str().to_str() else {
-            continue;
-        };
-        if spec.prune_asr && !keep_asr_file(name) {
+        let top_level = components.len() == 1;
+        if spec.prune_asr {
+            if !top_level {
+                continue;
+            }
+            let Some(name) = components[0].as_os_str().to_str() else {
+                continue;
+            };
+            if !keep_asr_file(name) {
+                continue;
+            }
+        } else if !top_level
+            && !spec
+                .allowed
+                .iter()
+                .any(|allowed| Path::new(*allowed) == rel)
+        {
             continue;
         }
 
@@ -188,6 +207,7 @@ mod tests {
             format,
             roots,
             prune_asr: prune,
+            allowed: Vec::new(),
             max_bytes: 10 * 1024 * 1024,
         }
     }
@@ -242,6 +262,41 @@ mod tests {
         assert!(out.join("encoder-x.int8.onnx").is_file());
         assert!(out.join("tokens.txt").is_file());
         assert!(!out.join("64").exists());
+        assert!(!out.join("test_wavs").exists());
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
+    fn extracts_nested_required_files() {
+        let bytes = tar_gz(&[
+            ("root/conv_frontend.onnx", b"conv"),
+            ("root/encoder.int8.onnx", b"enc"),
+            ("root/decoder.int8.onnx", b"dec"),
+            ("root/tokenizer/merges.txt", b"merges"),
+            ("root/tokenizer/tokenizer_config.json", b"config"),
+            ("root/tokenizer/vocab.json", b"vocab"),
+            ("root/test_wavs/a.wav", b"wav"),
+        ]);
+        let dir = std::env::temp_dir().join(format!("extract-nested-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let archive = dir.join("a.tar.gz");
+        std::fs::write(&archive, &bytes).unwrap();
+
+        let out = dir.join("out");
+        std::fs::create_dir_all(&out).unwrap();
+        let cancel = AtomicBool::new(false);
+        let mut s = spec(ArchiveFormat::TarGz, vec!["root"], false);
+        s.allowed = vec![
+            "tokenizer/merges.txt",
+            "tokenizer/tokenizer_config.json",
+            "tokenizer/vocab.json",
+        ];
+        extract_archive(&archive, &s, &out, &cancel).unwrap();
+
+        assert!(out.join("conv_frontend.onnx").is_file());
+        assert!(out.join("tokenizer/merges.txt").is_file());
+        assert!(out.join("tokenizer/tokenizer_config.json").is_file());
+        assert!(out.join("tokenizer/vocab.json").is_file());
         assert!(!out.join("test_wavs").exists());
         std::fs::remove_dir_all(&dir).ok();
     }
