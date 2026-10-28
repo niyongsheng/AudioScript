@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hotkeyLabel } from '@/shared/hotkeys'
 import { useI18n } from '@/shared/i18n'
 import { TaskStatus } from '@/shared/types'
@@ -19,6 +19,7 @@ import { TranscribePage } from './pages/TranscribePage'
 import { TranslatePage } from './pages/TranslatePage'
 import { StoreProvider, useStore } from './store'
 import { WelcomeGate } from './WelcomeGate'
+import { SEEN_VERSION_KEY, WhatsNew, type WhatsNewFeature, whatsNewFor } from './WhatsNew'
 
 export function App() {
   return (
@@ -29,10 +30,44 @@ export function App() {
 }
 
 function Root() {
-  const { prefsReady, onboardingDone } = useStore()
+  const { info, prefsReady, onboardingDone } = useStore()
+  const [whatsNew, setWhatsNew] = useState<readonly WhatsNewFeature[] | null>(null)
+
+  const closeWhatsNew = useCallback(() => {
+    if (!info) return
+    localStorage.setItem(SEEN_VERSION_KEY, info.version)
+    setWhatsNew(null)
+  }, [info])
+
+  useEffect(() => {
+    if (!prefsReady || !info) return
+
+    const seen = localStorage.getItem(SEEN_VERSION_KEY)
+    if (seen === info.version) return
+
+    const features = whatsNewFor(info.version)
+    if (!seen && !onboardingDone) {
+      localStorage.setItem(SEEN_VERSION_KEY, info.version)
+      return
+    }
+    if (features) {
+      setWhatsNew(features)
+    } else {
+      localStorage.setItem(SEEN_VERSION_KEY, info.version)
+    }
+  }, [prefsReady, info, onboardingDone])
 
   if (!prefsReady) return <BootSplash />
-  return onboardingDone ? <Shell /> : <WelcomeGate />
+  if (!onboardingDone) return <WelcomeGate />
+
+  return (
+    <>
+      <Shell />
+      {whatsNew && info && (
+        <WhatsNew version={info.version} name={info.name} features={whatsNew} onClose={closeWhatsNew} />
+      )}
+    </>
+  )
 }
 
 function BootSplash() {
