@@ -80,6 +80,25 @@ pub(crate) enum Frame {
     Window(Box<WebviewWindow>),
 }
 
+#[cfg(target_os = "macos")]
+// tauri-nspanel 的 show/hide 直接发 AppKit 消息，必须落在主线程，否则 macOS 会 SIGTRAP。
+fn on_main<T, F>(app: &AppHandle, run: F) -> Result<T, String>
+where
+    T: Send + 'static,
+    F: FnOnce() -> T + Send + 'static,
+{
+    if tauri_nspanel::objc2_foundation::MainThreadMarker::new().is_some() {
+        return Ok(run());
+    }
+
+    let (tx, rx) = std::sync::mpsc::sync_channel(1);
+    app.run_on_main_thread(move || {
+        let _ = tx.send(run());
+    })
+    .map_err(|e| e.to_string())?;
+    rx.recv().map_err(|e| e.to_string())
+}
+
 impl Frame {
     pub(crate) fn get(app: &AppHandle) -> Result<Self, String> {
         #[cfg(target_os = "macos")]
@@ -95,12 +114,12 @@ impl Frame {
             .ok_or_else(|| tf(Key::OverlayNotFound, &[LABEL]))
     }
 
-    fn show(&self) -> Result<(), String> {
+    fn show(&self, app: &AppHandle) -> Result<(), String> {
         match self {
             #[cfg(target_os = "macos")]
             Self::Panel(p) => {
-                p.show();
-                Ok(())
+                let p = p.clone();
+                on_main(app, move || p.show()).map_err(|e| tf(Key::OverlayShowFailed, &[&e]))
             }
             Self::Window(w) => w
                 .show()
@@ -108,12 +127,12 @@ impl Frame {
         }
     }
 
-    fn hide(&self) -> Result<(), String> {
+    fn hide(&self, app: &AppHandle) -> Result<(), String> {
         match self {
             #[cfg(target_os = "macos")]
             Self::Panel(p) => {
-                p.hide();
-                Ok(())
+                let p = p.clone();
+                on_main(app, move || p.hide()).map_err(|e| tf(Key::OverlayHideFailed, &[&e]))
             }
             Self::Window(w) => w
                 .hide()
@@ -121,20 +140,24 @@ impl Frame {
         }
     }
 
-    fn is_visible(&self) -> bool {
+    fn is_visible(&self, app: &AppHandle) -> bool {
         match self {
             #[cfg(target_os = "macos")]
-            Self::Panel(p) => p.is_visible(),
+            Self::Panel(p) => {
+                let p = p.clone();
+                on_main(app, move || p.is_visible()).unwrap_or(false)
+            }
             Self::Window(w) => w.is_visible().unwrap_or(false),
         }
     }
 
-    fn set_click_through(&self, on: bool) -> Result<(), String> {
+    fn set_click_through(&self, app: &AppHandle, on: bool) -> Result<(), String> {
         match self {
             #[cfg(target_os = "macos")]
             Self::Panel(p) => {
-                p.set_ignores_mouse_events(on);
-                Ok(())
+                let p = p.clone();
+                on_main(app, move || p.set_ignores_mouse_events(on))
+                    .map_err(|e| tf(Key::OverlayClickThroughFailed, &[&e]))
             }
             Self::Window(w) => w
                 .set_ignore_cursor_events(on)
@@ -195,12 +218,12 @@ pub(crate) fn set_geometry(
 
 pub fn toggle(app: &AppHandle) -> Result<bool, String> {
     let frame = Frame::get(app)?;
-    let visible = frame.is_visible();
+    let visible = frame.is_visible(app);
 
     if visible {
-        frame.hide()?;
+        frame.hide(app)?;
     } else {
-        frame.show()?;
+        frame.show(app)?;
         apply_fullscreen_overlay(app, &frame);
     }
 
@@ -227,7 +250,7 @@ fn set_enable(app: &AppHandle, enable: bool) {
 }
 
 pub fn is_visible(app: &AppHandle) -> bool {
-    Frame::get(app).map(|f| f.is_visible()).unwrap_or(false)
+    Frame::get(app).map(|f| f.is_visible(app)).unwrap_or(false)
 }
 
 fn broadcast_visibility(app: &AppHandle, visible: bool) {
@@ -242,7 +265,7 @@ fn apply_mode(app: &AppHandle, mode: OverlayMode) -> Result<(), String> {
 
     let want = mode.is_click_through();
     if state.needs_click_through_write(want) {
-        if let Err(e) = frame.set_click_through(want) {
+        if let Err(e) = frame.set_click_through(app, want) {
             *state
                 .applied_click_through
                 .lock()
@@ -380,7 +403,7 @@ pub fn init(
         fit_height_to_lines(app, &state.config());
     }
 
-    frame.set_click_through(mode.is_click_through())?;
+    frame.set_click_through(app, mode.is_click_through())?;
     state.needs_click_through_write(mode.is_click_through());
 
     apply_fullscreen_overlay(app, &frame);
@@ -399,7 +422,7 @@ pub fn init(
     );
 
     if applied.enable {
-        if let Err(e) = frame.show() {
+        if let Err(e) = frame.show(app) {
             tracing::error!("悬浮窗启动显示失败：{e}（可在悬浮窗页手动显示）");
         }
     }
@@ -478,7 +501,7 @@ pub fn debug_state(app: &AppHandle) -> Result<serde_json::Value, String> {
 
     let mut out = serde_json::json!({
         "label": frame.label(),
-        "visible": frame.is_visible(),
+        "visible": frame.is_visible(app),
         "clickThrough": app.state::<OverlayState>().mode_is_click_through(),
     });
 

@@ -1,11 +1,12 @@
 import { getCurrentWindow } from '@tauri-apps/api/window'
-import { StrictMode, useEffect, useState } from 'react'
+import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@/shared/theme.css'
 import { useI18n } from '@/shared/i18n'
-import { EVENT, on, overlayConfigGet } from '@/shared/ipc'
+import { EVENT, overlayConfigGet, sessionStatus } from '@/shared/ipc'
 import { initLocale } from '@/shared/locale'
-import { type OverlayConfig, OverlayMode } from '@/shared/types'
+import { type OverlayConfig, OverlayMode, TaskStatus } from '@/shared/types'
+import { useBroadcastSnapshot } from '@/shared/useBroadcastSnapshot'
 import { useTranscriptStream } from '@/shared/useTranscriptStream'
 import { StreamView } from './StreamView'
 
@@ -18,39 +19,30 @@ const DEFAULT_CONFIG: OverlayConfig = {
   fontColor: '#ffffff',
   bgColor: '#101018',
   maxLines: 6,
-  glow: true,
+  glow: false,
+  glowSpeed: 0,
 }
 
 void initLocale()
 
+function useCapturing(): boolean {
+  const [capturing, setCapturing] = useState(false)
+
+  useBroadcastSnapshot<TaskStatus>(
+    EVENT.taskState,
+    () => sessionStatus().then((info) => info.status),
+    (status) => setCapturing(status === TaskStatus.Capturing),
+  )
+
+  return capturing
+}
+
 function OverlayApp() {
   const { segments } = useTranscriptStream()
+  const capturing = useCapturing()
   const [config, setConfig] = useState<OverlayConfig>(DEFAULT_CONFIG)
 
-  useEffect(() => {
-    const unlisten: Array<() => void> = []
-    let disposed = false
-
-    let gotBroadcast = false
-    on<OverlayConfig>(EVENT.overlayState, (c) => {
-      gotBroadcast = true
-      setConfig(c)
-    }).then((fn) => {
-      if (disposed) fn()
-      else unlisten.push(fn)
-    })
-
-    overlayConfigGet()
-      .then((c) => {
-        if (!disposed && !gotBroadcast) setConfig(c)
-      })
-      .catch(() => {})
-
-    return () => {
-      disposed = true
-      for (const fn of unlisten) fn()
-    }
-  }, [])
+  useBroadcastSnapshot<OverlayConfig>(EVENT.overlayState, overlayConfigGet, setConfig)
 
   return (
     <div className="fixed inset-0">
@@ -61,6 +53,8 @@ function OverlayApp() {
         opacity={config.opacity}
         bgColor={config.bgColor}
         glow={config.glow}
+        glowSpeed={config.glowSpeed}
+        streaming={capturing}
       />
       {config.mode === OverlayMode.Edit && <EditChrome />}
     </div>

@@ -1,4 +1,5 @@
 import { type CSSProperties, useCallback, useEffect, useRef, useState } from 'react'
+import { GLOW_PALETTE } from '@/shared/glow'
 import { useI18n } from '@/shared/i18n'
 import { cn } from './cn'
 import { Icon } from './Icon'
@@ -16,24 +17,6 @@ const MASK_OFFSET = 102
 const WHEEL_OFFSET = 130
 const MASK_START = 102
 const WHEEL_START = 130
-
-const PALETTE = [
-  '#3186ff 34%',
-  '#9378ff 37%',
-  '#f96bd6 39%',
-  '#fc413d 41%',
-  '#fc413d 48%',
-  '#ff6b2b 50%',
-  '#fec700 52%',
-  '#ffdb0f 56%',
-  '#88de42 58%',
-  '#0ebc5f 61%',
-  '#0ebc5f 65%',
-  '#2eaab2 70%',
-  '#00a9bb 72%',
-  '#3186ff 73%',
-  '#3186ff 100%',
-].join(', ')
 
 const BLUR: CSSProperties = {
   position: 'absolute',
@@ -69,7 +52,7 @@ const WHEEL: CSSProperties = {
   aspectRatio: '1 / 1',
   borderRadius: '50%',
   rotate: `var(--glow-spin, ${WHEEL_START}deg)`,
-  background: `conic-gradient(${PALETTE})`,
+  background: `conic-gradient(${GLOW_PALETTE})`,
 }
 
 const WEDGE_SOFT: CSSProperties = {

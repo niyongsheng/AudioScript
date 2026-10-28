@@ -1,6 +1,7 @@
 import {
   ArrowDownTrayIcon,
   ArrowPathIcon,
+  ArrowPathRoundedSquareIcon,
   ArrowRightIcon,
   ArrowTopRightOnSquareIcon,
   ArrowUturnLeftIcon,
@@ -19,6 +20,7 @@ import {
   PaintBrushIcon,
   PlayIcon,
   ShieldCheckIcon,
+  SparklesIcon,
   SpeakerWaveIcon,
   Square2StackIcon,
   StopIcon,
@@ -51,6 +53,8 @@ export type IconName =
   | 'swatch'
   | 'border'
   | 'shield'
+  | 'sparkle'
+  | 'flow'
   | 'github'
   | 'heart'
   | 'download'
@@ -109,6 +113,8 @@ const ICONS: Record<IconName, IconComponent> = {
   swatch: SwatchIcon,
   border: Square2StackIcon,
   shield: ShieldCheckIcon,
+  sparkle: SparklesIcon,
+  flow: ArrowPathRoundedSquareIcon,
   github: GitHubGlyph,
   heart: HeartIcon,
   download: ArrowDownTrayIcon,

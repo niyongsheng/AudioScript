@@ -1,6 +1,7 @@
-import { type CSSProperties, memo, useLayoutEffect, useRef } from 'react'
+import { memo, useLayoutEffect, useRef } from 'react'
 import { useI18n } from '@/shared/i18n'
 import { SegmentState, type TranscriptSegment, TranslationState } from '@/shared/types'
+import { FlowingBorder } from './FlowingBorder'
 
 const SOURCE_SCALE = 0.8
 
@@ -15,9 +16,11 @@ interface Props {
   opacity: number
   bgColor: string
   glow: boolean
+  glowSpeed: number
+  streaming: boolean
 }
 
-export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, glow }: Props) {
+export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, glow, glowSpeed, streaming }: Props) {
   const { t } = useI18n()
   const scrollRef = useRef<HTMLDivElement>(null)
 
@@ -54,31 +57,9 @@ export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, gl
         )}
       </div>
 
-      {glow && (
-        <div
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[var(--radius-panel)]"
-          style={rainbowRing(3)}
-        />
-      )}
+      {glow && <FlowingBorder streaming={streaming} speed={glowSpeed} />}
     </div>
   )
-}
-
-const RAINBOW_GRADIENT = 'linear-gradient(90deg, #b06ab3 0%, #4facfe 25%, #47cf73 50%, #ffc371 75%, #ff5f6d 100%)'
-
-function rainbowRing(padding: number): CSSProperties {
-  const maskImage = 'linear-gradient(#000 0 0), linear-gradient(#000 0 0)'
-  return {
-    background: RAINBOW_GRADIENT,
-    padding,
-    maskImage,
-    maskClip: 'content-box, border-box',
-    maskComposite: 'exclude',
-    WebkitMaskImage: maskImage,
-    WebkitMaskClip: 'content-box, border-box',
-    WebkitMaskComposite: 'xor',
-  }
 }
 
 const BilingualSegment = memo(function BilingualSegment({ seg }: { seg: TranscriptSegment }) {

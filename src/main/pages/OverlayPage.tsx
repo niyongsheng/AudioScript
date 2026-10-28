@@ -4,7 +4,7 @@ import { hotkeyLabel } from '@/shared/hotkeys'
 import { useI18n } from '@/shared/i18n'
 import { formatCmdError, type OverlayConfig, overlaySetMode, shortcutsSet } from '@/shared/ipc'
 import { isMacOS } from '@/shared/platform'
-import { MAX_FONT_SIZE, MAX_OVERLAY_LINES, MIN_FONT_SIZE, OverlayMode } from '@/shared/types'
+import { MAX_FONT_SIZE, MAX_GLOW_SPEED, MAX_OVERLAY_LINES, MIN_FONT_SIZE, OverlayMode } from '@/shared/types'
 import { Button } from '@/ui/Button'
 import { Page } from '@/ui/Page'
 import { Select } from '@/ui/Select'
@@ -161,7 +161,12 @@ export function OverlayPage() {
           control={<ColorField value={overlayCfg.fontColor} onCommit={(v) => void updateOverlay({ fontColor: v })} />}
         />
         <SettingsRow
-          icon="border"
+          icon="swatch"
+          title={t('overlay.bgColor')}
+          control={<ColorField value={overlayCfg.bgColor} onCommit={(v) => void updateOverlay({ bgColor: v })} />}
+        />
+        <SettingsRow
+          icon="sparkle"
           title={t('overlay.glow')}
           control={
             <Switch
@@ -172,9 +177,23 @@ export function OverlayPage() {
           }
         />
         <SettingsRow
-          icon="swatch"
-          title={t('overlay.bgColor')}
-          control={<ColorField value={overlayCfg.bgColor} onCommit={(v) => void updateOverlay({ bgColor: v })} />}
+          icon="flow"
+          title={t('overlay.glowSpeed')}
+          unavailableReason={overlayCfg.glow ? undefined : t('overlay.glowSpeedNeedsGlow')}
+          control={
+            <div className="w-56">
+              <Slider
+                label={t('overlay.glowSpeed')}
+                value={draft.glowSpeed}
+                min={0}
+                max={MAX_GLOW_SPEED}
+                disabled={!overlayCfg.glow}
+                format={(v) => `${v}%`}
+                onChange={(v) => setDraft((d) => (d ? { ...d, glowSpeed: v } : d))}
+                onCommit={(v) => void updateOverlay({ glowSpeed: v })}
+              />
+            </div>
+          }
         />
       </SettingsGroup>
     </Page>
