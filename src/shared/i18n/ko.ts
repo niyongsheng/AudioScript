@@ -55,6 +55,8 @@ export const ko: Messages = {
 
   'app.windowTitle': 'AudioScript',
   'app.updateAvailable': '새 버전 v{version}이(가) 있습니다',
+  'app.updateNow': '지금 업데이트',
+  'app.updateIgnore': '무시',
   'app.updateGoAbout': '정보 페이지에서 업데이트',
   'app.operationFailed': '작업 실패',
   'app.permissionMissing': '시스템 권한이 없습니다',

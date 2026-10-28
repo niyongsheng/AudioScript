@@ -55,6 +55,8 @@ export const de: Messages = {
 
   'app.windowTitle': 'AudioScript',
   'app.updateAvailable': 'Version v{version} ist verfügbar',
+  'app.updateNow': 'Jetzt aktualisieren',
+  'app.updateIgnore': 'Ignorieren',
   'app.updateGoAbout': 'Unter „Info“ aktualisieren',
   'app.operationFailed': 'Vorgang fehlgeschlagen',
   'app.permissionMissing': 'Systemberechtigung fehlt',

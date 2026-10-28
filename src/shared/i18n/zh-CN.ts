@@ -53,6 +53,8 @@ export const zhCN = {
 
   'app.windowTitle': 'AudioScript 声稿',
   'app.updateAvailable': '发现新版本 v{version}',
+  'app.updateNow': '立即更新',
+  'app.updateIgnore': '忽略',
   'app.updateGoAbout': '去「关于」页更新',
   'app.operationFailed': '操作失败',
   'app.permissionMissing': '缺少系统权限',

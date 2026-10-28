@@ -55,6 +55,8 @@ export const zhTW: Messages = {
 
   'app.windowTitle': 'AudioScript 聲稿',
   'app.updateAvailable': '發現新版本 v{version}',
+  'app.updateNow': '立即更新',
+  'app.updateIgnore': '忽略',
   'app.updateGoAbout': '前往「關於」頁更新',
   'app.operationFailed': '操作失敗',
   'app.permissionMissing': '缺少系統權限',

@@ -55,6 +55,8 @@ export const ja: Messages = {
 
   'app.windowTitle': 'AudioScript',
   'app.updateAvailable': '新しいバージョン v{version} があります',
+  'app.updateNow': '今すぐ更新',
+  'app.updateIgnore': '無視',
   'app.updateGoAbout': '「情報」ページで更新',
   'app.operationFailed': '操作に失敗しました',
   'app.permissionMissing': 'システム権限がありません',

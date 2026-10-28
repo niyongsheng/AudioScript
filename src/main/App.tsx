@@ -121,7 +121,7 @@ function Shell() {
         </footer>
       </section>
 
-      <UpdateToast hidden={page === 'about'} onOpenAbout={() => setPage('about')} />
+      <UpdateToast hidden={page === 'about'} />
     </main>
   )
 }
