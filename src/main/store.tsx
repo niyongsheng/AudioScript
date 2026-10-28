@@ -114,6 +114,7 @@ interface Store {
   setMixMicDevice: (v: string) => void
   setMixSystemDevice: (v: string) => void
   setTranslateEngine: (v: TranslateEngine) => void
+  setEngineAndDirection: (engine: TranslateEngine, source: string, target: string, script: ZhScript) => void
   setDirection: (source: string, target: string, script: ZhScript) => void
   changeTheme: (v: Theme) => Promise<void>
   changeLanguage: (v: Language) => Promise<void>
@@ -507,6 +508,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [patchPrefs],
   )
 
+  const changeEngineAndDirection = useCallback(
+    (engine: TranslateEngine, source: string, target: string, script: ZhScript) => {
+      setTranslateEngine(engine)
+      setSourceLang(source)
+      setTargetLang(target)
+      setZhScript(script)
+      void patchPrefs({ translateEngine: engine, sourceLang: source, targetLang: target, zhScript: script })
+      track('setting_changed', { key: 'translate_engine', value: engine })
+      track('setting_changed', { key: 'translate_direction', value: `${source}:${target}:${script}` })
+    },
+    [patchPrefs],
+  )
+
   const changeDirection = useCallback(
     (source: string, target: string, script: ZhScript) => {
       setSourceLang(source)
@@ -639,6 +653,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setMixMicDevice: changeMixMicDevice,
       setMixSystemDevice: changeMixSystemDevice,
       setTranslateEngine: changeTranslateEngine,
+      setEngineAndDirection: changeEngineAndDirection,
       setDirection: changeDirection,
       changeTheme,
       changeLanguage,
@@ -699,6 +714,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       changeMixMicDevice,
       changeMixSystemDevice,
       changeTranslateEngine,
+      changeEngineAndDirection,
       changeDirection,
       changeTheme,
       changeLanguage,
