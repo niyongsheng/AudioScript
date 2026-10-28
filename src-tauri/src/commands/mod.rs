@@ -182,6 +182,7 @@ pub async fn route_async(app: &AppHandle, name: &str, args: &Value) -> Result<Va
         "permission_probe_system_audio" => Some((Lane::Quick, std::time::Duration::from_secs(30))),
         "permission_request_mic" => Some((Lane::Quick, std::time::Duration::from_secs(40))),
         "models_list" => Some((Lane::Quick, std::time::Duration::from_secs(10))),
+        "mac_translation_languages" => Some((Lane::Quick, std::time::Duration::from_secs(10))),
         "model_remove" => Some((Lane::Quick, std::time::Duration::from_secs(60))),
         _ => None,
     };
@@ -197,6 +198,7 @@ pub async fn route_async(app: &AppHandle, name: &str, args: &Value) -> Result<Va
 pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdError> {
     match name {
         "app_info" => Ok(app_info()),
+        "mac_translation_languages" => mac_translation_languages(),
         "locale_get" => Ok(json!(crate::i18n::locale().as_str())),
 
         "update_restart" => {
@@ -476,6 +478,7 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
             tracing::info!(
                 source_lang = %cfg.translate.source_lang,
                 target_lang = %effective_target_lang(
+                    cfg.translate.engine,
                     &cfg.translate.source_lang,
                     &cfg.translate.target_lang
                 ),
@@ -573,8 +576,74 @@ fn app_info() -> Value {
         "version": env!("CARGO_PKG_VERSION"),
         "platform": std::env::consts::OS,
         "arch": std::env::consts::ARCH,
+        "osVersion": os_version(),
         "builtAtMs": exe_mtime_ms(),
     })
+}
+
+fn mac_translation_languages() -> Result<Value, CmdError> {
+    #[cfg(target_os = "macos")]
+    {
+        use std::sync::OnceLock;
+        use translation::LanguageAvailability;
+
+        static CACHE: OnceLock<Vec<String>> = OnceLock::new();
+        if let Some(languages) = CACHE.get() {
+            return Ok(json!(languages));
+        }
+
+        let availability =
+            LanguageAvailability::new().map_err(|e| CmdError::Failed(e.to_string()))?;
+        let languages = availability
+            .supported_languages()
+            .map_err(|e| CmdError::Failed(e.to_string()))?;
+        let languages = CACHE.get_or_init(|| languages);
+        Ok(json!(languages))
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        Ok(json!([]))
+    }
+}
+
+#[cfg(target_os = "macos")]
+fn os_version() -> Option<String> {
+    let name = b"kern.osproductversion\0";
+    let mut size = 0usize;
+    let first = unsafe {
+        libc::sysctlbyname(
+            name.as_ptr().cast(),
+            std::ptr::null_mut(),
+            &mut size,
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+    if first != 0 || size == 0 {
+        return None;
+    }
+
+    let mut buffer = vec![0u8; size];
+    let second = unsafe {
+        libc::sysctlbyname(
+            name.as_ptr().cast(),
+            buffer.as_mut_ptr().cast(),
+            &mut size,
+            std::ptr::null_mut(),
+            0,
+        )
+    };
+    if second != 0 {
+        return None;
+    }
+
+    let end = buffer.iter().position(|b| *b == 0).unwrap_or(buffer.len());
+    String::from_utf8(buffer[..end].to_vec()).ok()
+}
+
+#[cfg(not(target_os = "macos"))]
+fn os_version() -> Option<String> {
+    None
 }
 
 const REPO_URL: &str = "https://github.com/niyongsheng/AudioScript";
@@ -598,7 +667,7 @@ fn export_transcript(
     let p = prefs::load(app);
     let direction = match p.translate_engine {
         TranslateEngine::Off => None,
-        _ => Some(direction_label(&p.source_lang, p.zh_script)),
+        _ => Some(direction_label(&p.source_lang, &p.target_lang, p.zh_script)),
     };
 
     let mut file = dest.to_path_buf();
@@ -606,7 +675,7 @@ fn export_transcript(
         file.set_extension("md");
     }
 
-    let md = crate::transcript::to_markdown(&segments, stamp, direction);
+    let md = crate::transcript::to_markdown(&segments, stamp, direction.as_deref());
     std::fs::write(&file, md).map_err(|e| {
         CmdError::Failed(tf(
             Key::CmdWriteFailed,
@@ -738,7 +807,7 @@ fn model_cmd_error(e: crate::models::ModelError) -> CmdError {
 }
 
 fn select_model(app: &AppHandle, id: &str) -> Result<crate::models::status::ModelsList, CmdError> {
-    use crate::config::{AsrModelTier, MtModelTier};
+    use crate::config::AsrModelTier;
 
     let entry = crate::models::catalog::entry(id)
         .ok_or_else(|| CmdError::BadArgs(tf(Key::CmdUnknownModel, &[id])))?;
@@ -768,9 +837,6 @@ fn select_model(app: &AppHandle, id: &str) -> Result<crate::models::status::Mode
             }
         }
         crate::models::ModelKind::Mt => {
-            let tier = MtModelTier::parse(&entry.tier)
-                .ok_or_else(|| CmdError::BadArgs(tf(Key::CmdUnknownMtTier, &[&entry.tier])))?;
-            crate::prefs::update(app, |p| p.mt_model_tier = tier).map_err(CmdError::Failed)?;
             for m in &mut list.mt {
                 m.selected = m.id == id;
             }
@@ -793,6 +859,18 @@ fn exe_mtime_ms() -> Option<u64> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn reports_the_macos_product_version() {
+        let version = os_version().expect("macOS 必须能读到 kern.osproductversion");
+        let major = version
+            .split('.')
+            .next()
+            .and_then(|v| v.parse::<u32>().ok())
+            .expect("版本号格式应为 major.minor.patch");
+        assert!(major >= 10, "{version}");
+    }
 
     fn tmp(tag: &str) -> std::path::PathBuf {
         let d = std::env::temp_dir().join(format!("audioscript-logs-{tag}-{}", std::process::id()));
@@ -862,7 +940,7 @@ mod tests {
             "https://github.com/k2-fsa/sherpa-onnx/releases/tag/asr-models"
         ));
         assert!(is_allowed_link(
-            "https://huggingface.co/Helsinki-NLP/opus-mt-tc-big-en-zh"
+            "https://huggingface.co/Helsinki-NLP/opus-mt-en-zh"
         ));
         assert!(is_allowed_link(
             "https://creativecommons.org/licenses/by/4.0/"

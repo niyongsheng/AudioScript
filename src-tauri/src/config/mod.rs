@@ -128,6 +128,7 @@ pub enum TranslateEngine {
     Off,
     #[default]
     LocalNmt,
+    MacTranslation,
     RemoteApi,
     Mock,
 }
@@ -137,8 +138,20 @@ impl TranslateEngine {
         match self {
             Self::Off => "off",
             Self::LocalNmt => "local-nmt",
+            Self::MacTranslation => "mac-translation",
             Self::RemoteApi => "remote-api",
             Self::Mock => "mock",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        match s {
+            "off" => Some(Self::Off),
+            "local-nmt" => Some(Self::LocalNmt),
+            "mac-translation" => Some(Self::MacTranslation),
+            "remote-api" => Some(Self::RemoteApi),
+            "mock" => Some(Self::Mock),
+            _ => None,
         }
     }
 }
@@ -176,7 +189,7 @@ pub struct SessionConfig {
 
 #[typeshare]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
+#[serde(rename_all = "camelCase", default)]
 pub struct OverlayConfig {
     pub enable: bool,
     pub mode: OverlayMode,
@@ -187,6 +200,7 @@ pub struct OverlayConfig {
     pub bg_color: String,
     pub max_lines: u16,
     pub glow: bool,
+    pub glow_speed: u8,
 }
 
 #[typeshare]
@@ -230,7 +244,8 @@ impl Default for OverlayConfig {
             font_color: "#ffffff".into(),
             bg_color: "#101018".into(),
             max_lines: 6,
-            glow: true,
+            glow: false,
+            glow_speed: 0,
         }
     }
 }
@@ -241,6 +256,8 @@ pub const MIN_FONT_SIZE: u8 = 10;
 pub const MAX_FONT_SIZE: u8 = 48;
 #[typeshare]
 pub const MAX_OVERLAY_LINES: u16 = 20;
+#[typeshare]
+pub const MAX_GLOW_SPEED: u8 = 100;
 
 #[typeshare]
 pub const MIN_TRAILING_SILENCE_MS: u32 = 200;
@@ -267,6 +284,7 @@ pub enum AsrModelTier {
     #[default]
     Builtin,
     HighAccuracy,
+    Qwen3,
 }
 
 impl AsrModelTier {
@@ -274,6 +292,7 @@ impl AsrModelTier {
         match self {
             Self::Builtin => "builtin",
             Self::HighAccuracy => "high-accuracy",
+            Self::Qwen3 => "qwen3",
         }
     }
 
@@ -281,32 +300,7 @@ impl AsrModelTier {
         match s {
             "builtin" => Some(Self::Builtin),
             "high-accuracy" => Some(Self::HighAccuracy),
-            _ => None,
-        }
-    }
-}
-
-#[typeshare]
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
-#[serde(rename_all = "kebab-case")]
-pub enum MtModelTier {
-    #[default]
-    Base,
-    Big,
-}
-
-impl MtModelTier {
-    pub fn as_str(self) -> &'static str {
-        match self {
-            Self::Base => "base",
-            Self::Big => "big",
-        }
-    }
-
-    pub fn parse(s: &str) -> Option<Self> {
-        match s {
-            "base" => Some(Self::Base),
-            "big" => Some(Self::Big),
+            "qwen3" => Some(Self::Qwen3),
             _ => None,
         }
     }
@@ -354,6 +348,14 @@ pub enum Language {
     En,
     #[serde(rename = "ja")]
     Ja,
+    #[serde(rename = "ko")]
+    Ko,
+    #[serde(rename = "fr")]
+    Fr,
+    #[serde(rename = "de")]
+    De,
+    #[serde(rename = "es")]
+    Es,
 }
 
 #[typeshare]
@@ -399,6 +401,7 @@ impl OverlayConfig {
         self.opacity = self.opacity.min(100);
         self.font_size = self.font_size.clamp(MIN_FONT_SIZE, MAX_FONT_SIZE);
         self.max_lines = self.max_lines.clamp(1, MAX_OVERLAY_LINES);
+        self.glow_speed = self.glow_speed.min(MAX_GLOW_SPEED);
         self.font_color = normalize_color(&self.font_color, &d.font_color);
         self.bg_color = normalize_color(&self.bg_color, &d.bg_color);
 
@@ -448,7 +451,6 @@ pub struct Preferences {
     pub overlay_geometry: Option<WindowGeometry>,
     pub onboarding_done: bool,
     pub asr_model_tier: AsrModelTier,
-    pub mt_model_tier: MtModelTier,
     pub analytics_enabled: bool,
 }
 
@@ -472,7 +474,6 @@ impl Default for Preferences {
             overlay_geometry: None,
             onboarding_done: false,
             asr_model_tier: AsrModelTier::default(),
-            mt_model_tier: MtModelTier::default(),
             analytics_enabled: true,
         }
     }
@@ -496,7 +497,6 @@ pub struct PrefsPatch {
     pub sidebar_visible: Option<bool>,
     pub onboarding_done: Option<bool>,
     pub asr_model_tier: Option<AsrModelTier>,
-    pub mt_model_tier: Option<MtModelTier>,
     pub analytics_enabled: Option<bool>,
 }
 
@@ -511,7 +511,7 @@ impl PrefsPatch {
             }
         }
         if let Some(s) = &self.source_lang {
-            if !is_supported_lang(s) {
+            if !is_supported_source_lang(s) {
                 return Err(crate::i18n::tf(
                     crate::i18n::Key::PrefsUnknownSourceLang,
                     &[s],
@@ -519,7 +519,7 @@ impl PrefsPatch {
             }
         }
         if let Some(s) = &self.target_lang {
-            if !is_supported_lang(s) {
+            if !is_language_tag(s) {
                 return Err(crate::i18n::tf(
                     crate::i18n::Key::PrefsUnknownTargetLang,
                     &[s],
@@ -572,9 +572,6 @@ impl PrefsPatch {
         if let Some(v) = self.asr_model_tier {
             p.asr_model_tier = v;
         }
-        if let Some(v) = self.mt_model_tier {
-            p.mt_model_tier = v;
-        }
         if let Some(v) = self.analytics_enabled {
             p.analytics_enabled = v;
         }
@@ -588,10 +585,12 @@ impl Preferences {
         if !matches!(self.audio_source.as_str(), "mic" | "loopback" | "mix") {
             self.audio_source = d.audio_source;
         }
-        if !is_supported_lang(&self.source_lang) {
+        if !is_supported_source_lang(&self.source_lang) {
             self.source_lang = d.source_lang;
         }
-        let target_lang = effective_target_lang(&self.source_lang, &self.target_lang).to_owned();
+        let target_lang =
+            effective_target_lang(self.translate_engine, &self.source_lang, &self.target_lang)
+                .to_owned();
         self.target_lang = target_lang;
         self.device_id = normalize_device(self.device_id.take());
         self.mix_mic_device_id = normalize_device(self.mix_mic_device_id.take());
@@ -618,13 +617,29 @@ impl Preferences {
     }
 }
 
-pub fn direction_label(source_lang: &str, zh_script: ZhScript) -> &'static str {
+pub fn direction_label(source_lang: &str, target_lang: &str, zh_script: ZhScript) -> String {
+    use crate::i18n::{tf, Key};
+    tf(
+        Key::DirectionPair,
+        &[
+            lang_name(source_lang, zh_script),
+            lang_name(target_lang, zh_script),
+        ],
+    )
+}
+
+fn lang_name(lang: &str, zh_script: ZhScript) -> &str {
     use crate::i18n::{tr, Key};
-    match (source_lang.starts_with("zh"), zh_script) {
-        (true, ZhScript::Traditional) => tr(Key::DirectionZhTwEn),
-        (true, ZhScript::Simplified) => tr(Key::DirectionZhCnEn),
-        (false, ZhScript::Traditional) => tr(Key::DirectionEnZhTw),
-        (false, ZhScript::Simplified) => tr(Key::DirectionEnZhCn),
+    match lang {
+        "en" => tr(Key::LangEnglish),
+        "zh" if zh_script == ZhScript::Traditional => tr(Key::LangChineseTraditional),
+        "zh" => tr(Key::LangChineseSimplified),
+        "ja" => tr(Key::LangJapanese),
+        "ko" => tr(Key::LangKorean),
+        "fr" => tr(Key::LangFrench),
+        "de" => tr(Key::LangGerman),
+        "es" => tr(Key::LangSpanish),
+        other => other,
     }
 }
 
@@ -636,16 +651,36 @@ pub fn target_lang_for(source_lang: &str) -> &'static str {
     }
 }
 
-pub fn is_supported_lang(lang: &str) -> bool {
+pub fn is_supported_source_lang(lang: &str) -> bool {
     matches!(lang, "en" | "zh")
+}
+
+pub fn is_language_tag(value: &str) -> bool {
+    !value.is_empty()
+        && value.split('-').all(|part| {
+            !part.is_empty() && part.len() <= 8 && part.chars().all(|c| c.is_ascii_alphanumeric())
+        })
+}
+
+fn base_lang(lang: &str) -> &str {
+    lang.split('-').next().unwrap_or(lang)
 }
 
 pub fn normalize_device(id: Option<String>) -> Option<String> {
     id.filter(|s| !s.is_empty())
 }
 
-pub fn effective_target_lang<'a>(source_lang: &str, target_lang: &'a str) -> &'a str {
-    if is_supported_lang(target_lang) && target_lang != source_lang {
+pub fn effective_target_lang<'a>(
+    engine: TranslateEngine,
+    source_lang: &str,
+    target_lang: &'a str,
+) -> &'a str {
+    let supported = if engine == TranslateEngine::MacTranslation {
+        is_language_tag(target_lang) && base_lang(target_lang) != base_lang(source_lang)
+    } else {
+        matches!(target_lang, "en" | "zh") && target_lang != source_lang
+    };
+    if supported {
         target_lang
     } else {
         target_lang_for(source_lang)
@@ -799,22 +834,91 @@ mod tests {
     }
 
     #[test]
-    fn direction_label_covers_all_four_directions() {
+    fn extra_target_languages_survive_sanitizing() {
         assert_eq!(
-            direction_label("en", ZhScript::Simplified),
+            effective_target_lang(TranslateEngine::MacTranslation, "en", "ja"),
+            "ja"
+        );
+        assert_eq!(
+            effective_target_lang(TranslateEngine::MacTranslation, "zh", "fr"),
+            "fr"
+        );
+        assert_eq!(
+            effective_target_lang(TranslateEngine::MacTranslation, "en", "ko"),
+            "ko"
+        );
+        assert_eq!(
+            effective_target_lang(TranslateEngine::MacTranslation, "en", "de-Latn-DE"),
+            "de-Latn-DE"
+        );
+
+        let mac = Preferences {
+            translate_engine: TranslateEngine::MacTranslation,
+            source_lang: "en".into(),
+            target_lang: "ja".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(mac.target_lang, "ja");
+
+        let local = Preferences {
+            translate_engine: TranslateEngine::LocalNmt,
+            source_lang: "en".into(),
+            target_lang: "ja".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(local.target_lang, "zh", "Opus-MT 不支持的目标语言必须回退");
+    }
+
+    #[test]
+    fn extra_targets_are_patchable_but_not_sources() {
+        let target = PrefsPatch {
+            target_lang: Some("fr".into()),
+            ..Default::default()
+        };
+        assert!(target.validate().is_ok());
+
+        let source = PrefsPatch {
+            source_lang: Some("fr".into()),
+            ..Default::default()
+        };
+        assert!(source.validate().is_err());
+    }
+
+    #[test]
+    fn direction_label_renders_language_names() {
+        assert_eq!(
+            direction_label("en", "zh", ZhScript::Simplified),
             "英语 → 简体中文"
         );
         assert_eq!(
-            direction_label("zh", ZhScript::Simplified),
+            direction_label("zh", "en", ZhScript::Simplified),
             "简体中文 → 英语"
         );
         assert_eq!(
-            direction_label("en", ZhScript::Traditional),
+            direction_label("en", "zh", ZhScript::Traditional),
             "英语 → 繁体中文"
         );
         assert_eq!(
-            direction_label("zh", ZhScript::Traditional),
+            direction_label("zh", "en", ZhScript::Traditional),
             "繁体中文 → 英语"
+        );
+        assert_eq!(
+            direction_label("en", "ja", ZhScript::Simplified),
+            "英语 → 日语"
+        );
+        assert_eq!(
+            direction_label("zh", "fr", ZhScript::Traditional),
+            "繁体中文 → 法语"
+        );
+        assert_eq!(
+            direction_label("en", "de", ZhScript::Simplified),
+            "英语 → 德语"
+        );
+        assert_eq!(
+            direction_label("en", "es", ZhScript::Simplified),
+            "英语 → 西班牙语"
         );
     }
 
@@ -894,7 +998,18 @@ mod tests {
         let c = OverlayConfig::default();
         assert!(c.enable, "出箱即显示悬浮窗");
         assert_eq!(c.mode, OverlayMode::Edit, "出箱即可拖动 / 缩放");
-        assert!(c.glow, "发光边框默认开是产品定位，别改回去");
+        assert!(!c.glow, "彩色边框默认关");
+        assert_eq!(c.glow_speed, 0, "流光速度默认 0：静止");
+    }
+
+    #[test]
+    fn overlay_config_accepts_files_without_glow_speed() {
+        let c: OverlayConfig = serde_json::from_str(
+            r##"{"enable":true,"mode":"edit","alwaysOnTop":true,"opacity":60,"fontSize":22,"fontColor":"#ffffff","bgColor":"#101018","maxLines":6,"glow":true}"##,
+        )
+        .expect("旧版偏好文件缺少 glowSpeed 时不能整份回退默认值");
+        assert!(c.glow);
+        assert_eq!(c.glow_speed, 0);
     }
 
     #[test]
@@ -903,6 +1018,7 @@ mod tests {
             opacity: 250,
             font_size: 200,
             max_lines: 9999,
+            glow_speed: 250,
             ..Default::default()
         }
         .sanitized();
@@ -910,6 +1026,7 @@ mod tests {
         assert_eq!(c.opacity, 100, "不透明度上限是 100");
         assert_eq!(c.font_size, MAX_FONT_SIZE);
         assert_eq!(c.max_lines, MAX_OVERLAY_LINES);
+        assert_eq!(c.glow_speed, MAX_GLOW_SPEED);
     }
 
     #[test]

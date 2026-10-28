@@ -72,6 +72,7 @@ export interface AppInfo {
   version: string
   platform: string
   arch: string
+  osVersion?: string | null
   builtAtMs: number | null
 }
 
@@ -87,6 +88,10 @@ export interface ConfigDefaults {
 
 export function appInfo(): Promise<AppInfo> {
   return call<AppInfo>('app_info')
+}
+
+export function macTranslationLanguages(): Promise<string[]> {
+  return call<string[]>('mac_translation_languages')
 }
 
 export function localeGet(): Promise<string> {

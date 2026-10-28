@@ -5,7 +5,7 @@
       "id": "asr-builtin",
       "kind": "asr",
       "tier": "builtin",
-      "title": "内置语音识别（小模型）",
+      "title": "Zipformer 小模型",
       "description": "中英双语流式识别，随应用分发，开箱即用。",
       "bundled": true,
       "downloadable": false,
@@ -36,7 +36,7 @@
       "id": "asr-high-accuracy",
       "kind": "asr",
       "tier": "high-accuracy",
-      "title": "高精度语音识别",
+      "title": "Zipformer 高精度",
       "description": "更大的双语流式模型，识别更准，占用更多内存与 CPU。",
       "bundled": false,
       "downloadable": true,
@@ -73,10 +73,63 @@
       "sourceUrl": "https://github.com/k2-fsa/sherpa-onnx"
     },
     {
+      "id": "asr-qwen3",
+      "kind": "asr",
+      "tier": "qwen3",
+      "title": "Qwen3-ASR 高精度",
+      "description": "0.6B 多语言离线识别，句末出字；下载与内存占用较大。",
+      "bundled": false,
+      "downloadable": true,
+      "multilingual": true,
+      "install": {
+        "dir": "asr-qwen3",
+        "archiveRoot": "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25"
+      },
+      "required": {
+        "asr": {
+          "format": "qwen3-asr",
+          "convFrontend": "conv_frontend.onnx",
+          "encoder": "encoder.int8.onnx",
+          "decoder": "decoder.int8.onnx",
+          "tokenizerDir": "tokenizer",
+          "files": [
+            "tokenizer/merges.txt",
+            "tokenizer/tokenizer_config.json",
+            "tokenizer/vocab.json"
+          ]
+        }
+      },
+      "archive": {
+        "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25.tar.bz2",
+        "format": "tar-bz2",
+        "sha256": "393f8a14e2f5fb96746aaab342997a40641001fbd5bf9592a080a8329178ee96",
+        "sizeBytes": 878702423,
+        "maxExtractedBytes": 1100000000
+      },
+      "sizes": { "installedBytes": 1019215872 },
+      "licenses": [
+        {
+          "component": "Qwen/Qwen3-ASR-0.6B (ONNX export by k2-fsa/sherpa-onnx)",
+          "license": "Apache-2.0",
+          "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+          "requiresAttribution": false,
+          "attribution": "Qwen Team / Alibaba Cloud"
+        },
+        {
+          "component": "Silero VAD",
+          "license": "MIT",
+          "licenseUrl": "https://github.com/snakers4/silero-vad/blob/master/LICENSE",
+          "requiresAttribution": false,
+          "attribution": "Silero Team"
+        }
+      ],
+      "sourceUrl": "https://huggingface.co/Qwen/Qwen3-ASR-0.6B"
+    },
+    {
       "id": "mt-base",
       "kind": "mt",
       "tier": "base",
-      "title": "内置机器翻译（基础版）",
+      "title": "OPUS-MT 基础版",
       "description": "en→zh 与 zh→en 各一个轻量模型，延迟低，随应用分发。",
       "bundled": true,
       "downloadable": false,
@@ -107,50 +160,6 @@
         }
       ],
       "sourceUrl": "https://github.com/Helsinki-NLP/Opus-MT"
-    },
-    {
-      "id": "mt-big",
-      "kind": "mt",
-      "tier": "big",
-      "title": "大模型机器翻译（高精度）",
-      "description": "opus-mt-tc-big 双向模型，译文更自然；下载与内存占用明显更大。",
-      "bundled": false,
-      "downloadable": false,
-      "install": {
-        "dir": "mt/big",
-        "directions": ["opus-mt-tc-big-en-zh-ct2", "opus-mt-tc-big-zh-en-ct2"],
-        "archiveRoots": ["opus-mt-tc-big-en-zh-ct2", "opus-mt-tc-big-zh-en-ct2"]
-      },
-      "required": {
-        "mt": {
-          "files": ["model.bin", "source-tokenizer.json", "target-tokenizer.json"]
-        }
-      },
-      "archive": {
-        "url": "https://github.com/niyongsheng/AudioScript/releases/download/models-v1/opus-mt-tc-big-en-zh-zh-en-ct2-int8.tar.gz",
-        "format": "tar-gz",
-        "sha256": "",
-        "sizeBytes": 0,
-        "maxExtractedBytes": 629145600
-      },
-      "sizes": { "installedBytes": 524288000 },
-      "licenses": [
-        {
-          "component": "Helsinki-NLP/opus-mt-tc-big-en-zh",
-          "license": "CC-BY-4.0",
-          "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
-          "requiresAttribution": true,
-          "attribution": "Helsinki-NLP / OPUS-MT"
-        },
-        {
-          "component": "Helsinki-NLP/opus-mt-tc-big-zh-en",
-          "license": "CC-BY-4.0",
-          "licenseUrl": "https://creativecommons.org/licenses/by/4.0/",
-          "requiresAttribution": true,
-          "attribution": "Helsinki-NLP / OPUS-MT"
-        }
-      ],
-      "sourceUrl": "https://huggingface.co/Helsinki-NLP"
     }
   ]
 }

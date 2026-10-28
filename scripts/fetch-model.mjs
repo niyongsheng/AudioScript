@@ -26,6 +26,10 @@ const URL = `https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/
 
 const MODELS_DIR = join(ROOT, 'src-tauri', 'assets', 'models')
 const CACHE_DIR = join(ROOT, '.cache')
+const VAD_FILE = 'silero_vad.onnx'
+const VAD_URL = `https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/${VAD_FILE}`
+const VAD_SHA = '9e2449e1087496d8d4caba907f23e0bd3f78d91fa552479bb9c23ac09cbb1fd6'
+const VAD_PATH = join(MODELS_DIR, VAD_FILE)
 const TARGET_DIR = high ? join(CACHE_DIR, 'asr-high') : join(MODELS_DIR, MODEL)
 const EXTRACTED_DIR = join(dirname(TARGET_DIR), MODEL)
 const ARCHIVE = join(CACHE_DIR, `${MODEL}.tar.bz2`)
@@ -57,17 +61,45 @@ async function exists(p) {
   }
 }
 
+async function fetchTo(url, dest) {
+  const res = await fetch(url, { redirect: 'follow' })
+  if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`)
+  await pipeline(Readable.fromWeb(res.body), createWriteStream(dest))
+}
+
 async function download() {
   await mkdir(CACHE_DIR, { recursive: true })
   process.stdout.write(`⬇️  下载 ${MODEL}\n    ${URL}\n`)
 
-  const res = await fetch(URL, { redirect: 'follow' })
-  if (!res.ok) {
-    console.error(`❌ 下载失败：HTTP ${res.status} ${res.statusText}`)
+  try {
+    await fetchTo(URL, ARCHIVE)
+  } catch (e) {
+    console.error(`❌ 下载失败：${e.message}`)
     process.exit(1)
   }
-  await pipeline(Readable.fromWeb(res.body), createWriteStream(ARCHIVE))
   process.stdout.write(`✅ 已缓存到 ${ARCHIVE}\n`)
+}
+
+async function ensureVad() {
+  if (await exists(VAD_PATH)) {
+    if ((await sha256File(VAD_PATH)) === VAD_SHA) return
+  }
+
+  await mkdir(MODELS_DIR, { recursive: true })
+  await mkdir(CACHE_DIR, { recursive: true })
+  const tmp = join(CACHE_DIR, VAD_FILE)
+  process.stdout.write(`⬇️  下载 Silero VAD\n    ${VAD_URL}\n`)
+
+  try {
+    await fetchTo(VAD_URL, tmp)
+    if ((await sha256File(tmp)) !== VAD_SHA) throw new Error('SHA-256 不匹配')
+    await rm(VAD_PATH, { force: true })
+    await rename(tmp, VAD_PATH)
+    process.stdout.write(`✅ VAD 就绪：${VAD_PATH}\n`)
+  } catch (e) {
+    await rm(tmp, { force: true })
+    process.stdout.write(`⚠️  VAD 下载失败（Qwen3-ASR 需要它）：${e.message}\n`)
+  }
 }
 
 function extract() {
@@ -161,6 +193,8 @@ async function reportCatalog() {
 }
 
 async function main() {
+  await ensureVad()
+
   if (!force) {
     const missing = await missingFiles()
     if (missing.length === 0) {

@@ -1,3 +1,4 @@
+pub mod offline;
 pub mod segment;
 pub mod streaming;
 
@@ -37,6 +38,13 @@ impl EngineCaps {
         streaming: true,
         produces_partial: true,
         requires_full_utterance: false,
+        supports_endpoint: true,
+    };
+
+    pub const OFFLINE_QWEN3: Self = Self {
+        streaming: false,
+        produces_partial: false,
+        requires_full_utterance: true,
         supports_endpoint: true,
     };
 }

@@ -83,6 +83,8 @@ sha2 = "0.10"
 zhconv = { version = "0.4", features = ["opencc"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
+# macOS 26+ 的系统翻译（Translation.framework）；语言包由系统管理，应用不下载。
+translation-rs = "0.5"
 # Apple Silicon 的推荐组合就是 accelerate + ruy。
 ct2rs = { version = "0.10", default-features = false, features = [
     "tokenizers",
@@ -103,6 +105,10 @@ tauri-nspanel = { version = "2.1", default-features = false }
 # Tauri 只暴露布尔的 set_always_on_top，它映射到 NSFloatingWindowLevel(3)，盖不住他人全屏应用，
 # 故需直接调 NSWindow 的 level。
 objc2 = "0.6"
+
+# 模型下载要跟随系统代理：ureq 只认环境变量，macOS 的系统代理在 SCDynamicStore 里。
+core-foundation = "0.9"
+system-configuration = "0.7"
 
 # 麦克风授权状态查询与申请（AVCaptureDevice）。flexaudio-mic 内部的 status() 是 pub(crate)
 # 拿不到，而它公开的 preflight() 在授权未决时会弹窗并阻塞最多 30 秒，不能当查询用。
@@ -125,3 +131,5 @@ windows-sys = { version = "0.59", features = [
     "Win32_Foundation",
     "Win32_Storage_FileSystem",
 ] }
+# Windows 的系统代理在注册表里，ureq 的 proxy-from-env 读不到。
+winreg = "0.56"

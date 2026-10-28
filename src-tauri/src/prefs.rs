@@ -204,7 +204,6 @@ mod tests {
             .collect(),
             onboarding_done: true,
             asr_model_tier: crate::config::AsrModelTier::HighAccuracy,
-            mt_model_tier: crate::config::MtModelTier::Big,
             zh_script: crate::config::ZhScript::Traditional,
             analytics_enabled: false,
         };

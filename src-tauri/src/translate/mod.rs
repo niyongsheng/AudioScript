@@ -1,4 +1,6 @@
 pub mod local_nmt;
+#[cfg(target_os = "macos")]
+pub mod mac_translation;
 pub mod mock;
 pub mod queue;
 pub mod script;
@@ -19,6 +21,9 @@ pub enum TranslateError {
 
     #[error("{}", tf(Key::TranslateUnsupportedPair, &[.from.as_str(), .to.as_str()]))]
     UnsupportedPair { from: String, to: String },
+
+    #[error("{}", tf(Key::TranslatePlatformUnavailable, &[.0.as_str()]))]
+    PlatformUnavailable(String),
 
     #[error("{}", tf(Key::TranslateInvalidOutput, &[.reason.as_str()]))]
     Degenerate { reason: String },
@@ -91,6 +96,12 @@ impl TranslateCaps {
         incremental: false,
         offline: true,
         typical_latency_ms: 300,
+    };
+
+    pub const MAC_TRANSLATION: Self = Self {
+        incremental: false,
+        offline: true,
+        typical_latency_ms: 200,
     };
 }
 

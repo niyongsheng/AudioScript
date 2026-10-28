@@ -3,7 +3,7 @@ use std::path::{Path, PathBuf};
 use ct2rs::tokenizers::hf::Tokenizer as HfTokenizer;
 
 use super::{script, TranslateCaps, TranslateError, Translator};
-use crate::config::{MtModelTier, TranslateConfig, ZhScript};
+use crate::config::{TranslateConfig, ZhScript};
 use crate::i18n::{tf, tr, Key};
 use crate::models::catalog;
 
@@ -45,7 +45,6 @@ pub struct LocalNmt {
     engine: Option<ct2rs::Translator<MarianTokenizer>>,
     direction: Direction,
     script: ZhScript,
-    tier: MtModelTier,
     model_root: PathBuf,
 }
 
@@ -56,8 +55,8 @@ enum Direction {
 }
 
 impl Direction {
-    fn dir_name(self, tier: MtModelTier) -> &'static str {
-        let dirs = catalog::mt_entry(tier).direction_dirs();
+    fn dir_name(self) -> &'static str {
+        let dirs = catalog::mt_entry().direction_dirs();
         match self {
             Self::EnZh => dirs
                 .first()
@@ -97,12 +96,11 @@ impl Direction {
 }
 
 impl LocalNmt {
-    pub fn new(model_root: PathBuf, tier: MtModelTier) -> Self {
+    pub fn new(model_root: PathBuf) -> Self {
         Self {
             engine: None,
             direction: Direction::EnZh,
             script: ZhScript::default(),
-            tier,
             model_root,
         }
     }
@@ -124,14 +122,11 @@ impl LocalNmt {
     }
 
     fn model_dir(&self) -> PathBuf {
-        self.model_root.join(self.direction.dir_name(self.tier))
+        self.model_root.join(self.direction.dir_name())
     }
 
-    fn check_model_dir(dir: &Path, tier: MtModelTier) -> Result<(), TranslateError> {
-        let remedy = match tier {
-            MtModelTier::Base => tr(Key::TranslateRemedyFetchMt),
-            MtModelTier::Big => tr(Key::TranslateRemedyBig),
-        };
+    fn check_model_dir(dir: &Path) -> Result<(), TranslateError> {
+        let remedy = tr(Key::TranslateRemedyFetchMt);
 
         if !dir.is_dir() {
             return Err(TranslateError::MissingModelFile(tf(
@@ -162,7 +157,7 @@ impl Translator for LocalNmt {
         }
 
         let dir = self.model_dir();
-        Self::check_model_dir(&dir, self.tier)?;
+        Self::check_model_dir(&dir)?;
 
         let config = ct2rs::Config {
             num_threads_per_replica: 1,
@@ -253,39 +248,20 @@ mod tests {
 
     #[test]
     fn missing_model_dir_gives_actionable_error() {
-        let e =
-            LocalNmt::check_model_dir(Path::new("/nonexistent/mt"), MtModelTier::Base).unwrap_err();
+        let e = LocalNmt::check_model_dir(Path::new("/nonexistent/mt")).unwrap_err();
         let msg = e.to_string();
         assert!(msg.contains("fetch:mt"), "错误里要给出修复动作：{msg}");
-
-        let e =
-            LocalNmt::check_model_dir(Path::new("/nonexistent/mt"), MtModelTier::Big).unwrap_err();
-        assert!(e.to_string().contains("模型"), "{e}");
     }
 
     #[test]
-    fn tiers_map_to_their_direction_directories() {
-        assert_eq!(
-            Direction::EnZh.dir_name(MtModelTier::Base),
-            "opus-mt-en-zh-ct2"
-        );
-        assert_eq!(
-            Direction::ZhEn.dir_name(MtModelTier::Base),
-            "opus-mt-zh-en-ct2"
-        );
-        assert_eq!(
-            Direction::EnZh.dir_name(MtModelTier::Big),
-            "opus-mt-tc-big-en-zh-ct2"
-        );
-        assert_eq!(
-            Direction::ZhEn.dir_name(MtModelTier::Big),
-            "opus-mt-tc-big-zh-en-ct2"
-        );
+    fn directions_map_to_their_model_directories() {
+        assert_eq!(Direction::EnZh.dir_name(), "opus-mt-en-zh-ct2");
+        assert_eq!(Direction::ZhEn.dir_name(), "opus-mt-zh-en-ct2");
     }
 
     #[test]
     fn traditional_script_wraps_the_model_input_and_output() {
-        let mut t = LocalNmt::new(PathBuf::from("/tmp"), MtModelTier::Base);
+        let mut t = LocalNmt::new(PathBuf::from("/tmp"));
 
         t.script = ZhScript::Simplified;
         t.direction = Direction::ZhEn;
@@ -302,7 +278,7 @@ mod tests {
 
     #[test]
     fn translate_before_init_is_rejected() {
-        let mut t = LocalNmt::new(PathBuf::from("/tmp"), MtModelTier::Base);
+        let mut t = LocalNmt::new(PathBuf::from("/tmp"));
         assert!(matches!(
             t.translate("hello"),
             Err(TranslateError::NotInitialized)

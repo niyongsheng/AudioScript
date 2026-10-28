@@ -38,12 +38,6 @@ for (const m of catalog.models) {
       check(m.archive.sizeBytes > 0, `${m.id} 的 sizeBytes 未填写`)
       check(m.archive.maxExtractedBytes > 0, `${m.id} 的 maxExtractedBytes 未填写`)
     }
-    if (m.id === 'mt-big') {
-      check(
-        m.archive.url.includes('/releases/download/models-v1/'),
-        'mt-big 的下载地址必须位于 models-v1 release',
-      )
-    }
   } else {
     check(!m.downloadable, `${m.id} 标记为可下载但没有 archive`)
   }
@@ -52,8 +46,8 @@ for (const m of catalog.models) {
 for (const [kind, tier] of [
   ['asr', 'builtin'],
   ['asr', 'high-accuracy'],
+  ['asr', 'qwen3'],
   ['mt', 'base'],
-  ['mt', 'big'],
 ]) {
   const count = catalog.models.filter((m) => m.kind === kind && m.tier === tier).length
   check(count === 1, `${kind}/${tier} 档必须恰好有一个模型（当前 ${count}）`)

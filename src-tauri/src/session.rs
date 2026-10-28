@@ -9,8 +9,8 @@ use tauri::{AppHandle, Emitter, Manager};
 use crate::asr::{AsrEngine, TARGET_SAMPLE_RATE};
 use crate::audio::{self, CaptureHandle, SILENCE_RMS};
 use crate::config::{
-    effective_target_lang, AsrConfig, EngineType, MtModelTier, SessionConfig, TranslateConfig,
-    TranslateEngine, ZhScript,
+    effective_target_lang, AsrConfig, EngineType, SessionConfig, TranslateConfig, TranslateEngine,
+    ZhScript,
 };
 use crate::i18n::{tf, tr, Key};
 use crate::models::catalog;
@@ -22,35 +22,39 @@ use crate::translate::Translator;
 const TRANSLATE_QUEUE_CAPACITY: usize = 32;
 
 fn create_translator(
-    app: &AppHandle,
+    roots: &paths::ModelSearchRoots,
     cfg: &TranslateConfig,
-    mt_tier: MtModelTier,
 ) -> Result<Box<dyn Translator>, String> {
     let engine: Box<dyn Translator> = match cfg.engine {
         TranslateEngine::LocalNmt => {
-            let roots = paths::search_roots(app);
-            let resolved = paths::locate_mt_root(&roots, mt_tier)?;
+            let resolved = paths::locate_mt_root(roots)?;
             tracing::info!(
-                tier = mt_tier.as_str(),
                 via = resolved.via.as_str(),
                 path = %resolved.path.display(),
                 "翻译模型目录"
             );
-            let missing = paths::missing_mt_files(&resolved.path, catalog::mt_entry(mt_tier))?;
+            let missing = paths::missing_mt_files(&resolved.path, catalog::mt_entry())?;
             if !missing.is_empty() {
                 return Err(tf(
                     Key::TranslateSessionModelMissing,
                     &[
-                        &catalog::mt_entry(mt_tier).localized_title(),
+                        &catalog::mt_entry().localized_title(),
                         &resolved.path.display().to_string(),
                         &missing.join(", "),
                     ],
                 ));
             }
-            Box::new(crate::translate::local_nmt::LocalNmt::new(
-                resolved.path,
-                mt_tier,
-            ))
+            Box::new(crate::translate::local_nmt::LocalNmt::new(resolved.path))
+        }
+        TranslateEngine::MacTranslation => {
+            #[cfg(target_os = "macos")]
+            {
+                Box::new(crate::translate::mac_translation::MacTranslator::new())
+            }
+            #[cfg(not(target_os = "macos"))]
+            {
+                return Err(tf(Key::TranslateEngineNotWired, &[cfg.engine.as_str()]));
+            }
         }
         TranslateEngine::Mock => {
             let fail_every = std::env::var(crate::translate::mock::ENV_FAIL_EVERY)
@@ -387,8 +391,12 @@ pub fn start(
     devices: audio::DeviceSelection,
 ) -> Result<(), String> {
     let mut cfg = cfg;
-    let target_lang =
-        effective_target_lang(&cfg.translate.source_lang, &cfg.translate.target_lang).to_owned();
+    let target_lang = effective_target_lang(
+        cfg.translate.engine,
+        &cfg.translate.source_lang,
+        &cfg.translate.target_lang,
+    )
+    .to_owned();
     cfg.translate.target_lang = target_lang;
 
     tracing::info!("启动：收到命令");
@@ -422,6 +430,7 @@ pub fn start(
 
     let prefs = crate::prefs::load(app);
     let asr_entry = catalog::asr_entry(prefs.asr_model_tier);
+    let roots = paths::search_roots(app);
 
     let asr_dir = if let Some(custom) = cfg
         .asr
@@ -447,7 +456,6 @@ pub fn start(
         tracing::info!(path = %dir.display(), "使用自定义 ASR 模型目录");
         dir
     } else {
-        let roots = paths::search_roots(app);
         let resolved = paths::locate_asr(&roots, prefs.asr_model_tier)?;
         tracing::info!(
             tier = prefs.asr_model_tier.as_str(),
@@ -469,7 +477,19 @@ pub fn start(
         resolved.path
     };
 
-    let mut engine = crate::asr::streaming::StreamingAdapter::new();
+    let mut engine: Box<dyn AsrEngine> = match asr_entry.asr_format() {
+        Some(catalog::AsrFormat::Transducer) => {
+            Box::new(crate::asr::streaming::StreamingAdapter::new())
+        }
+        Some(catalog::AsrFormat::Qwen3Asr) => {
+            let vad = paths::vad_model_path(&roots)
+                .ok_or_else(|| tf(Key::AsrVadModelMissing, &[paths::VAD_MODEL_FILE]))?;
+            Box::new(crate::asr::offline::Qwen3OfflineAdapter::new(
+                vad, asr_entry,
+            ))
+        }
+        None => return Err(tf(Key::AsrInvalidConfig, &[&asr_entry.id])),
+    };
     let engine_cfg = AsrConfig {
         model_dir: Some(asr_dir.to_string_lossy().into_owned()),
         ..cfg.asr.clone()
@@ -483,13 +503,10 @@ pub fn start(
         "ASR 引擎已就绪"
     );
 
-    let engine: Arc<Mutex<Box<dyn AsrEngine>>> = Arc::new(Mutex::new(Box::new(engine)));
+    let engine: Arc<Mutex<Box<dyn AsrEngine>>> = Arc::new(Mutex::new(engine));
 
-    let translator: Arc<Mutex<Box<dyn Translator>>> = Arc::new(Mutex::new(create_translator(
-        app,
-        &cfg.translate,
-        prefs.mt_model_tier,
-    )?));
+    let translator: Arc<Mutex<Box<dyn Translator>>> =
+        Arc::new(Mutex::new(create_translator(&roots, &cfg.translate)?));
 
     let queue = Arc::new(JobQueue::new(TRANSLATE_QUEUE_CAPACITY));
     let events = events_sender()?;

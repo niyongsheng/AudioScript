@@ -2,11 +2,12 @@ use std::path::{Path, PathBuf};
 
 use tauri::{AppHandle, Manager};
 
-use crate::config::{AsrModelTier, MtModelTier};
+use crate::config::AsrModelTier;
 use crate::i18n::{tf, tr, Key};
-use crate::models::catalog::{self, CatalogEntry};
+use crate::models::catalog::{self, AsrFormat, CatalogEntry};
 
 pub const ENV_MODEL_DIR: &str = "AUDIOSCRIPT_MODEL_DIR";
+pub const VAD_MODEL_FILE: &str = "silero_vad.onnx";
 
 #[derive(Debug, Clone)]
 pub struct ResolvedModelDir {
@@ -96,6 +97,22 @@ pub fn search_roots(app: &AppHandle) -> ModelSearchRoots {
     }
 }
 
+pub fn vad_model_path(roots: &ModelSearchRoots) -> Option<PathBuf> {
+    for root in [
+        roots.env.as_ref(),
+        roots.dev.as_ref(),
+        roots.bundled.as_ref(),
+    ] {
+        if let Some(root) = root {
+            let path = root.join(VAD_MODEL_FILE);
+            if path.is_file() {
+                return Some(simplify(path));
+            }
+        }
+    }
+    None
+}
+
 fn add_candidate(
     candidates: &mut Vec<(PathBuf, ResolutionVia)>,
     root: &Option<PathBuf>,
@@ -178,27 +195,19 @@ pub fn locate_asr(
     )
 }
 
-pub fn locate_mt_root(
-    roots: &ModelSearchRoots,
-    tier: MtModelTier,
-) -> Result<ResolvedModelDir, String> {
-    let entry = catalog::mt_entry(tier);
-    let bundled = matches!(tier, MtModelTier::Base);
-    let remedy = if bundled {
-        tf(Key::PathBundledRemedyMt, &[ENV_MODEL_DIR])
-    } else {
-        tf(Key::PathOptionalRemedyMt, &[ENV_MODEL_DIR])
-    };
+pub fn locate_mt_root(roots: &ModelSearchRoots) -> Result<ResolvedModelDir, String> {
+    let entry = catalog::mt_entry();
+    let remedy = tf(Key::PathBundledRemedyMt, &[ENV_MODEL_DIR]);
     locate(
         roots,
-        bundled,
+        true,
         entry.installed_dir(),
         tf(Key::PathMtLabel, &[&entry.localized_title()]),
         remedy,
     )
 }
 
-fn file_names(dir: &Path) -> Result<Vec<String>, String> {
+pub(crate) fn file_names(dir: &Path) -> Result<Vec<String>, String> {
     let entries = std::fs::read_dir(dir).map_err(|e| {
         tf(
             Key::PathReadFailed,
@@ -223,7 +232,6 @@ fn matches_precision(name: &str, prefix: &str, precision: &str) -> bool {
 }
 
 pub fn missing_asr_files(dir: &Path, entry: &CatalogEntry) -> Result<Vec<String>, String> {
-    let names = file_names(dir)?;
     let req = entry
         .required
         .asr
@@ -231,20 +239,47 @@ pub fn missing_asr_files(dir: &Path, entry: &CatalogEntry) -> Result<Vec<String>
         .ok_or_else(|| tf(Key::PathCatalogAsr, &[&entry.id]))?;
 
     let mut missing = Vec::new();
-    for (prefix, precision) in [
-        ("encoder", req.encoder.as_str()),
-        ("decoder", req.decoder.as_str()),
-        ("joiner", req.joiner.as_str()),
-    ] {
-        if !names
-            .iter()
-            .any(|n| matches_precision(n, prefix, precision))
-        {
-            missing.push(format!("{prefix}*.onnx（{precision}）"));
+    match req.format {
+        AsrFormat::Transducer => {
+            let names = file_names(dir)?;
+            for (prefix, precision) in [
+                ("encoder", req.encoder.as_deref()),
+                ("decoder", req.decoder.as_deref()),
+                ("joiner", req.joiner.as_deref()),
+            ] {
+                let Some(precision) = precision else {
+                    missing.push(format!("{prefix}*.onnx（未配置）"));
+                    continue;
+                };
+                if !names
+                    .iter()
+                    .any(|n| matches_precision(n, prefix, precision))
+                {
+                    missing.push(format!("{prefix}*.onnx（{precision}）"));
+                }
+            }
+        }
+        AsrFormat::Qwen3Asr => {
+            for (label, value) in [
+                ("conv_frontend.onnx", req.conv_frontend.as_deref()),
+                ("encoder.onnx", req.encoder.as_deref()),
+                ("decoder.onnx", req.decoder.as_deref()),
+            ] {
+                match value {
+                    Some(file) if dir.join(file).is_file() => {}
+                    Some(file) => missing.push(file.to_owned()),
+                    None => missing.push(format!("{label}（未配置）")),
+                }
+            }
+            match req.tokenizer_dir.as_deref() {
+                Some(tok) if dir.join(tok).is_dir() => {}
+                Some(tok) => missing.push(format!("{tok}/")),
+                None => missing.push("tokenizer/（未配置）".into()),
+            }
         }
     }
     for f in &req.files {
-        if !names.iter().any(|n| n == f) {
+        if !dir.join(f).is_file() {
             missing.push(f.clone());
         }
     }
@@ -318,18 +353,17 @@ pub fn log_startup_selfcheck(app: &AppHandle) {
         Err(e) => tracing::error!("{e}"),
     }
 
-    match locate_mt_root(&roots, prefs.mt_model_tier) {
+    match locate_mt_root(&roots) {
         Ok(resolved) => {
             tracing::info!(
-                tier = prefs.mt_model_tier.as_str(),
                 via = resolved.via.as_str(),
                 path = %resolved.path.display(),
                 "翻译模型目录已解析"
             );
-            match missing_mt_files(&resolved.path, catalog::mt_entry(prefs.mt_model_tier)) {
+            match missing_mt_files(&resolved.path, catalog::mt_entry()) {
                 Ok(missing) if missing.is_empty() => {}
                 Ok(missing) => tracing::error!(
-                    "翻译模型文件不完整，缺少：{}\n→ 打开「模型」页重新下载，或切换回基础模型",
+                    "翻译模型文件不完整，缺少：{}\n→ 内置翻译模型缺失，请重新安装应用",
                     missing.join(", ")
                 ),
                 Err(e) => tracing::error!("{e}"),
@@ -495,8 +529,29 @@ mod tests {
     }
 
     #[test]
+    fn qwen3_layout_uses_its_own_required_files() {
+        let dir = temp_dir(&[
+            "conv_frontend.onnx",
+            "encoder.int8.onnx",
+            "decoder.int8.onnx",
+        ]);
+        std::fs::create_dir_all(dir.join("tokenizer")).unwrap();
+        for f in ["merges.txt", "tokenizer_config.json", "vocab.json"] {
+            std::fs::write(dir.join("tokenizer").join(f), b"x").unwrap();
+        }
+
+        let entry = catalog::entry("asr-qwen3").unwrap();
+        assert!(missing_asr_files(&dir, entry).unwrap().is_empty());
+
+        std::fs::remove_file(dir.join("decoder.int8.onnx")).unwrap();
+        let missing = missing_asr_files(&dir, entry).unwrap();
+        assert!(missing.iter().any(|m| m.contains("decoder")), "{missing:?}");
+        std::fs::remove_dir_all(&dir).ok();
+    }
+
+    #[test]
     fn mt_missing_files_name_direction_and_file() {
-        let entry = catalog::mt_entry(MtModelTier::Base);
+        let entry = catalog::mt_entry();
         let root = std::env::temp_dir().join(format!("paths-mt-{}", uuid::Uuid::new_v4()));
         let missing = missing_mt_files(&root, entry).unwrap();
         assert!(
@@ -512,7 +567,7 @@ mod tests {
 
     #[test]
     fn mt_base_locates_bundled_mt_dir() {
-        let rel = catalog::mt_entry(MtModelTier::Base).installed_dir();
+        let rel = catalog::mt_entry().installed_dir();
         let bundled = root_with(rel, &[]);
         let roots = ModelSearchRoots {
             env: None,
@@ -520,7 +575,7 @@ mod tests {
             dev: None,
             user: None,
         };
-        let got = locate_mt_root(&roots, MtModelTier::Base).unwrap();
+        let got = locate_mt_root(&roots).unwrap();
         assert_eq!(got.via, ResolutionVia::BundledResource);
         assert!(got.path.ends_with(rel));
         std::fs::remove_dir_all(&bundled).ok();

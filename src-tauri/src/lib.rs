@@ -139,6 +139,9 @@ pub fn run() {
             if let Err(e) = session::init_translate_worker() {
                 tracing::error!("{e}");
             }
+            if let Err(e) = crate::asr::offline::init_worker() {
+                tracing::error!("{e}");
+            }
             if let Err(e) = commands::init_executors() {
                 tracing::error!("{e}");
             }
@@ -164,7 +167,6 @@ pub fn run() {
                 "app_started",
                 Some(serde_json::json!({
                     "asr_model_tier": saved_prefs.asr_model_tier.as_str(),
-                    "mt_model_tier": saved_prefs.mt_model_tier.as_str(),
                     "translate_engine": saved_prefs.translate_engine.as_str(),
                     "source_lang": saved_prefs.source_lang,
                     "target_lang": saved_prefs.target_lang,
@@ -297,12 +299,7 @@ pub fn run() {
                         translate: config::TranslateConfig {
                             engine: std::env::var("AUDIOSCRIPT_TRANSLATE")
                                 .ok()
-                                .and_then(|v| match v.as_str() {
-                                    "off" => Some(config::TranslateEngine::Off),
-                                    "mock" => Some(config::TranslateEngine::Mock),
-                                    "local-nmt" => Some(config::TranslateEngine::LocalNmt),
-                                    _ => None,
-                                })
+                                .and_then(|v| config::TranslateEngine::parse(&v))
                                 .unwrap_or(config::TranslateEngine::LocalNmt),
                             source_lang: translate_source.clone(),
                             ..Default::default()

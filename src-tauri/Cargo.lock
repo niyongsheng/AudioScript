@@ -335,6 +335,7 @@ dependencies = [
  "anyhow",
  "block2",
  "bzip2 0.5.2",
+ "core-foundation 0.9.4",
  "ct2rs",
  "dunce",
  "flate2",
@@ -348,6 +349,7 @@ dependencies = [
  "sha2",
  "sherpa-onnx",
  "sys-locale",
+ "system-configuration",
  "tar",
  "tauri",
  "tauri-build",
@@ -363,10 +365,12 @@ dependencies = [
  "tracing",
  "tracing-appender",
  "tracing-subscriber",
+ "translation-rs",
  "typeshare",
  "ureq 2.12.1",
  "uuid",
  "windows-sys 0.59.0",
+ "winreg",
  "zhconv",
 ]
 
@@ -6286,6 +6290,16 @@ dependencies = [
  "tracing",
  "tracing-core",
  "tracing-log",
+]
+
+[[package]]
+name = "translation-rs"
+version = "0.5.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ae11183ba68389998dca2eaa319125b18303914ee69f4e0ac825d3adbaf6b4c4"
+dependencies = [
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

@@ -4,7 +4,7 @@ use tauri::{AppHandle, Manager};
 use super::catalog::{self, CatalogEntry};
 use super::state::ModelState;
 use super::ModelKind;
-use crate::config::{AsrModelTier, MtModelTier};
+use crate::config::AsrModelTier;
 
 #[typeshare::typeshare]
 #[derive(Debug, Clone, Serialize)]
@@ -31,6 +31,7 @@ pub struct ModelStatus {
     pub installed: bool,
     pub complete: bool,
     pub selected: bool,
+    pub multilingual: bool,
     pub path: Option<String>,
     pub via: Option<String>,
     pub installed_bytes: u32,
@@ -111,10 +112,7 @@ pub fn inspect(app: &AppHandle) -> ModelsList {
                 let selected = AsrModelTier::parse(&entry.tier) == Some(prefs.asr_model_tier);
                 inspect_asr(&roots, entry, selected)
             }
-            ModelKind::Mt => {
-                let selected = MtModelTier::parse(&entry.tier) == Some(prefs.mt_model_tier);
-                inspect_mt(&roots, entry, selected)
-            }
+            ModelKind::Mt => inspect_mt(&roots, entry, true),
         };
         match entry.kind {
             ModelKind::Asr => asr.push(status),
@@ -130,7 +128,7 @@ pub fn inspect(app: &AppHandle) -> ModelsList {
         asr,
         mt,
         job,
-        user_root: crate::paths::user_models_root(app).map(|p| p.display().to_string()),
+        user_root: roots.user.map(|p| p.display().to_string()),
     }
 }
 
@@ -160,6 +158,7 @@ fn base_status(entry: &CatalogEntry, selected: bool) -> ModelStatus {
         installed: false,
         complete: false,
         selected,
+        multilingual: entry.multilingual,
         path: None,
         via: None,
         installed_bytes: entry.sizes.installed_bytes.min(u32::MAX as u64) as u32,
@@ -208,11 +207,8 @@ fn inspect_mt(
     selected: bool,
 ) -> ModelStatus {
     let mut out = base_status(entry, selected);
-    let Some(tier) = MtModelTier::parse(&entry.tier) else {
-        return out;
-    };
 
-    if let Ok(resolved) = crate::paths::locate_mt_root(roots, tier) {
+    if let Ok(resolved) = crate::paths::locate_mt_root(roots) {
         out.installed = true;
         out.path = Some(resolved.path.display().to_string());
         out.via = Some(resolved.via.as_str().to_string());

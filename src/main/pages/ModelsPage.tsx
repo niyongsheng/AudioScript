@@ -46,7 +46,7 @@ function statusBadgeInfo(model: ModelStatus): {
   key: MessageKey
 } {
   if (model.complete) {
-    return { tone: 'ok', key: model.bundled ? 'models.bundled' : 'models.statusDownloaded' }
+    return model.bundled ? { tone: 'muted', key: 'models.bundled' } : { tone: 'ok', key: 'models.statusDownloaded' }
   }
   if (model.bundled) return { tone: 'danger', key: 'models.statusBundledMissing' }
   if (model.installed) return { tone: 'danger', key: 'models.statusIncomplete' }
@@ -314,8 +314,8 @@ function ModelRow({
               <Icon name="check" size={15} strokeWidth={2.25} />
             </span>
           )}
-          {model.bundled && <StatusBadge tone="muted">{t('models.bundled')}</StatusBadge>}
-          {!model.selected && <StatusBadge tone={badge.tone}>{t(badge.key)}</StatusBadge>}
+          {model.multilingual && <StatusBadge tone="info">{t('models.multilingual')}</StatusBadge>}
+          {(!model.selected || model.bundled) && <StatusBadge tone={badge.tone}>{t(badge.key)}</StatusBadge>}
         </span>
       }
       description={

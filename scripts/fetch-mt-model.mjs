@@ -1,8 +1,7 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
-import { copyFile, existsSync } from 'node:fs'
-import { mkdir, readdir, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readdir, rm, stat } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -15,19 +14,11 @@ const PYTHON = IS_WIN ? 'python' : 'python3'
 const PY = join(VENV_BIN, IS_WIN ? 'python.exe' : 'python')
 const TOK_CACHE = join(ROOT, '.cache', 'mt')
 
-const argv = process.argv.slice(2)
-const argValue = (name) => {
-  const i = argv.indexOf(name)
-  return i >= 0 ? argv[i + 1] : undefined
-}
-const big = argValue('--tier') === 'big'
-const printCatalog = argv.includes('--print-catalog')
-const force = argv.includes('--force')
+const force = process.argv.includes('--force')
 
-const MT_DIR = big ? join(ROOT, '.cache', 'mt-big-build') : join(ROOT, 'src-tauri', 'assets', 'models', 'mt')
-const DIST_DIR = join(ROOT, 'dist', 'models', 'models-v1')
+const MT_DIR = join(ROOT, 'src-tauri', 'assets', 'models', 'mt')
 
-const BASE_PAIRS = [
+const PAIRS = [
   {
     hf: 'Helsinki-NLP/opus-mt-en-zh',
     dir: 'opus-mt-en-zh-ct2',
@@ -41,25 +32,6 @@ const BASE_PAIRS = [
     note: 'zh→en (CC-BY-4.0，需署名)',
   },
 ]
-
-const BIG_PAIRS = [
-  {
-    hf: 'Helsinki-NLP/opus-mt-tc-big-en-zh',
-    candidates: ['Helsinki-NLP/opus-mt-tc-big-en-zh', 'Helsinki-NLP/opus-mt-tc-big-en-zho'],
-    dir: 'opus-mt-tc-big-en-zh-ct2',
-    tokenizer: 'tok-tc-big-en-zh',
-    note: 'en→zh tc-big (CC-BY-4.0)',
-  },
-  {
-    hf: 'Helsinki-NLP/opus-mt-tc-big-zh-en',
-    candidates: ['Helsinki-NLP/opus-mt-tc-big-zh-en', 'Helsinki-NLP/opus-mt-tc-big-zho-en'],
-    dir: 'opus-mt-tc-big-zh-en-ct2',
-    tokenizer: 'tok-tc-big-zh-en',
-    note: 'zh→en tc-big (CC-BY-4.0)',
-  },
-]
-
-const PAIRS = big ? BIG_PAIRS : BASE_PAIRS
 
 const SPM_TO_JSON_SCRIPT = `
 import sys, os, sentencepiece
@@ -85,66 +57,6 @@ async function dirSize(dir) {
     total += e.isDirectory() ? await dirSize(p) : (await stat(p)).size
   }
   return total
-}
-
-async function sha256File(path) {
-  const { createHash } = await import('node:crypto')
-  const { createReadStream } = await import('node:fs')
-  return new Promise((resolvePromise, reject) => {
-    const hash = createHash('sha256')
-    createReadStream(path)
-      .on('data', (chunk) => hash.update(chunk))
-      .on('error', reject)
-      .on('end', () => resolvePromise(hash.digest('hex')))
-  })
-}
-
-async function resolveHf(pair) {
-  if (!pair.candidates) return pair.hf
-  const endpoint = (process.env.HF_ENDPOINT || 'https://huggingface.co').replace(/\/$/, '')
-  for (const id of pair.candidates) {
-    try {
-      const res = await fetch(`${endpoint}/api/models/${id}`)
-      if (res.ok) {
-        process.stdout.write(`🔎 ${pair.note} → ${id}\n`)
-        return id
-      }
-    } catch {
-    }
-  }
-  throw new Error(`找不到 tc-big 仓库：${pair.candidates.join(' / ')}（检查网络/HF 访问）`)
-}
-
-async function packBig() {
-  const notice = [
-    'These model weights come from the Helsinki-NLP / OPUS-MT project (CC-BY-4.0).',
-    'AudioScript converts them to CTranslate2 int8 and converts the SentencePiece',
-    'vocabularies to tokenizer JSON. Training data is unchanged.',
-    '',
-    'Source: https://huggingface.co/Helsinki-NLP',
-    'License: https://creativecommons.org/licenses/by/4.0/',
-    '',
-  ].join('\n')
-
-  for (const pair of PAIRS) {
-    await writeFile(join(MT_DIR, pair.dir, 'NOTICE.txt'), notice)
-  }
-
-  await mkdir(DIST_DIR, { recursive: true })
-  const archive = join(DIST_DIR, 'opus-mt-tc-big-en-zh-zh-en-ct2-int8.tar.gz')
-  await rm(archive, { force: true })
-  process.stdout.write(`📦 打包 ${archive}\n`)
-  run('tar', ['-czf', archive, '-C', MT_DIR, '.'])
-
-  const sha = await sha256File(archive)
-  const size = (await stat(archive)).size
-  const installed = await dirSize(MT_DIR)
-  const fragment = { id: 'mt-big', sha256: sha, sizeBytes: size, installedBytes: installed }
-  if (printCatalog) {
-    process.stdout.write(`\nCATALOG_FRAGMENT\n${JSON.stringify(fragment, null, 2)}\n`)
-  } else {
-    process.stdout.write(`sha256=${sha}\nsizeBytes=${size}\ninstalledBytes=${installed}\n`)
-  }
 }
 
 async function isReady(dir) {
@@ -247,15 +159,7 @@ async function convert(pair) {
 }
 
 async function main() {
-  process.stdout.write(
-    `${big ? '可选大模型' : '内置'}机器翻译模型（opus-mt + CTranslate2 int8）\n\n`,
-  )
-  if (big) {
-    await rm(MT_DIR, { recursive: true, force: true })
-    for (const pair of PAIRS) {
-      pair.hf = await resolveHf(pair)
-    }
-  }
+  process.stdout.write('内置机器翻译模型（opus-mt + CTranslate2 int8）\n\n')
 
   for (const pair of PAIRS) {
     await convert(pair)
@@ -263,10 +167,6 @@ async function main() {
 
   const total = await dirSize(MT_DIR)
   process.stdout.write(`\n✅ 翻译模型全部就绪，合计 ${(total / 1024 / 1024).toFixed(0)} MB\n`)
-
-  if (big) {
-    await packBig()
-  }
 }
 
 main().catch((e) => {

@@ -4,7 +4,7 @@ use std::sync::OnceLock;
 use serde::Deserialize;
 
 use super::ModelKind;
-use crate::config::{AsrModelTier, MtModelTier};
+use crate::config::AsrModelTier;
 use crate::i18n::{tr, Key};
 
 #[derive(Debug, Deserialize)]
@@ -23,6 +23,8 @@ pub struct CatalogEntry {
     pub description: String,
     pub bundled: bool,
     pub downloadable: bool,
+    #[serde(default)]
+    pub multilingual: bool,
     pub install: InstallSpec,
     pub required: RequiredSpec,
     #[serde(default)]
@@ -57,11 +59,29 @@ pub struct RequiredSpec {
     pub mt: Option<MtRequired>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum AsrFormat {
+    #[default]
+    Transducer,
+    Qwen3Asr,
+}
+
 #[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
 pub struct AsrRequired {
-    pub encoder: String,
-    pub decoder: String,
-    pub joiner: String,
+    #[serde(default)]
+    pub format: AsrFormat,
+    #[serde(default)]
+    pub encoder: Option<String>,
+    #[serde(default)]
+    pub decoder: Option<String>,
+    #[serde(default)]
+    pub joiner: Option<String>,
+    #[serde(default)]
+    pub conv_frontend: Option<String>,
+    #[serde(default)]
+    pub tokenizer_dir: Option<String>,
     #[serde(default)]
     pub files: Vec<String>,
 }
@@ -133,8 +153,8 @@ pub fn asr_entry(tier: AsrModelTier) -> &'static CatalogEntry {
     by_tier(ModelKind::Asr, tier.as_str())
 }
 
-pub fn mt_entry(tier: MtModelTier) -> &'static CatalogEntry {
-    by_tier(ModelKind::Mt, tier.as_str())
+pub fn mt_entry() -> &'static CatalogEntry {
+    by_tier(ModelKind::Mt, "base")
 }
 
 fn by_tier(kind: ModelKind, tier: &str) -> &'static CatalogEntry {
@@ -146,12 +166,16 @@ fn by_tier(kind: ModelKind, tier: &str) -> &'static CatalogEntry {
 }
 
 impl CatalogEntry {
+    pub fn asr_format(&self) -> Option<AsrFormat> {
+        self.required.asr.as_ref().map(|r| r.format)
+    }
+
     pub fn localized_title(&self) -> &str {
         let key = match self.id.as_str() {
             "asr-builtin" => Some(Key::ModelAsrBuiltinTitle),
             "asr-high-accuracy" => Some(Key::ModelAsrHighTitle),
+            "asr-qwen3" => Some(Key::ModelAsrQwen3Title),
             "mt-base" => Some(Key::ModelMtBaseTitle),
-            "mt-big" => Some(Key::ModelMtBigTitle),
             _ => None,
         };
         match key {
@@ -217,6 +241,27 @@ pub fn validate(c: &Catalog) -> Result<(), String> {
         {
             return Err(format!("模型 {} 既没有方向目录也没有归档根目录", m.id));
         }
+        if let Some(asr) = &m.required.asr {
+            match asr.format {
+                AsrFormat::Transducer => {
+                    if asr.encoder.is_none() || asr.decoder.is_none() || asr.joiner.is_none() {
+                        return Err(format!("模型 {} 缺少 encoder/decoder/joiner", m.id));
+                    }
+                }
+                AsrFormat::Qwen3Asr => {
+                    if asr.conv_frontend.is_none()
+                        || asr.encoder.is_none()
+                        || asr.decoder.is_none()
+                        || asr.tokenizer_dir.is_none()
+                    {
+                        return Err(format!(
+                            "模型 {} 缺少 convFrontend/encoder/decoder/tokenizerDir",
+                            m.id
+                        ));
+                    }
+                }
+            }
+        }
         if let Some(archive) = &m.archive {
             if !archive.url.starts_with("https://") {
                 return Err(format!("模型 {} 的下载地址必须是 HTTPS", m.id));
@@ -229,9 +274,6 @@ pub fn validate(c: &Catalog) -> Result<(), String> {
                     return Err(format!("模型 {} 的归档体积未填写", m.id));
                 }
             }
-            if m.id == "mt-big" && !archive.url.contains("/releases/download/models-v1/") {
-                return Err("mt-big 的下载地址必须位于 models-v1 release".into());
-            }
         } else if m.downloadable {
             return Err(format!("模型 {} 标记为可下载但没有归档信息", m.id));
         }
@@ -240,8 +282,8 @@ pub fn validate(c: &Catalog) -> Result<(), String> {
     for (kind, tier) in [
         (ModelKind::Asr, "builtin"),
         (ModelKind::Asr, "high-accuracy"),
+        (ModelKind::Asr, "qwen3"),
         (ModelKind::Mt, "base"),
-        (ModelKind::Mt, "big"),
     ] {
         let count = c
             .models
@@ -276,8 +318,8 @@ mod tests {
             asr_entry(AsrModelTier::HighAccuracy).id,
             "asr-high-accuracy"
         );
-        assert_eq!(mt_entry(MtModelTier::Base).id, "mt-base");
-        assert_eq!(mt_entry(MtModelTier::Big).id, "mt-big");
+        assert_eq!(asr_entry(AsrModelTier::Qwen3).id, "asr-qwen3");
+        assert_eq!(mt_entry().id, "mt-base");
     }
 
     #[test]
