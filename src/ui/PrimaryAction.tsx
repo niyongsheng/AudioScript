@@ -11,10 +11,82 @@ interface Props {
 }
 
 const GLIDE = 9
+const WHEEL_GLIDE = 2.4
+const MASK_OFFSET = 102
+const WHEEL_OFFSET = 130
+const MASK_START = 102
+const WHEEL_START = 130
 
-function useSpecularFollow() {
+const PALETTE = [
+  '#3186ff 34%',
+  '#9378ff 37%',
+  '#f96bd6 39%',
+  '#fc413d 41%',
+  '#fc413d 48%',
+  '#ff6b2b 50%',
+  '#fec700 52%',
+  '#ffdb0f 56%',
+  '#88de42 58%',
+  '#0ebc5f 61%',
+  '#0ebc5f 65%',
+  '#2eaab2 70%',
+  '#00a9bb 72%',
+  '#3186ff 73%',
+  '#3186ff 100%',
+].join(', ')
+
+const BLUR: CSSProperties = {
+  position: 'absolute',
+  inset: -12,
+  filter: 'blur(2px)',
+  transform: 'translateZ(0)',
+  backfaceVisibility: 'hidden',
+  pointerEvents: 'none',
+}
+
+const CLIP: CSSProperties = {
+  position: 'absolute',
+  inset: 10,
+  borderRadius: '999px',
+  overflow: 'hidden',
+  transform: 'translateZ(0)',
+  backfaceVisibility: 'hidden',
+}
+
+const WEDGE: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  borderRadius: 'inherit',
+  scale: '4 1.2',
+}
+
+const WHEEL: CSSProperties = {
+  position: 'absolute',
+  inset: 0,
+  top: '50%',
+  translate: '0 -50%',
+  width: '100%',
+  aspectRatio: '1 / 1',
+  borderRadius: '50%',
+  rotate: `var(--glow-spin, ${WHEEL_START}deg)`,
+  background: `conic-gradient(${PALETTE})`,
+}
+
+const WEDGE_SOFT: CSSProperties = {
+  ...WEDGE,
+  maskImage: `conic-gradient(from var(--glow-angle, ${MASK_START}deg), transparent 0 55%, #000 70% 75%, transparent 89%)`,
+  WebkitMaskImage: `conic-gradient(from var(--glow-angle, ${MASK_START}deg), transparent 0 55%, #000 70% 75%, transparent 89%)`,
+}
+
+const WEDGE_SHARP: CSSProperties = {
+  ...WEDGE,
+  maskImage: `conic-gradient(from var(--glow-angle, ${MASK_START}deg), transparent 0 62%, #000 82%, transparent 89%)`,
+  WebkitMaskImage: `conic-gradient(from var(--glow-angle, ${MASK_START}deg), transparent 0 62%, #000 82%, transparent 89%)`,
+}
+
+function useGlowFollow() {
   const ref = useRef<HTMLButtonElement>(null)
-  const s = useRef({ cur: 0, target: 0, raf: 0, last: 0 })
+  const s = useRef({ a: MASK_START, r: WHEEL_START, target: MASK_START, raf: 0, last: 0 })
 
   const glide = useCallback((now: number) => {
     const el = ref.current
@@ -22,11 +94,19 @@ function useSpecularFollow() {
     const st = s.current
     const dt = st.last ? Math.min(0.05, (now - st.last) / 1000) : 1 / 60
     st.last = now
-    let diff = st.target - st.cur
-    diff -= Math.round(diff / 360) * 360
-    st.cur += diff * (1 - Math.exp(-dt * GLIDE))
-    el.style.setProperty('--spot', st.cur.toFixed(2))
-    st.raf = Math.abs(diff) > 0.2 ? requestAnimationFrame(glide) : 0
+
+    let da = st.target - st.a
+    da -= Math.round(da / 360) * 360
+    st.a += da * (1 - Math.exp(-dt * GLIDE))
+
+    let dr = st.target - MASK_OFFSET + WHEEL_OFFSET - st.r
+    dr -= Math.round(dr / 360) * 360
+    st.r += dr * (1 - Math.exp(-dt * WHEEL_GLIDE))
+
+    el.style.setProperty('--glow-angle', `${st.a.toFixed(2)}deg`)
+    el.style.setProperty('--glow-spin', `${st.r.toFixed(2)}deg`)
+
+    st.raf = Math.abs(da) > 0.2 || Math.abs(dr) > 0.2 ? requestAnimationFrame(glide) : 0
     if (!st.raf) st.last = 0
   }, [])
 
@@ -36,11 +116,8 @@ function useSpecularFollow() {
       if (!el) return
       const st = s.current
       const r = el.getBoundingClientRect()
-      const x = e.clientX - r.left
-      const y = e.clientY - r.top
-      el.style.setProperty('--px', `${x.toFixed(1)}px`)
-      el.style.setProperty('--py', `${y.toFixed(1)}px`)
-      st.target = (Math.atan2(y - r.height / 2, x - r.width / 2) * 180) / Math.PI + 90
+      const spot = (Math.atan2(e.clientY - r.top - r.height / 2, e.clientX - r.left - r.width / 2) * 180) / Math.PI + 90
+      st.target = spot + MASK_OFFSET
       if (!st.raf) st.raf = requestAnimationFrame(glide)
     },
     [glide],
@@ -75,23 +152,9 @@ function useElapsed(capturing: boolean): number {
   return elapsed
 }
 
-const PEAK = 14
-
-const RIM: CSSProperties = {
-  padding: 1.5,
-  background: `conic-gradient(from calc(var(--spot, 0) * 1deg - ${PEAK}deg), transparent 0deg, rgb(255 255 255 / 0.9) ${PEAK}deg, transparent 40deg)`,
-  maskImage: 'linear-gradient(#000 0 0), linear-gradient(#000 0 0)',
-  maskClip: 'content-box, border-box',
-  maskComposite: 'exclude',
-}
-
-const POOL: CSSProperties = {
-  background: 'radial-gradient(80px circle at var(--px, 50%) var(--py, 50%), rgb(255 255 255 / 0.22), transparent 65%)',
-}
-
 export function PrimaryAction({ capturing, pending, activeDevice, onToggle }: Props) {
   const { t } = useI18n()
-  const { ref, onPointerMove } = useSpecularFollow()
+  const { ref, onPointerMove } = useGlowFollow()
   const elapsed = useElapsed(capturing)
 
   const state = pending
@@ -109,23 +172,39 @@ export function PrimaryAction({ capturing, pending, activeDevice, onToggle }: Pr
         onPointerMove={onPointerMove}
         disabled={pending}
         className={cn(
-          'group relative flex w-full items-center justify-center rounded-[var(--radius-ctl)] px-3 py-2',
+          'group relative flex w-full items-center justify-center rounded-full px-3 py-2',
           'font-medium text-sm transition disabled:cursor-not-allowed disabled:opacity-50',
-          'hover:brightness-110',
-          capturing ? 'bg-[var(--color-danger)]' : 'bg-[var(--color-success)]',
           'text-[var(--color-accent-ink)]',
         )}
       >
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[var(--radius-ctl)] opacity-40 transition-opacity duration-200 group-hover:opacity-100"
-          style={RIM}
-        />
+          className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-40 transition-opacity duration-300 group-hover:opacity-100"
+        >
+          <span style={BLUR}>
+            <span style={CLIP}>
+              <span style={WEDGE_SOFT}>
+                <span style={WHEEL} />
+              </span>
+            </span>
+          </span>
+          <span style={BLUR}>
+            <span style={CLIP}>
+              <span style={WEDGE_SHARP}>
+                <span style={WHEEL} />
+              </span>
+            </span>
+          </span>
+        </span>
         <span
           aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[var(--radius-ctl)] opacity-0 transition-opacity duration-200 group-hover:opacity-100"
-          style={POOL}
-        />
+          className={cn(
+            'absolute inset-0 rounded-[inherit]',
+            capturing ? 'bg-[var(--color-danger)]' : 'bg-[var(--color-success)]',
+          )}
+        >
+          <span className="absolute inset-0 rounded-[inherit] bg-white opacity-0 transition-opacity duration-150 group-hover:opacity-10" />
+        </span>
         <span className="relative flex items-center justify-center gap-1.5">
           <Icon name={capturing ? 'stop' : 'play'} size={14} />
           {capturing ? t('action.stop') : t('action.start')}
