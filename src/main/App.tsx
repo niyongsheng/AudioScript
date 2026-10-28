@@ -18,6 +18,7 @@ import { OverlayPage } from './pages/OverlayPage'
 import { TranscribePage } from './pages/TranscribePage'
 import { TranslatePage } from './pages/TranslatePage'
 import { StoreProvider, useStore } from './store'
+import { UpdateToast } from './UpdateToast'
 import { WelcomeGate } from './WelcomeGate'
 import { SEEN_VERSION_KEY, WhatsNew, type WhatsNewFeature, whatsNewFor } from './WhatsNew'
 
@@ -102,12 +103,7 @@ function Shell() {
       <section className="flex min-w-0 flex-1 flex-col bg-[var(--color-surface-0)]">
         <TitleBarSpacer />
 
-        <Alerts
-          page={page}
-          onOpenPermissions={openPermissions}
-          onOpenAbout={() => setPage('about')}
-          onOpenTranslate={() => setPage('translate')}
-        />
+        <Alerts onOpenPermissions={openPermissions} onOpenTranslate={() => setPage('translate')} />
 
         <div className="flex-1 overflow-y-auto">
           <PageSwitch
@@ -124,6 +120,8 @@ function Shell() {
           </div>
         </footer>
       </section>
+
+      <UpdateToast hidden={page === 'about'} onOpenAbout={() => setPage('about')} />
     </main>
   )
 }
@@ -167,51 +165,24 @@ function PageSwitch({ page, onOpenPermissions, focusPermissions, onFocusPermissi
 }
 
 interface AlertsProps {
-  page: PageId
   onOpenPermissions: () => void
-  onOpenAbout: () => void
   onOpenTranslate: () => void
 }
 
-function Alerts({ page, onOpenPermissions, onOpenAbout, onOpenTranslate }: AlertsProps) {
+function Alerts({ onOpenPermissions, onOpenTranslate }: AlertsProps) {
   const { t } = useI18n()
-  const {
-    error,
-    setError,
-    hotkeyProblems,
-    audio,
-    languageMismatch,
-    status,
-    permissionError,
-    setPermissionError,
-    updateInfo,
-    updatePhase,
-  } = useStore()
+  const { error, setError, hotkeyProblems, audio, languageMismatch, status, permissionError, setPermissionError } =
+    useStore()
 
-  const showUpdate = Boolean(
-    updateInfo?.available && page !== 'about' && updatePhase !== 'downloading' && updatePhase !== 'ready',
-  )
   const showMismatch = languageMismatch && status === TaskStatus.Capturing
   const showSilent = Boolean(audio?.silent && audio.segments === 0 && status === TaskStatus.Capturing)
   const hasAlerts =
-    showUpdate || Boolean(error) || Boolean(permissionError) || showMismatch || hotkeyProblems.length > 0 || showSilent
+    Boolean(error) || Boolean(permissionError) || showMismatch || hotkeyProblems.length > 0 || showSilent
 
   if (!hasAlerts) return null
 
   return (
     <div className="mx-auto w-full max-w-2xl space-y-2 px-6 pt-4">
-      {showUpdate && (
-        <Alert
-          tone="info"
-          title={t('app.updateAvailable', { version: updateInfo?.version ?? '' })}
-          actions={
-            <Button size="sm" onClick={onOpenAbout}>
-              {t('app.updateGoAbout')}
-            </Button>
-          }
-        />
-      )}
-
       {error && (
         <Alert tone="error" title={t('app.operationFailed')} onDismiss={() => setError(null)}>
           <p className="break-words font-mono">{error}</p>
