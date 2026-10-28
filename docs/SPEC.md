@@ -283,7 +283,8 @@ interface OverlayConfig {
   fontColor: string
   bgColor: string                // 支持 rgba 半透明
   maxLines: number
-  glow: boolean                  // 默认 true：2px 彩色渐变描边，无外发光
+  glow: boolean                  // 默认 false：2px 彩色描边
+  glowSpeed: number              // 0 ~ 100，默认 0（静止）；大于 0 时转写中色盘按该速度沿边流动
 }
 ```
 
@@ -335,17 +336,21 @@ pub trait AsrEngine: Send {
 |---|---|---|
 | `local-streaming` 小模型 | ~58 MB | **内置**。首次启动零网络、零配置 |
 | `local-streaming` 高精度双语 | ~200 MB | 可选下载（带进度与校验） |
+| `local-streaming` Qwen3-ASR 0.6B | ~972 MB | 可选下载（离线，句末出字） |
 | `local-whisper` | GB 级 | 用户自行下载，应用内给指引（V0.2） |
-| `mac-native` / `remote-api` | 无 | 依赖系统语言包 / 用户填配置（V0.2） |
+| `mac-native` | 无 | macOS 26+ Apple Silicon 系统语音资产（规划，未实现） |
+| `remote-api` | 无 | 用户填配置（V0.2） |
 
 | 用途 | 模型 | 文件 |
 |---|---|---|
 | **V0.1 内置** | `sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16` | encoder int8 41 MB + decoder **fp32** 13 MB + joiner int8 3.1 MB + `tokens.txt` + `bpe.model` ≈ **58 MB** |
 | 可选高精度 | `sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20` | encoder int8 174–182 MB + decoder 13 MB + joiner int8 3.1 MB + tokens ≈ 200 MB |
+| 可选离线高精度 | `sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25` | conv_frontend 42 MB + encoder int8 176 MB + decoder int8 737 MB + tokenizer ≈ 972 MB；Silero VAD 随应用分发 |
 
 约束：
 
 - **int8 只在 encoder / joiner 上用，decoder MUST 保持 fp32**——官方示例的 int8 用法就是混合的，解码器量化对准确率的伤害不成比例。
+- **Qwen3-ASR 是离线模型**：用 Silero VAD 切句，只输出 final，MUST NOT 声称提供逐字 partial；识别跑在启动时预创建的离线线程上，MUST NOT 阻塞音频采集线程。
 - **下载后 MUST 剪裁**（`scripts/fetch-model.mjs`）：官方包里的 fp32 权重、`64/` `96/` chunk-size 变体、`test_wavs/` 全用不到，而 `bundle.resources` 是整目录复制、不做过滤——不剪裁时 `Contents/Resources/models/` 达 474 MB，剪裁后 58 MB。
 - 剪裁规则与 `asr/streaming.rs` 的 `Precision` **耦合**（按「encoder/joiner 取 int8、decoder 取 fp32」保留唯一一套权重，避免 `discover_model_files` 歧义）——改一处必须同步改另一处。
 - **模型文件 MUST NOT 提交进 git**：由 `scripts/fetch-model.mjs` 从官方 Releases 下载并剪裁到 `src-tauri/assets/models/`，挂 `package.json` 的 `prepare` 钩子，该目录进 `.gitignore`。
@@ -353,6 +358,20 @@ pub trait AsrEngine: Send {
 - 内置模型 MUST 覆盖中英双语实时转写；模型切换 MUST NOT 要求重启应用；自定义模型路径 MUST 支持。
 
 > 构建从此依赖一个外部下载步骤：配 CI 时 MUST 加缓存，且在首次跑通前 MUST NOT 写进发布流程。
+
+#### macOS 原生 ASR（规划，未实现）
+
+目标是给 macOS 26+ Apple Silicon 增加可选的 `EngineType::MacNative`，使用 Apple **SpeechAnalyzer + SpeechTranscriber**。当前代码里的 `MacNative` 只是枚举占位，`session.rs` 尚未接受该引擎。
+
+已确认的能力与约束：
+
+- **平台**：仅 macOS 26+ Apple Silicon；Intel 和 macOS 14/15 MUST 回退到 sherpa-onnx。
+- **API**：SpeechAnalyzer/SpeechTranscriber 是 Swift-only async API，Rust `speech` crate 目前只支持整文件分析；实时字幕 MUST 通过 Swift 桥接层消费 `AnalyzerInput`，MUST NOT 用 `SFSpeechRecognizer` 替代（其中文本地资产不可控）。
+- **音频格式**：输入 MUST 转换为 `SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith:)`，buffer 建议 ≥4096 帧；识别 MUST NOT 阻塞音频采集线程。
+- **模型资产**：由系统 `AssetInventory` 管理，应用 MUST NOT 打包或静默下载；UI 需要显示系统语言资产状态。
+- **权限**：`Info.plist` 需要 `NSSpeechRecognitionUsageDescription`（目前刻意未加）。
+- **语言**：以运行时 `supportedLocales` / `installedLocales` 为准；macOS 27 实测包含 `zh_CN`、`zh_TW`、`yue_CN`、`en_*`、`ja_JP`、`ko_KR`、`fr_*`，但不是稳定列表。
+- **质量门槛**：正式启用前 MUST 用 10 分钟中英音频做 spike，对比 sherpa 高精度模型的 WER、partial 延迟、内存；没有明显收益就只保留实验开关，不进入默认链路。
 
 ### 5.3 翻译引擎
 
@@ -396,6 +415,8 @@ pub trait Translator: Send {
 | 模型 | `Helsinki-NLP/opus-mt-{en-zh,zh-en}` 转 CTranslate2 **int8**，每方向 76 MB |
 | 许可 | en→zh Apache-2.0；zh→en CC-BY-4.0（**MUST 在关于页署名**） |
 | 延迟 | 70–77 ms/句（release，M 系列 CPU，beam=1） |
+
+**可选：macOS 26+ 系统翻译**——`TranslateEngine::MacTranslation` 走 `Translation.framework`，默认 `.lowLatency`；语言包由系统设置管理，应用 MUST NOT 尝试静默下载；仅 macOS 26+ 显示该选项，其余平台继续用 Opus-MT。源语言仍限定 en/zh（受 ASR 限制）；目标语言 MUST 从运行时 `LanguageAvailability.supportedLanguages` 读取（macOS 27 实测 20 余种），MUST NOT 在代码里写死列表；Opus-MT 仍只支持 en↔zh。
 
 **简繁方向**：本地模型只覆盖简体 ↔ 英语，繁体方向靠 OpenCC 规则转换补齐，MUST 统一走 `translate::script`：
 
