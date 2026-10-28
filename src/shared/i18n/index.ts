@@ -1,26 +1,34 @@
 import { useSyncExternalStore } from 'react'
+import { de } from './de'
 import { en } from './en'
+import { es } from './es'
+import { fr } from './fr'
 import { ja } from './ja'
+import { ko } from './ko'
 import { type Messages, zhCN } from './zh-CN'
 import { zhTW } from './zh-TW'
 
-export type Locale = 'zh-CN' | 'zh-TW' | 'en' | 'ja'
+const CATALOGS = {
+  'zh-CN': zhCN,
+  'zh-TW': zhTW,
+  en,
+  ja,
+  ko,
+  fr,
+  de,
+  es,
+}
+
+export type Locale = keyof typeof CATALOGS
 
 export type MessageKey = keyof Messages
 
 type Vars = Record<string, string | number>
 
-const CATALOGS: Record<Locale, Messages> = {
-  'zh-CN': zhCN,
-  'zh-TW': zhTW,
-  en,
-  ja,
-}
-
-export const LOCALES: readonly Locale[] = ['zh-CN', 'zh-TW', 'en', 'ja']
+export const LOCALES = Object.keys(CATALOGS) as readonly Locale[]
 
 export function isLocale(value: string): value is Locale {
-  return (LOCALES as readonly string[]).includes(value)
+  return value in CATALOGS
 }
 
 let current: Locale = 'en'

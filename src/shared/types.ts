@@ -109,6 +109,7 @@ export interface ModelStatus {
 	installed: boolean;
 	complete: boolean;
 	selected: boolean;
+	multilingual: boolean;
 	path?: string;
 	via?: string;
 	installedBytes: number;
@@ -140,6 +141,7 @@ export interface OverlayConfig {
 	bgColor: string;
 	maxLines: number;
 	glow: boolean;
+	glowSpeed: number;
 }
 
 export interface PermissionSnapshot {
@@ -150,6 +152,7 @@ export interface PermissionSnapshot {
 export enum TranslateEngine {
 	Off = "off",
 	LocalNmt = "local-nmt",
+	MacTranslation = "mac-translation",
 	RemoteApi = "remote-api",
 	Mock = "mock",
 }
@@ -171,6 +174,10 @@ export enum Language {
 	ZhTw = "zh-TW",
 	En = "en",
 	Ja = "ja",
+	Ko = "ko",
+	Fr = "fr",
+	De = "de",
+	Es = "es",
 }
 
 export interface WindowPos {
@@ -191,11 +198,7 @@ export interface WindowGeometry {
 export enum AsrModelTier {
 	Builtin = "builtin",
 	HighAccuracy = "high-accuracy",
-}
-
-export enum MtModelTier {
-	Base = "base",
-	Big = "big",
+	Qwen3 = "qwen3",
 }
 
 export interface Preferences {
@@ -216,7 +219,6 @@ export interface Preferences {
 	overlayGeometry?: WindowGeometry;
 	onboardingDone: boolean;
 	asrModelTier: AsrModelTier;
-	mtModelTier: MtModelTier;
 	analyticsEnabled: boolean;
 }
 
@@ -235,7 +237,6 @@ export interface PrefsPatch {
 	sidebarVisible?: boolean;
 	onboardingDone?: boolean;
 	asrModelTier?: AsrModelTier;
-	mtModelTier?: MtModelTier;
 	analyticsEnabled?: boolean;
 }
 
@@ -314,6 +315,7 @@ export enum EndpointProfile {
 export const MIN_FONT_SIZE: number = 10;
 export const MAX_FONT_SIZE: number = 48;
 export const MAX_OVERLAY_LINES: number = 20;
+export const MAX_GLOW_SPEED: number = 100;
 export const MIN_TRAILING_SILENCE_MS: number = 200;
 export const MAX_TRAILING_SILENCE_MS: number = 2000;
 export const MIN_MAX_UTTERANCE_MS: number = 2000;
