@@ -8,7 +8,7 @@
 
 <h1>AudioScript 声稿</h1>
 
-<p>监听系统声音输出，把外语播客、视频与会议实时转成「原文 + 译文」双语悬浮字幕。识别与翻译全部在本机完成，默认中文，macOS 26+ 可选更多目标语言。</p>
+<p>监听系统声音输出，把外语播客、视频与会议实时转成「原文 + 译文」双语悬浮字幕。识别与翻译全部在本机完成，内置中英文；可选 NLLB-200 多语言翻译，macOS 26+ 还可使用系统翻译。</p>
 
 <p>
   <a href="https://audioscript.looplooptech.com/">官网</a> ·
@@ -32,16 +32,16 @@ https://github.com/user-attachments/assets/b1f88a82-b3fe-4721-8736-af6a9e4d828e
 ## 功能
 
 - **采集**：系统声音 / 麦克风 / 两者混合。
-- **识别**：Zipformer 流式双语识别（内置小模型 / 可选高精度 / Qwen3-ASR）。
-- **翻译**：内置 Opus-MT（en ↔ zh）；macOS 26+ 可选系统翻译，目标语言跟随系统语言包。
+- **识别**：Zipformer 流式双语识别（内置小模型 / 可选高精度 / Qwen3-ASR）；macOS 26+ 可选系统语音识别。
+- **翻译**：内置 Opus-MT（en ↔ zh）；可选 NLLB-200 多语言翻译（仅限非商业用途）；macOS 26+ 可选系统语言包翻译。
 - **字幕悬窗**：双语对照，字号 / 不透明度 / 行数 / 彩色流光边框与速度可调。
 - **界面**：简体中文 / 繁體中文 / English / 日本語 / 한국어 / Français / Deutsch / Español。
 - **常驻**：托盘、关窗不退出、单实例、开机自启。
 
 ## 隐私
 
-* 语音识别与转译全部在本机完成，离线可用。
-* Aptabase匿名使用统计，可在「通用 → 隐私」中关闭。
+* 语音识别与翻译全部在本机完成，离线可用。
+* Aptabase 匿名使用统计，可在「通用 → 隐私」中关闭。
 
 ## 构建
 
@@ -62,4 +62,4 @@ pnpm tauri build      # 打包
 
 - [MIT](LICENSE)  
 
-- [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) Apache-2.0、[Qwen3-ASR](https://huggingface.co/Qwen/Qwen3-ASR-0.6B) Apache-2.0、[Silero VAD](https://github.com/snakers4/silero-vad) MIT、[CTranslate2](https://github.com/OpenNMT/CTranslate2) MIT、[opus-mt](https://github.com/Helsinki-NLP)、[translation-rs](https://github.com/doom-fish/translation-rs) MIT OR Apache-2.0、[flexaudio](https://crates.io/crates/flexaudio) MIT、[tauri-nspanel](https://github.com/ahkohd/tauri-nspanel) MIT OR Apache-2.0
+- [sherpa-onnx](https://github.com/k2-fsa/sherpa-onnx) Apache-2.0、[Qwen3-ASR](https://huggingface.co/Qwen/Qwen3-ASR-0.6B) Apache-2.0、[Silero VAD](https://github.com/snakers4/silero-vad) MIT、[CTranslate2](https://github.com/OpenNMT/CTranslate2) MIT、[opus-mt](https://github.com/Helsinki-NLP)、[NLLB-200](https://huggingface.co/facebook/nllb-200-distilled-600M) CC-BY-NC-4.0（可选）、[translation-rs](https://github.com/doom-fish/translation-rs) MIT OR Apache-2.0、[flexaudio](https://crates.io/crates/flexaudio) MIT、[tauri-nspanel](https://github.com/ahkohd/tauri-nspanel) MIT OR Apache-2.0

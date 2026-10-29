@@ -9,7 +9,7 @@
     <title>AudioScript 声稿 — 离线实时转写与双语悬浮字幕</title>
     <meta
       name="description"
-      content="监听系统声音输出，把外语播客、视频与会议实时转成「原文 + 译文」双语悬浮字幕。识别与翻译全部在本机完成，默认中文，macOS 26+ 可选更多目标语言。支持 macOS、Windows、Linux。"
+      content="监听系统声音输出，把外语播客、视频与会议实时转成「原文 + 译文」双语悬浮字幕。识别与翻译全部在本机完成，内置中英文，可选更多目标语言模型。支持 macOS、Windows、Linux。"
     />
     <meta name="author" content="Nico" />
     <link rel="canonical" href="https://audioscript.looplooptech.com/" />
@@ -1757,7 +1757,7 @@
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
         "name": "AudioScript 声稿",
-        "description": "监听系统声音输出，把外语播客、视频与会议实时转成原文 + 译文双语悬浮字幕。识别与翻译全部在本机完成，默认中文，macOS 26+ 可选更多目标语言。",
+        "description": "监听系统声音输出，把外语播客、视频与会议实时转成原文 + 译文双语悬浮字幕。识别与翻译全部在本机完成，内置中英文，可选更多目标语言模型。",
         "operatingSystem": "macOS 14.2+, Windows 10+, Linux",
         "applicationCategory": "MultimediaApplication",
         "softwareVersion": "0.3.1",
@@ -1823,8 +1823,8 @@
           </p>
           <h1 id="hero-title"><span class="zh" lang="zh-CN">所闻，即所见。</span><span class="en" lang="en">Hear it. Read it.</span></h1>
           <p class="hero-sub">
-            <span class="zh" lang="zh-CN">监听系统声音输出，把外语播客、视频与会议实时变成「原文 + 译文」双语悬浮字幕。识别与翻译都在本机完成；默认中文，macOS 26+ 可选更多目标语言。</span>
-            <span class="en" lang="en">AudioScript listens to your system audio and turns foreign podcasts, videos, and meetings into live bilingual subtitles — source text plus translation, recognized and translated entirely on your machine. Chinese is the default target; macOS 26+ supports more target languages.</span>
+            <span class="zh" lang="zh-CN">监听系统声音输出，把外语播客、视频与会议实时变成「原文 + 译文」双语悬浮字幕。识别与翻译都在本机完成；内置中英文，可选更多目标语言模型。</span>
+            <span class="en" lang="en">AudioScript listens to your system audio and turns foreign podcasts, videos, and meetings into live bilingual subtitles — source text plus translation, recognized and translated entirely on your machine. Chinese and English are built in; optional models add more target languages.</span>
           </p>
           <div class="hero-actions" data-reveal>
             <a class="btn btn-primary btn-lg magnet" href="#download">
@@ -1928,7 +1928,7 @@
             <article class="feature" data-reveal style="--d: 60ms">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" aria-hidden="true"><path d="M4 5h16v11H4zM8 20h8M12 16v4M7 9h10M7 12h6" /></svg>
               <h3><span class="zh" lang="zh-CN">流式双语字幕。</span><span class="en" lang="en">Streaming bilingual subtitles.</span></h3>
-              <p><span class="zh" lang="zh-CN">默认流式：partial 实时刷新，句末定稿；Qwen3 高精度模型按句输出。原文在上，译文在下。Opus-MT 支持英语 ↔ 中文，macOS 26+ 可选系统翻译。</span><span class="en" lang="en">Streaming by default: partials update live and freeze at sentence end; the Qwen3 high-accuracy model emits whole sentences. Source above, translation below. Opus-MT covers English ↔ Chinese; macOS 26+ adds system translation.</span></p>
+              <p><span class="zh" lang="zh-CN">默认流式：partial 实时刷新，句末定稿；Qwen3 高精度模型按句输出。原文在上，译文在下。Opus-MT 支持英语 ↔ 中文，可选 NLLB-200 补齐多语言，macOS 26+ 还可使用系统翻译。</span><span class="en" lang="en">Streaming by default: partials update live and freeze at sentence end; the Qwen3 high-accuracy model emits whole sentences. Source above, translation below. Opus-MT covers English ↔ Chinese; optional NLLB-200 adds 30-language translation, and macOS 26+ adds system translation.</span></p>
               <span class="mono">STREAM · EN ↔ ZH · MULTI-TARGET</span>
             </article>
             <article class="feature" data-reveal>
@@ -2047,6 +2047,12 @@
                 <p><span class="zh" lang="zh-CN">en → zh 与 zh → en 双向轻量模型，延迟低，随应用分发。macOS 26+ 还可切换系统翻译，目标语言跟随系统语言包。</span><span class="en" lang="en">Lightweight en → zh and zh → en models with low latency, shipped with the app. On macOS 26+, system translation adds more target languages from the installed system language packs.</span></p>
                 <span class="lic">Apache-2.0 / CC-BY-4.0</span>
               </div>
+              <div class="model-row">
+                <h3><span class="zh" lang="zh-CN">NLLB-200 多语言翻译</span><span class="en" lang="en">NLLB-200 multilingual translation</span></h3>
+                <span class="size">≈616 MB</span>
+                <p><span class="zh" lang="zh-CN">可选下载，下载包约 558 MB，覆盖 Qwen3-ASR 全部 30 种语言，Windows / Linux 上补齐多语言翻译。仅限非商业用途。</span><span class="en" lang="en">Optional download, about 558 MB, covering all 30 Qwen3-ASR languages and adding multilingual translation on Windows and Linux. Non-commercial use only.</span></p>
+                <span class="lic">CC-BY-NC-4.0 · <span class="zh" lang="zh-CN">按需下载</span><span class="en" lang="en">optional</span></span>
+              </div>
             </div>
           </div>
         </div>
@@ -2122,7 +2128,7 @@
             </details>
             <details name="faq">
               <summary><span class="zh" lang="zh-CN">支持哪些语言？</span><span class="en" lang="en">Which languages are supported?</span></summary>
-              <p><span class="zh" lang="zh-CN">默认 Opus-MT 支持英语 ↔ 中文，需要手动选择翻译方向。macOS 26+ 可切换系统翻译，目标语言取决于已安装的系统语言包（约 20 种）；翻译源语言仍限英语 / 中文。Qwen3-ASR 可做多语言离线识别，但不会自动切换翻译方向。</span><span class="en" lang="en">Opus-MT supports English ↔ Chinese by default, and you choose the direction. On macOS 26+, system translation supports more target languages from the installed system language packs (about 20); the translation source is still limited to English or Chinese. Qwen3-ASR can recognize more languages offline, but it does not switch the translation direction automatically.</span></p>
+              <p><span class="zh" lang="zh-CN">默认 Opus-MT 支持英语 ↔ 中文，需要手动选择翻译方向。Qwen3-ASR 可做 30 种语言离线识别，配合可选的 NLLB-200 模型即可翻译这些语言（模型页单独下载，仅限非商业用途）；macOS 26+ 还可改用系统翻译，目标语言取决于已安装的系统语言包（约 20 种）。</span><span class="en" lang="en">Opus-MT supports English ↔ Chinese by default, and you choose the direction. Qwen3-ASR recognizes 30 languages offline; with the optional NLLB-200 model those languages can also be translated (separate download on the Models page, non-commercial use only). On macOS 26+, system translation offers still more target languages from the installed system language packs (about 20).</span></p>
             </details>
             <details name="faq">
               <summary><span class="zh" lang="zh-CN">需要安装 BlackHole 之类的虚拟声卡吗？</span><span class="en" lang="en">Do I need BlackHole or another virtual audio driver?</span></summary>
@@ -2177,11 +2183,11 @@
         var META = {
           zh: {
             title: 'AudioScript 声稿 — 离线实时转写与双语悬浮字幕',
-            desc: '监听系统声音输出，把外语播客、视频与会议实时转成「原文 + 译文」双语悬浮字幕。识别与翻译全部在本机完成，默认中文，macOS 26+ 可选更多目标语言。支持 macOS、Windows、Linux。',
+            desc: '监听系统声音输出，把外语播客、视频与会议实时转成「原文 + 译文」双语悬浮字幕。识别与翻译全部在本机完成，内置中英文，可选更多目标语言模型。支持 macOS、Windows、Linux。',
           },
           en: {
             title: 'AudioScript — Offline real-time transcription and bilingual subtitles',
-            desc: 'AudioScript turns whatever is playing on your system into live bilingual subtitles — source text plus translation, recognized and translated entirely on your machine. Chinese by default; macOS 26+ supports more target languages.',
+            desc: 'AudioScript turns whatever is playing on your system into live bilingual subtitles — source text plus translation, recognized and translated entirely on your machine. Chinese and English are built in; optional models add more target languages.',
           },
         }
         var root = document.documentElement

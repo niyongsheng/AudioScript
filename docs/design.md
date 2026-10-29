@@ -1,6 +1,6 @@
 # AudioScript — 配色与视觉语言
 
-**日期** 2026-10-16 · 落在 `src/shared/theme.css` 与 `src/ui/`
+**日期** 2026-10-29 · 落在 `src/shared/theme.css` 与 `src/ui/`
 
 > 架构与行为规范见 [SPEC.md](./SPEC.md)。
 
@@ -25,7 +25,9 @@
 | `--as-danger` | `#ff453a` | `#ff3b30` | systemRed |
 | `--as-warn` | `#ff9f0a` | `#ff9500` | systemOrange |
 
-底色是**中性灰**（三通道相同，彩度为零）：彩色只出现在主操作（实心绿/红 + 边缘流光，§3）、可选的悬浮窗流光边框与选中/焦点的蓝。`logo.svg` 用的是同一套色——改一个要顺手看另一个。
+底色是**中性灰**（三通道相同，彩度为零）：彩色只出现在主操作（实心绿/红 + 边缘流光，§3）、可选的悬浮窗流光边框、选中/焦点的蓝，以及模型页「流式 / 非流式」标签的紫。`logo.svg` 用的是同一套色——改一个要顺手看另一个。
+
+上表是主色；`*-bg` / `*-ink` 三元组、`--as-border-subtle`、purple、segment 等完整令牌见 `src/shared/theme.css`。
 
 关键几何：
 
@@ -39,7 +41,7 @@
 
 ## 2. 硬规则
 
-由 `theme.css` 顶部注释与组件文件承载，**改动前必读**：
+**改动前必读**：
 
 1. `.app-window.theme-light` **只作用于主窗口**。`overlay.html` 没有 `app-window` 类，悬浮窗**永远**拿 `:root` 的深色值——字幕浮在视频画面上，浅色没法读。
 2. `html:has(.overlay-body)` 那三条是透明窗的命脉。HTML/body MUST 完全透明、MUST NOT 有滚动条。验证：`getComputedStyle(document.body).backgroundColor` 必须是 `rgba(0, 0, 0, 0)`。
@@ -59,7 +61,6 @@
 - **输入设备选择器（`DeviceSelect`）**：自定义浮层，MUST NOT 用原生 `<select>`——`<option>` 渲染不了动态电平。每个选项是「5 点电平 + 设备名 + 声道/采样率」，展开时显示全列表电平，收起时只留选中设备。浮层 MUST 用 portal 渲染：分组卡片带 `overflow-hidden`，就地绝对定位会被裁掉。Mix 模式下拆成「麦克风」「系统声音」两行，各自一个选择器，MUST NOT 用一个下拉表达两个选中值。
 - **`ChoiceCard` / `ChoiceGroup`**：选中框 MUST 用 `border-2` + **未选中时透明**，MUST NOT "选中才加边框"——边框必须内嵌，否则整组会抖一下。MUST 走 `role="radio"` / `aria-checked`，MUST NOT 用 `<button aria-pressed>`（互斥选项，读屏器要能念出"共 3 项、第 2 项"）。
 - **`StatusBadge`**：各档**同一个形状**（淡底 + 同色系深字），没有实心档——颜色只承担语义，不承担音量。参考图的实心绿在一屏三颗、淡灰底上是整页最响的东西，而它表达的是"一切正常"。
-- **`SidebarToggle`（暂时下线）**：组件与入口已移除，边栏恒显。重做时按原来的两条：收起后 MUST 在内容区左上角**重新渲染一个**入口，MUST NOT 只把边栏 `display:none`——跟着一起消失就再也打不开了；可见性 MUST 持久化在 `Preferences.sidebarVisible` 而非只存前端（「重置所有设置」得能把它清掉）。
 - **状态点（`PrimaryAction` 里 6px 的圆点）**：就绪 `--as-success`、启动 / 停止中 `--as-warn`（脉冲）、采集中 `--as-danger`（脉冲）——与主操作按钮同一套绿 / 红语义。圆点颜色与它右边的文案 MUST 同源，分开判断就会出现"橙点 + 就绪"。
 - **`PermissionPanel`**：欢迎页与「通用 → 权限」区块**共用同一组件**，MUST NOT 各写一份（文案与状态映射分叉是这块最容易发生的事）。「没测过」用 `muted` 而不是 `warn`——颜色承担语义，不承担音量。系统音频的检测结论**只活在组件状态里，MUST NOT 落盘**：昨天缓存的「可用」是谎话。
 
