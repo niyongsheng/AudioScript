@@ -4,7 +4,7 @@ use std::sync::OnceLock;
 use serde::Deserialize;
 
 use super::ModelKind;
-use crate::config::AsrModelTier;
+use crate::config::{AsrModelTier, MtModelTier};
 use crate::i18n::{tr, Key};
 
 #[derive(Debug, Deserialize)]
@@ -25,6 +25,8 @@ pub struct CatalogEntry {
     pub downloadable: bool,
     #[serde(default)]
     pub multilingual: bool,
+    #[serde(default)]
+    pub languages: Vec<String>,
     pub install: InstallSpec,
     pub required: RequiredSpec,
     #[serde(default)]
@@ -86,8 +88,18 @@ pub struct AsrRequired {
     pub files: Vec<String>,
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum MtFormat {
+    #[default]
+    Marian,
+    Nllb,
+}
+
 #[derive(Debug, Deserialize)]
 pub struct MtRequired {
+    #[serde(default)]
+    pub format: MtFormat,
     #[serde(default)]
     pub files: Vec<String>,
 }
@@ -153,8 +165,8 @@ pub fn asr_entry(tier: AsrModelTier) -> &'static CatalogEntry {
     by_tier(ModelKind::Asr, tier.as_str())
 }
 
-pub fn mt_entry() -> &'static CatalogEntry {
-    by_tier(ModelKind::Mt, "base")
+pub fn mt_entry(tier: MtModelTier) -> &'static CatalogEntry {
+    by_tier(ModelKind::Mt, tier.as_str())
 }
 
 fn by_tier(kind: ModelKind, tier: &str) -> &'static CatalogEntry {
@@ -170,12 +182,21 @@ impl CatalogEntry {
         self.required.asr.as_ref().map(|r| r.format)
     }
 
+    pub fn mt_format(&self) -> Option<MtFormat> {
+        self.required.mt.as_ref().map(|r| r.format)
+    }
+
+    pub fn streaming(&self) -> Option<bool> {
+        self.asr_format().map(|f| f == AsrFormat::Transducer)
+    }
+
     pub fn localized_title(&self) -> &str {
         let key = match self.id.as_str() {
             "asr-builtin" => Some(Key::ModelAsrBuiltinTitle),
             "asr-high-accuracy" => Some(Key::ModelAsrHighTitle),
             "asr-qwen3" => Some(Key::ModelAsrQwen3Title),
             "mt-base" => Some(Key::ModelMtBaseTitle),
+            "mt-multilingual" => Some(Key::ModelMtMultilingualTitle),
             _ => None,
         };
         match key {
@@ -221,6 +242,10 @@ fn is_sha256(value: &str) -> bool {
     value.len() == 64 && value.bytes().all(|b| b.is_ascii_hexdigit())
 }
 
+fn is_language_code(value: &str) -> bool {
+    !value.is_empty() && value.chars().all(|c| c.is_ascii_lowercase())
+}
+
 pub fn validate(c: &Catalog) -> Result<(), String> {
     if c.version != 1 {
         return Err(format!("不支持的 catalog 版本 {}", c.version));
@@ -262,6 +287,26 @@ pub fn validate(c: &Catalog) -> Result<(), String> {
                 }
             }
         }
+        if let Some(mt) = &m.required.mt {
+            if mt.files.is_empty() {
+                return Err(format!("模型 {} 没有声明 MT 必需文件", m.id));
+            }
+            if mt.format == MtFormat::Nllb
+                && !(mt.files.iter().any(|f| f == "model.bin")
+                    && mt.files.iter().any(|f| f == "tokenizer.json"))
+            {
+                return Err(format!(
+                    "模型 {} 的 NLLB 条目必须声明 model.bin 与 tokenizer.json",
+                    m.id
+                ));
+            }
+        }
+        if m.multilingual && m.languages.is_empty() {
+            return Err(format!("多语言模型 {} 必须声明 languages", m.id));
+        }
+        if let Some(code) = m.languages.iter().find(|code| !is_language_code(code)) {
+            return Err(format!("模型 {} 的语言代码无效：{code}", m.id));
+        }
         if let Some(archive) = &m.archive {
             if !archive.url.starts_with("https://") {
                 return Err(format!("模型 {} 的下载地址必须是 HTTPS", m.id));
@@ -284,6 +329,7 @@ pub fn validate(c: &Catalog) -> Result<(), String> {
         (ModelKind::Asr, "high-accuracy"),
         (ModelKind::Asr, "qwen3"),
         (ModelKind::Mt, "base"),
+        (ModelKind::Mt, "multilingual"),
     ] {
         let count = c
             .models
@@ -319,7 +365,25 @@ mod tests {
             "asr-high-accuracy"
         );
         assert_eq!(asr_entry(AsrModelTier::Qwen3).id, "asr-qwen3");
-        assert_eq!(mt_entry().id, "mt-base");
+        assert_eq!(mt_entry(MtModelTier::Base).id, "mt-base");
+        assert_eq!(mt_entry(MtModelTier::Multilingual).id, "mt-multilingual");
+    }
+
+    #[test]
+    fn asr_entries_report_streaming() {
+        assert_eq!(entry("asr-builtin").unwrap().streaming(), Some(true));
+        assert_eq!(entry("asr-high-accuracy").unwrap().streaming(), Some(true));
+        assert_eq!(entry("asr-qwen3").unwrap().streaming(), Some(false));
+        assert_eq!(mt_entry(MtModelTier::Base).streaming(), None);
+        assert_eq!(mt_entry(MtModelTier::Multilingual).streaming(), None);
+    }
+
+    #[test]
+    fn bilingual_entries_declare_languages() {
+        for id in ["asr-builtin", "asr-high-accuracy", "mt-base"] {
+            let entry = entry(id).unwrap();
+            assert_eq!(entry.languages, ["zh", "en"], "{id} 缺少中英语言声明");
+        }
     }
 
     #[test]

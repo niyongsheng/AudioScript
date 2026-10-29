@@ -1,8 +1,8 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useStore } from '@/main/store'
+import { useModels } from '@/main/useModels'
 import { type MessageKey, useI18n } from '@/shared/i18n'
 import {
-  EVENT,
   formatCmdError,
   type ModelJobStatus,
   ModelPhase,
@@ -12,11 +12,8 @@ import {
   modelDownload,
   modelOpenDir,
   modelRemove,
-  modelSelect,
-  modelsList,
-  on,
 } from '@/shared/ipc'
-import { modelTitle } from '@/shared/models'
+import { formatBytes, modelLanguageLabel, modelStatusBadge, modelTitle } from '@/shared/models'
 import { ModelKind, TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
 import { Button } from '@/ui/Button'
@@ -25,11 +22,6 @@ import { Page } from '@/ui/Page'
 import { ProgressBar } from '@/ui/ProgressBar'
 import { SettingsGroup, SettingsRow } from '@/ui/Settings'
 import { StatusBadge } from '@/ui/StatusBadge'
-
-interface Failure {
-  modelId: string
-  message: string
-}
 
 const PHASE_KEYS: Record<ModelPhase, MessageKey> = {
   [ModelPhase.Downloading]: 'models.phaseDownloading',
@@ -41,81 +33,21 @@ const PHASE_KEYS: Record<ModelPhase, MessageKey> = {
   [ModelPhase.Failed]: 'models.phaseFailed',
 }
 
-function statusBadgeInfo(model: ModelStatus): {
-  tone: 'ok' | 'warn' | 'danger' | 'muted'
-  key: MessageKey
-} {
-  if (model.complete) {
-    return model.bundled ? { tone: 'muted', key: 'models.bundled' } : { tone: 'ok', key: 'models.statusDownloaded' }
-  }
-  if (model.bundled) return { tone: 'danger', key: 'models.statusBundledMissing' }
-  if (model.installed) return { tone: 'danger', key: 'models.statusIncomplete' }
-  if (model.downloadable) return { tone: 'warn', key: 'models.statusNotInstalled' }
-  return { tone: 'muted', key: 'models.statusNotPublished' }
-}
-
 export function ModelsPage() {
   const { status, setError } = useStore()
   const { t } = useI18n()
   const capturing = status === TaskStatus.Capturing
 
-  const [list, setList] = useState<ModelsList | null>(null)
-  const [loadError, setLoadError] = useState<string | null>(null)
-  const [job, setJob] = useState<ModelJobStatus | null>(null)
-  const [failure, setFailure] = useState<Failure | null>(null)
+  const { list, setList, job, loadError, failure, dismissFailure, clearLoadError, refresh } = useModels()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
 
-  const refresh = useCallback(async () => {
-    try {
-      const next = await modelsList()
-      setList(next)
-      setJob(next.job ?? null)
-      setLoadError(null)
-    } catch (e) {
-      setLoadError(formatCmdError(e))
-    }
-  }, [])
-
   function retry() {
-    setLoadError(null)
     void refresh()
   }
 
-  useEffect(() => {
-    let disposed = false
-    void refresh()
-
-    const unlisten = on<ModelJobStatus>(EVENT.modelsProgress, (payload) => {
-      if (disposed) return
-      const terminal =
-        payload.phase === ModelPhase.Done ||
-        payload.phase === ModelPhase.Failed ||
-        payload.phase === ModelPhase.Cancelled
-
-      if (!terminal) {
-        setJob(payload)
-        return
-      }
-
-      if (payload.phase === ModelPhase.Failed) {
-        setFailure({
-          modelId: payload.modelId,
-          message: payload.error ?? t('models.downloadFailedFallback'),
-        })
-      }
-      setJob(null)
-      void refresh()
-    })
-
-    return () => {
-      disposed = true
-      void unlisten.then((fn) => fn())
-    }
-  }, [refresh, t])
-
   async function download(modelId: string) {
-    setFailure(null)
+    dismissFailure()
     setBusyId(modelId)
     try {
       await modelDownload(modelId)
@@ -132,18 +64,6 @@ export function ModelsPage() {
       await modelCancel(jobId)
     } catch (e) {
       setError(formatCmdError(e))
-    }
-  }
-
-  async function select(modelId: string) {
-    setBusyId(modelId)
-    try {
-      setList(await modelSelect(modelId))
-      setConfirmRemove(null)
-    } catch (e) {
-      setError(formatCmdError(e))
-    } finally {
-      setBusyId(null)
     }
   }
 
@@ -198,7 +118,7 @@ export function ModelsPage() {
         <Alert
           tone="error"
           title={t('models.refreshFailed')}
-          onDismiss={() => setLoadError(null)}
+          onDismiss={clearLoadError}
           actions={
             <Button size="sm" onClick={retry}>
               {t('common.retry')}
@@ -225,9 +145,9 @@ export function ModelsPage() {
         <Alert
           tone="error"
           title={t('models.downloadFailedTitle', { title: modelTitleById(list, failure.modelId, t) })}
-          onDismiss={() => setFailure(null)}
+          onDismiss={dismissFailure}
         >
-          <p className="break-words">{failure.message}</p>
+          <p className="break-words">{failure.message ?? t('models.downloadFailedFallback')}</p>
         </Alert>
       )}
 
@@ -246,7 +166,6 @@ export function ModelsPage() {
               confirmRemove={confirmRemove === m.id}
               onDownload={() => void download(m.id)}
               onCancel={() => job && void cancel(job.jobId)}
-              onSelect={() => void select(m.id)}
               onRemove={() => void remove(m.id)}
               onCancelRemove={() => setConfirmRemove(null)}
             />
@@ -256,6 +175,7 @@ export function ModelsPage() {
 
       <p className="px-1 text-[var(--color-ink-2)] text-[0.7rem] leading-relaxed">
         {connected ? t('models.needsNetwork') : t('models.noStorage')}
+        <span className="ml-1">{t('models.switchHint')}</span>
         {connected && (
           <button type="button" className="ml-1 underline underline-offset-2" onClick={openModelsDir}>
             {t('models.openDir')}
@@ -274,7 +194,6 @@ interface RowProps {
   confirmRemove: boolean
   onDownload: () => void
   onCancel: () => void
-  onSelect: () => void
   onRemove: () => void
   onCancelRemove: () => void
 }
@@ -287,7 +206,6 @@ function ModelRow({
   confirmRemove,
   onDownload,
   onCancel,
-  onSelect,
   onRemove,
   onCancelRemove,
 }: RowProps) {
@@ -296,7 +214,8 @@ function ModelRow({
   const licenses = [...new Set(model.licenses.map((l) => l.license))]
   const needsAttribution = model.licenses.some((l) => l.requiresAttribution)
   const canDelete = model.installed && !model.bundled && model.downloadable && !model.selected && !capturing && !job
-  const badge = statusBadgeInfo(model)
+  const badge = modelStatusBadge(model)
+  const languageBadge = modelLanguageLabel(model, t)
 
   return (
     <SettingsRow
@@ -314,8 +233,11 @@ function ModelRow({
               <Icon name="check" size={15} strokeWidth={2.25} />
             </span>
           )}
-          {model.multilingual && <StatusBadge tone="info">{t('models.multilingual')}</StatusBadge>}
-          {(!model.selected || model.bundled) && <StatusBadge tone={badge.tone}>{t(badge.key)}</StatusBadge>}
+          {languageBadge && <StatusBadge tone="info">{languageBadge}</StatusBadge>}
+          {model.kind === ModelKind.Asr && (
+            <StatusBadge tone="purple">{t(model.streaming ? 'models.streaming' : 'models.nonStreaming')}</StatusBadge>
+          )}
+          <StatusBadge tone={badge.tone}>{t(badge.key)}</StatusBadge>
         </span>
       }
       description={
@@ -347,11 +269,7 @@ function ModelRow({
             </>
           ) : (
             <>
-              {model.selected ? null : model.installed && model.complete ? (
-                <Button size="sm" onClick={onSelect} disabled={busy}>
-                  {t('common.use')}
-                </Button>
-              ) : model.downloadable ? (
+              {(!model.installed || !model.complete) && model.downloadable && (
                 <Button
                   size="sm"
                   variant="primary"
@@ -361,7 +279,7 @@ function ModelRow({
                 >
                   {model.installed ? t('common.redownload') : t('common.download')}
                 </Button>
-              ) : null}
+              )}
 
               {canDelete &&
                 (confirmRemove ? (
@@ -374,7 +292,7 @@ function ModelRow({
                     </Button>
                   </>
                 ) : (
-                  <Button size="sm" variant="ghost" onClick={onRemove} disabled={busy}>
+                  <Button size="sm" variant="danger" onClick={onRemove} disabled={busy}>
                     {t('common.delete')}
                   </Button>
                 ))}
@@ -389,12 +307,4 @@ function ModelRow({
 function modelTitleById(list: ModelsList, id: string, t: (key: MessageKey) => string): string {
   const model = [...list.asr, ...list.mt].find((m) => m.id === id)
   return model ? modelTitle(model, t) : id
-}
-
-function formatBytes(bytes: number): string {
-  if (!bytes) return '—'
-  const mb = bytes / (1024 * 1024)
-  if (mb >= 1024) return `${(mb / 1024).toFixed(1)} GB`
-  if (mb >= 10) return `${Math.round(mb)} MB`
-  return `${mb.toFixed(1)} MB`
 }

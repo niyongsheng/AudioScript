@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { cn } from './cn'
 
-type Tone = 'ok' | 'warn' | 'danger' | 'muted' | 'info'
+type Tone = 'ok' | 'warn' | 'danger' | 'muted' | 'info' | 'purple'
 
 const TONE: Record<Tone, string> = {
   ok: 'bg-[var(--color-success-bg)] text-[var(--color-success-ink)]',
@@ -9,6 +9,7 @@ const TONE: Record<Tone, string> = {
   danger: 'bg-[var(--color-danger-bg)] text-[var(--color-danger-ink)]',
   muted: 'bg-[var(--color-surface-2)] text-[var(--color-ink-1)]',
   info: 'bg-[var(--color-surface-selected)] text-[var(--color-accent)]',
+  purple: 'bg-[var(--color-purple-bg)] text-[var(--color-purple-ink)]',
 }
 
 interface Props {

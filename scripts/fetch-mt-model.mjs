@@ -1,6 +1,8 @@
 #!/usr/bin/env node
 
 import { spawnSync } from 'node:child_process'
+import { createHash } from 'node:crypto'
+import { createReadStream } from 'node:fs'
 import { mkdir, readdir, rm, stat } from 'node:fs/promises'
 import { dirname, join, resolve } from 'node:path'
 import { fileURLToPath } from 'node:url'
@@ -15,8 +17,15 @@ const PY = join(VENV_BIN, IS_WIN ? 'python.exe' : 'python')
 const TOK_CACHE = join(ROOT, '.cache', 'mt')
 
 const force = process.argv.includes('--force')
+const multilingual = process.argv.includes('--multilingual')
 
 const MT_DIR = join(ROOT, 'src-tauri', 'assets', 'models', 'mt')
+const NLLB_HF = 'facebook/nllb-200-distilled-600M'
+const NLLB_DIR_NAME = 'nllb-200-distilled-600M-ct2-int8'
+const NLLB_ROOT = join(ROOT, '.cache', 'mt-nllb')
+const NLLB_OUT = join(NLLB_ROOT, NLLB_DIR_NAME)
+const NLLB_ARCHIVE = join(ROOT, '.cache', `${NLLB_DIR_NAME}.tar.gz`)
+const NLLB_URL = `https://github.com/niyongsheng/AudioScript/releases/download/models-v1/${NLLB_DIR_NAME}.tar.gz`
 
 const PAIRS = [
   {
@@ -59,12 +68,15 @@ async function dirSize(dir) {
   return total
 }
 
+async function hasFiles(dir, files) {
+  for (const f of files) {
+    if (!(await exists(join(dir, f)))) return false
+  }
+  return true
+}
+
 async function isReady(dir) {
-  return (
-    (await exists(join(dir, 'model.bin'))) &&
-    (await exists(join(dir, 'source-tokenizer.json'))) &&
-    (await exists(join(dir, 'target-tokenizer.json')))
-  )
+  return hasFiles(dir, ['model.bin', 'source-tokenizer.json', 'target-tokenizer.json'])
 }
 
 function run(cmd, args, opts = {}) {
@@ -158,7 +170,79 @@ async function convert(pair) {
   process.stdout.write(`✅ ${pair.note} 完成（${(size / 1024 / 1024).toFixed(0)} MB）\n`)
 }
 
+async function sha256File(path) {
+  const hash = createHash('sha256')
+  for await (const chunk of createReadStream(path)) hash.update(chunk)
+  return hash.digest('hex')
+}
+
+async function convertMultilingual() {
+  const required = ['model.bin', 'shared_vocabulary.json', 'config.json', 'tokenizer.json']
+  const complete = (dir) => hasFiles(dir, required)
+
+  if (force || !(await complete(NLLB_OUT))) {
+    await ensureVenv()
+    await mkdir(NLLB_ROOT, { recursive: true })
+    await rm(NLLB_OUT, { recursive: true, force: true })
+    process.stdout.write(`⬇️  转换 ${NLLB_HF}（下载 fp32 权重 + 转 int8，首次较久）…\n`)
+    run(join(VENV_BIN, IS_WIN ? 'ct2-transformers-converter.exe' : 'ct2-transformers-converter'), [
+      '--model',
+      NLLB_HF,
+      '--output_dir',
+      NLLB_OUT,
+      '--quantization',
+      'int8',
+      '--copy_files',
+      'tokenizer.json',
+      'special_tokens_map.json',
+      '--force',
+    ])
+    if (!(await complete(NLLB_OUT))) {
+      throw new Error(`转换后仍缺文件：${NLLB_OUT}`)
+    }
+  }
+
+  const installed = await dirSize(NLLB_OUT)
+  process.stdout.write(`📦 打包 ${NLLB_ARCHIVE}\n`)
+  run('tar', ['-C', NLLB_ROOT, '-czf', NLLB_ARCHIVE, NLLB_DIR_NAME])
+  const archiveSize = (await stat(NLLB_ARCHIVE)).size
+  const sha = await sha256File(NLLB_ARCHIVE)
+
+  process.stdout.write(`\n✅ NLLB 完成（安装后 ${(installed / 1024 / 1024).toFixed(0)} MB）\n`)
+  process.stdout.write(
+    [
+      '',
+      '上传到 GitHub Release：',
+      `  gh release create models-v1 ${NLLB_ARCHIVE} --title "Models v1" --notes "可选模型资源"`,
+      `  # release 已存在时：gh release upload models-v1 ${NLLB_ARCHIVE}`,
+      '',
+      'catalog 字段：',
+      JSON.stringify(
+        {
+          archive: {
+            url: NLLB_URL,
+            format: 'tar-gz',
+            sha256: sha,
+            sizeBytes: archiveSize,
+            maxExtractedBytes: Math.ceil(installed * 1.1),
+          },
+          sizes: { installedBytes: installed },
+        },
+        null,
+        2,
+      ),
+      '',
+    ].join('\n'),
+  )
+}
+
 async function main() {
+  if (multilingual) {
+    process.stdout.write('多语言机器翻译模型（NLLB-200 + CTranslate2 int8）\n\n')
+    await convertMultilingual()
+    return
+  }
+
   process.stdout.write('内置机器翻译模型（opus-mt + CTranslate2 int8）\n\n')
 
   for (const pair of PAIRS) {

@@ -39,7 +39,13 @@ export function Button({
         className,
       )}
     >
-      {icon && <Icon name={icon} size={size === 'md' ? 14 : 12} />}
+      {icon && (
+        <Icon
+          name={icon}
+          size={size === 'md' ? 14 : 12}
+          className={cn(pending && icon === 'refresh' && 'animate-spin')}
+        />
+      )}
       {children}
       {pending && <span className="ml-0.5 animate-pulse">…</span>}
     </button>

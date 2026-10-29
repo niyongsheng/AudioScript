@@ -195,12 +195,18 @@ pub fn locate_asr(
     )
 }
 
-pub fn locate_mt_root(roots: &ModelSearchRoots) -> Result<ResolvedModelDir, String> {
-    let entry = catalog::mt_entry();
-    let remedy = tf(Key::PathBundledRemedyMt, &[ENV_MODEL_DIR]);
+pub fn locate_mt_root(
+    roots: &ModelSearchRoots,
+    entry: &CatalogEntry,
+) -> Result<ResolvedModelDir, String> {
+    let remedy = if entry.bundled {
+        tf(Key::PathBundledRemedyMt, &[ENV_MODEL_DIR])
+    } else {
+        tf(Key::PathOptionalRemedyMt, &[ENV_MODEL_DIR])
+    };
     locate(
         roots,
-        true,
+        entry.bundled,
         entry.installed_dir(),
         tf(Key::PathMtLabel, &[&entry.localized_title()]),
         remedy,
@@ -294,6 +300,16 @@ pub fn missing_mt_files(root: &Path, entry: &CatalogEntry) -> Result<Vec<String>
         .as_ref()
         .ok_or_else(|| tf(Key::PathCatalogMt, &[&entry.id]))?;
 
+    if entry.mt_format() == Some(catalog::MtFormat::Nllb) {
+        let missing = req
+            .files
+            .iter()
+            .filter(|f| !root.join(f.as_str()).is_file())
+            .cloned()
+            .collect();
+        return Ok(missing);
+    }
+
     let directions = entry.direction_dirs();
     if directions.is_empty() {
         return Err(tf(Key::PathCatalogDirections, &[&entry.id]));
@@ -353,18 +369,25 @@ pub fn log_startup_selfcheck(app: &AppHandle) {
         Err(e) => tracing::error!("{e}"),
     }
 
-    match locate_mt_root(&roots) {
+    let mt_entry = catalog::mt_entry(prefs.mt_model_tier);
+    match locate_mt_root(&roots, mt_entry) {
         Ok(resolved) => {
             tracing::info!(
                 via = resolved.via.as_str(),
                 path = %resolved.path.display(),
+                model = %mt_entry.id,
                 "翻译模型目录已解析"
             );
-            match missing_mt_files(&resolved.path, catalog::mt_entry()) {
+            match missing_mt_files(&resolved.path, mt_entry) {
                 Ok(missing) if missing.is_empty() => {}
                 Ok(missing) => tracing::error!(
-                    "翻译模型文件不完整，缺少：{}\n→ 内置翻译模型缺失，请重新安装应用",
-                    missing.join(", ")
+                    "翻译模型文件不完整，缺少：{}\n→ {}",
+                    missing.join(", "),
+                    if mt_entry.bundled {
+                        "内置翻译模型缺失，请重新安装应用"
+                    } else {
+                        "请在「模型」页重新下载该模型"
+                    }
                 ),
                 Err(e) => tracing::error!("{e}"),
             }
@@ -376,6 +399,7 @@ pub fn log_startup_selfcheck(app: &AppHandle) {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::config::MtModelTier;
 
     fn temp_dir(files: &[&str]) -> PathBuf {
         let dir = std::env::temp_dir().join(format!("paths-{}", uuid::Uuid::new_v4()));
@@ -551,7 +575,7 @@ mod tests {
 
     #[test]
     fn mt_missing_files_name_direction_and_file() {
-        let entry = catalog::mt_entry();
+        let entry = catalog::mt_entry(MtModelTier::Base);
         let root = std::env::temp_dir().join(format!("paths-mt-{}", uuid::Uuid::new_v4()));
         let missing = missing_mt_files(&root, entry).unwrap();
         assert!(
@@ -567,7 +591,8 @@ mod tests {
 
     #[test]
     fn mt_base_locates_bundled_mt_dir() {
-        let rel = catalog::mt_entry().installed_dir();
+        let entry = catalog::mt_entry(MtModelTier::Base);
+        let rel = entry.installed_dir();
         let bundled = root_with(rel, &[]);
         let roots = ModelSearchRoots {
             env: None,
@@ -575,9 +600,21 @@ mod tests {
             dev: None,
             user: None,
         };
-        let got = locate_mt_root(&roots).unwrap();
+        let got = locate_mt_root(&roots, entry).unwrap();
         assert_eq!(got.via, ResolutionVia::BundledResource);
         assert!(got.path.ends_with(rel));
         std::fs::remove_dir_all(&bundled).ok();
+    }
+
+    #[test]
+    fn single_dir_mt_checks_files_at_root() {
+        let entry = catalog::mt_entry(MtModelTier::Multilingual);
+        let root = std::env::temp_dir().join(format!("paths-mt-multi-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&root).unwrap();
+        std::fs::write(root.join("model.bin"), b"x").unwrap();
+        let missing = missing_mt_files(&root, entry).unwrap();
+        assert!(!missing.iter().any(|m| m == "model.bin"), "{missing:?}");
+        assert!(missing.iter().any(|m| m == "tokenizer.json"), "{missing:?}");
+        std::fs::remove_dir_all(&root).ok();
     }
 }

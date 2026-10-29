@@ -12,7 +12,7 @@ use super::extract::{self, ExtractSpec};
 use super::state::ModelState;
 use super::status::{ModelJobStatus, ModelPhase};
 use super::{ModelError, ModelKind, EVENT_MODEL_PROGRESS};
-use crate::config::AsrModelTier;
+use crate::config::{AsrModelTier, MtModelTier};
 use crate::i18n::{tf, tr, Key};
 use crate::paths;
 
@@ -145,7 +145,7 @@ fn is_installed_complete(app: &AppHandle, entry: &CatalogEntry) -> bool {
             .and_then(|resolved| paths::missing_asr_files(&resolved.path, entry).ok())
             .map(|missing| missing.is_empty())
             .unwrap_or(false),
-        ModelKind::Mt => paths::locate_mt_root(&roots)
+        ModelKind::Mt => paths::locate_mt_root(&roots, entry)
             .and_then(|resolved| paths::missing_mt_files(&resolved.path, entry))
             .map(|missing| missing.is_empty())
             .unwrap_or(false),
@@ -310,8 +310,10 @@ pub fn remove_model(app: &AppHandle, model_id: &str) -> Result<(), ModelError> {
     }
 
     let prefs = crate::prefs::load(app);
-    let selected = entry.kind == ModelKind::Asr
-        && AsrModelTier::parse(&entry.tier) == Some(prefs.asr_model_tier);
+    let selected = match entry.kind {
+        ModelKind::Asr => AsrModelTier::parse(&entry.tier) == Some(prefs.asr_model_tier),
+        ModelKind::Mt => MtModelTier::parse(&entry.tier) == Some(prefs.mt_model_tier),
+    };
     if selected {
         return Err(ModelError::Selected);
     }

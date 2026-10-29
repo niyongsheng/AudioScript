@@ -31,6 +31,15 @@ for (const m of catalog.models) {
   check(safeRel(m.install.dir), `${m.id} 的安装目录不安全：${m.install.dir}`)
   check(typeof m.title === 'string' && m.title.trim().length > 0, `${m.id} 缺少 title`)
   check(typeof m.description === 'string' && m.description.trim().length > 0, `${m.id} 缺少 description`)
+  if (m.multilingual) {
+    check(Array.isArray(m.languages) && m.languages.length > 0, `${m.id} 多语言模型必须声明 languages`)
+  }
+  if (m.languages) {
+    check(
+      Array.isArray(m.languages) && m.languages.every((code) => /^[a-z]+$/.test(code)),
+      `${m.id} 的 languages 必须是语言代码数组`,
+    )
+  }
   if (m.archive) {
     check(m.archive.url.startsWith('https://'), `${m.id} 的下载地址不是 HTTPS`)
     if (m.downloadable) {
@@ -48,6 +57,7 @@ for (const [kind, tier] of [
   ['asr', 'high-accuracy'],
   ['asr', 'qwen3'],
   ['mt', 'base'],
+  ['mt', 'multilingual'],
 ]) {
   const count = catalog.models.filter((m) => m.kind === kind && m.tier === tier).length
   check(count === 1, `${kind}/${tier} 档必须恰好有一个模型（当前 ${count}）`)

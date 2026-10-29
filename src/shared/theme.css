@@ -26,6 +26,8 @@
   --color-success: var(--as-success);
   --color-success-bg: var(--as-success-bg);
   --color-success-ink: var(--as-success-ink);
+  --color-purple-bg: var(--as-purple-bg);
+  --color-purple-ink: var(--as-purple-ink);
 
   --color-segment-partial: var(--as-segment-partial);
   --color-segment-final: var(--as-segment-final);
@@ -69,6 +71,8 @@
   --as-success: #30d158;
   --as-success-bg: #16351f;
   --as-success-ink: #5cd97b;
+  --as-purple-bg: #2f1d3d;
+  --as-purple-ink: #d3a4f7;
 
   --as-segment-partial: #8e8e93;
   --as-segment-final: #ffffff;
@@ -107,6 +111,8 @@
   --as-success: #34c759;
   --as-success-bg: #e7f6ec;
   --as-success-ink: #1b7a3d;
+  --as-purple-bg: #f4e9fd;
+  --as-purple-ink: #7a2fa8;
 
   --as-segment-partial: #8e8e93;
   --as-segment-final: #1d1d1f;

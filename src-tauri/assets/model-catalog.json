@@ -9,6 +9,7 @@
       "description": "中英双语流式识别，随应用分发，开箱即用。",
       "bundled": true,
       "downloadable": false,
+      "languages": ["zh", "en"],
       "install": {
         "dir": "sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16"
       },
@@ -40,6 +41,7 @@
       "description": "更大的双语流式模型，识别更准，占用更多内存与 CPU。",
       "bundled": false,
       "downloadable": true,
+      "languages": ["zh", "en"],
       "install": {
         "dir": "asr-high",
         "archiveRoot": "sherpa-onnx-streaming-zipformer-bilingual-zh-en-2023-02-20"
@@ -81,6 +83,11 @@
       "bundled": false,
       "downloadable": true,
       "multilingual": true,
+      "languages": [
+        "zh", "en", "yue", "ar", "de", "fr", "es", "pt", "id", "it",
+        "ko", "ru", "th", "vi", "ja", "tr", "hi", "ms", "nl", "sv",
+        "da", "fi", "pl", "cs", "fil", "fa", "el", "hu", "mk", "ro"
+      ],
       "install": {
         "dir": "asr-qwen3",
         "archiveRoot": "sherpa-onnx-qwen3-asr-0.6B-int8-2026-03-25"
@@ -133,6 +140,7 @@
       "description": "en→zh 与 zh→en 各一个轻量模型，延迟低，随应用分发。",
       "bundled": true,
       "downloadable": false,
+      "languages": ["zh", "en"],
       "install": {
         "dir": "mt",
         "directions": ["opus-mt-en-zh-ct2", "opus-mt-zh-en-ct2"]
@@ -160,6 +168,56 @@
         }
       ],
       "sourceUrl": "https://github.com/Helsinki-NLP/Opus-MT"
+    },
+    {
+      "id": "mt-multilingual",
+      "kind": "mt",
+      "tier": "multilingual",
+      "title": "NLLB-200 多语言",
+      "description": "200 种语言互译，配合 Qwen3-ASR 使用；需单独下载，仅限非商业用途。",
+      "bundled": false,
+      "downloadable": true,
+      "multilingual": true,
+      "languages": [
+        "zh", "en", "yue", "ar", "de", "fr", "es", "pt", "id", "it",
+        "ko", "ru", "th", "vi", "ja", "tr", "hi", "ms", "nl", "sv",
+        "da", "fi", "pl", "cs", "fil", "fa", "el", "hu", "mk", "ro"
+      ],
+      "install": {
+        "dir": "mt-nllb",
+        "archiveRoot": "nllb-200-distilled-600M-ct2-int8"
+      },
+      "required": {
+        "mt": {
+          "format": "nllb",
+          "files": ["model.bin", "shared_vocabulary.json", "config.json", "tokenizer.json"]
+        }
+      },
+      "archive": {
+        "url": "https://github.com/niyongsheng/AudioScript/releases/download/models-v1/nllb-200-distilled-600M-ct2-int8.tar.gz",
+        "format": "tar-gz",
+        "sha256": "00fc68a67e130a7957b5247a5314f675d0408f85a0b8123fe95589145327114f",
+        "sizeBytes": 585157276,
+        "maxExtractedBytes": 700000000
+      },
+      "sizes": { "installedBytes": 645852228 },
+      "licenses": [
+        {
+          "component": "facebook/nllb-200-distilled-600M (CTranslate2 int8)",
+          "license": "CC-BY-NC-4.0",
+          "licenseUrl": "https://creativecommons.org/licenses/by-nc/4.0/",
+          "requiresAttribution": true,
+          "attribution": "Meta AI / NLLB Team"
+        },
+        {
+          "component": "CTranslate2 conversion",
+          "license": "MIT",
+          "licenseUrl": "https://github.com/OpenNMT/CTranslate2/blob/master/LICENSE",
+          "requiresAttribution": false,
+          "attribution": "OpenNMT / CTranslate2"
+        }
+      ],
+      "sourceUrl": "https://huggingface.co/facebook/nllb-200-distilled-600M"
     }
   ]
 }

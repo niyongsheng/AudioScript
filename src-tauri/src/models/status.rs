@@ -4,7 +4,7 @@ use tauri::{AppHandle, Manager};
 use super::catalog::{self, CatalogEntry};
 use super::state::ModelState;
 use super::ModelKind;
-use crate::config::AsrModelTier;
+use crate::config::{AsrModelTier, MtModelTier};
 
 #[typeshare::typeshare]
 #[derive(Debug, Clone, Serialize)]
@@ -32,6 +32,8 @@ pub struct ModelStatus {
     pub complete: bool,
     pub selected: bool,
     pub multilingual: bool,
+    pub languages: Vec<String>,
+    pub streaming: bool,
     pub path: Option<String>,
     pub via: Option<String>,
     pub installed_bytes: u32,
@@ -112,7 +114,10 @@ pub fn inspect(app: &AppHandle) -> ModelsList {
                 let selected = AsrModelTier::parse(&entry.tier) == Some(prefs.asr_model_tier);
                 inspect_asr(&roots, entry, selected)
             }
-            ModelKind::Mt => inspect_mt(&roots, entry, true),
+            ModelKind::Mt => {
+                let selected = MtModelTier::parse(&entry.tier) == Some(prefs.mt_model_tier);
+                inspect_mt(&roots, entry, selected)
+            }
         };
         match entry.kind {
             ModelKind::Asr => asr.push(status),
@@ -159,6 +164,8 @@ fn base_status(entry: &CatalogEntry, selected: bool) -> ModelStatus {
         complete: false,
         selected,
         multilingual: entry.multilingual,
+        languages: entry.languages.clone(),
+        streaming: entry.streaming().unwrap_or(false),
         path: None,
         via: None,
         installed_bytes: entry.sizes.installed_bytes.min(u32::MAX as u64) as u32,
@@ -208,7 +215,7 @@ fn inspect_mt(
 ) -> ModelStatus {
     let mut out = base_status(entry, selected);
 
-    if let Ok(resolved) = crate::paths::locate_mt_root(roots) {
+    if let Ok(resolved) = crate::paths::locate_mt_root(roots, entry) {
         out.installed = true;
         out.path = Some(resolved.path.display().to_string());
         out.via = Some(resolved.via.as_str().to_string());
