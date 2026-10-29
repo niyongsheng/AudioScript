@@ -224,6 +224,7 @@ pub fn toggle(app: &AppHandle) -> Result<bool, String> {
         frame.hide(app)?;
     } else {
         frame.show(app)?;
+        apply_mode(app, app.state::<OverlayState>().mode())?;
         apply_fullscreen_overlay(app, &frame);
     }
 
@@ -259,22 +260,30 @@ fn broadcast_visibility(app: &AppHandle, visible: bool) {
     }
 }
 
-fn apply_mode(app: &AppHandle, mode: OverlayMode) -> Result<(), String> {
-    let frame = Frame::get(app)?;
+fn apply_click_through(app: &AppHandle, frame: &Frame, mode: OverlayMode) -> Result<(), String> {
     let state = app.state::<OverlayState>();
-
     let want = mode.is_click_through();
-    if state.needs_click_through_write(want) {
-        if let Err(e) = frame.set_click_through(app, want) {
-            *state
-                .applied_click_through
-                .lock()
-                .expect("overlay click-through mutex poisoned") = None;
-            return Err(format!("{e}（mode={}）", mode.as_str()));
-        }
+
+    // 窗口未映射时 GdkWindow 还不存在，tao 的 set_ignore_cursor_events(true) 会直接 panic，
+    // 所以隐藏状态下只记住模式，等 show 之后再写。
+    if !frame.is_visible(app) || !state.needs_click_through_write(want) {
+        return Ok(());
     }
 
-    state.set_mode(mode);
+    if let Err(e) = frame.set_click_through(app, want) {
+        *state
+            .applied_click_through
+            .lock()
+            .expect("overlay click-through mutex poisoned") = None;
+        return Err(format!("{e}（mode={}）", mode.as_str()));
+    }
+    Ok(())
+}
+
+fn apply_mode(app: &AppHandle, mode: OverlayMode) -> Result<(), String> {
+    let frame = Frame::get(app)?;
+    apply_click_through(app, &frame, mode)?;
+    app.state::<OverlayState>().set_mode(mode);
     Ok(())
 }
 
@@ -403,9 +412,6 @@ pub fn init(
         fit_height_to_lines(app, &state.config());
     }
 
-    frame.set_click_through(app, mode.is_click_through())?;
-    state.needs_click_through_write(mode.is_click_through());
-
     apply_fullscreen_overlay(app, &frame);
 
     broadcast(app, &state);
@@ -426,6 +432,8 @@ pub fn init(
             tracing::error!("悬浮窗启动显示失败：{e}（可在悬浮窗页手动显示）");
         }
     }
+
+    apply_click_through(app, &frame, mode)?;
 
     #[cfg(target_os = "macos")]
     watchdog::start(app.clone());
