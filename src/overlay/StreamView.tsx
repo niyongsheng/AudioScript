@@ -1,4 +1,4 @@
-import { memo, useLayoutEffect, useRef } from 'react'
+import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useI18n } from '@/shared/i18n'
 import { SegmentState, type TranscriptSegment, TranslationState } from '@/shared/types'
 import { FlowingBorder } from './FlowingBorder'
@@ -8,6 +8,12 @@ const SOURCE_SCALE = 0.8
 const SOURCE_OPACITY = 0.7
 
 const PARTIAL_OPACITY = 0.55
+
+const TYPEWRITER_MIN_DELTA = 8
+
+const TYPEWRITER_MS = 260
+
+const STICK_BOTTOM_PX = 24
 
 interface Props {
   segments: TranscriptSegment[]
@@ -23,15 +29,33 @@ interface Props {
 export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, glow, glowSpeed, streaming }: Props) {
   const { t } = useI18n()
   const scrollRef = useRef<HTMLDivElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
+  const stickRef = useRef(true)
+
+  const scrollToBottom = useCallback(() => {
+    const el = scrollRef.current
+    if (el) el.scrollTop = el.scrollHeight
+  }, [])
+
+  useLayoutEffect(() => {
+    const el = scrollRef.current
+    const content = contentRef.current
+    if (!el || !content) return
+    const observer = new ResizeObserver(() => {
+      if (stickRef.current) el.scrollTop = el.scrollHeight
+    })
+    observer.observe(content)
+    return () => observer.disconnect()
+  }, [])
 
   const tail = segments.at(-1)
   const followKey = tail ? `${tail.id}:${tail.revision}` : ''
 
   // biome-ignore lint/correctness/useExhaustiveDependencies: 意图是 followKey 变化时滚到底，体内无需读取
   useLayoutEffect(() => {
-    const el = scrollRef.current
-    if (el) el.scrollTop = el.scrollHeight
-  }, [followKey])
+    stickRef.current = true
+    scrollToBottom()
+  }, [followKey, scrollToBottom])
 
   const bg = hexToRgba(bgColor, opacity / 100)
 
@@ -47,14 +71,21 @@ export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, gl
           lineHeight: 1.35,
           scrollbarWidth: 'none',
         }}
+        onScroll={() => {
+          const el = scrollRef.current
+          if (!el) return
+          stickRef.current = el.scrollHeight - el.scrollTop - el.clientHeight <= STICK_BOTTOM_PX
+        }}
       >
-        {segments.length === 0 ? (
-          <p className="m-0 text-[0.8em]" style={{ color: fontColor, opacity: 0.45 }}>
-            {t('overlayWindow.waiting')}
-          </p>
-        ) : (
-          segments.map((s) => <BilingualSegment key={s.id} seg={s} />)
-        )}
+        <div ref={contentRef}>
+          {segments.length === 0 ? (
+            <p className="m-0 text-[0.8em]" style={{ color: fontColor, opacity: 0.45 }}>
+              {t('overlayWindow.waiting')}
+            </p>
+          ) : (
+            segments.map((s, i) => <BilingualSegment key={s.id} seg={s} active={i === segments.length - 1} />)
+          )}
+        </div>
       </div>
 
       {glow && <FlowingBorder streaming={streaming} speed={glowSpeed} />}
@@ -62,9 +93,57 @@ export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, gl
   )
 }
 
-const BilingualSegment = memo(function BilingualSegment({ seg }: { seg: TranscriptSegment }) {
+const BilingualSegment = memo(function BilingualSegment({ seg, active }: { seg: TranscriptSegment; active: boolean }) {
   const { t } = useI18n()
   const isPartial = seg.state === SegmentState.Partial
+  const [shown, setShown] = useState(seg.text)
+  const shownRef = useRef(seg.text)
+  const rafRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    const full = seg.text
+    const current = shownRef.current
+    const reveal = isPartial && full.startsWith(current) && full.length - current.length > TYPEWRITER_MIN_DELTA
+
+    if (rafRef.current !== null) {
+      cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
+    }
+
+    if (!reveal) {
+      shownRef.current = full
+      setShown(full)
+      return
+    }
+
+    const from = current.length
+    const started = performance.now()
+    const tick = (now: number) => {
+      const progress = Math.min(1, (now - started) / TYPEWRITER_MS)
+      const next = full.slice(0, from + Math.floor((full.length - from) * progress))
+      if (next !== shownRef.current) {
+        shownRef.current = next
+        setShown(next)
+      }
+      if (progress < 1) {
+        rafRef.current = requestAnimationFrame(tick)
+      } else {
+        rafRef.current = null
+        shownRef.current = full
+        setShown(full)
+      }
+    }
+    rafRef.current = requestAnimationFrame(tick)
+
+    return () => {
+      if (rafRef.current !== null) {
+        cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
+      }
+    }
+  }, [seg.text, isPartial])
+
+  const text = isPartial ? shown : seg.text
 
   return (
     <div
@@ -77,8 +156,8 @@ const BilingualSegment = memo(function BilingualSegment({ seg }: { seg: Transcri
           opacity: isPartial ? PARTIAL_OPACITY : SOURCE_OPACITY,
         }}
       >
-        {seg.text}
-        {isPartial && <Caret />}
+        {text}
+        {isPartial && active && <Caret />}
       </p>
 
       {seg.translationState === TranslationState.Done && seg.translation && <p className="m-0">{seg.translation}</p>}
