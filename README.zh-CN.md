@@ -52,10 +52,6 @@ pnpm tauri dev        # 开发模式
 pnpm tauri build      # 打包
 ```
 
-## 已知限制
-
-- **Linux / Wayland**：悬浮窗无法始终置顶，Wayland 协议不支持普通窗口置顶。需要置顶时用 `GDK_BACKEND=x11` 启动（走 XWayland）；X11 桌面默认正常。
-
 
 ## 联系我
 
