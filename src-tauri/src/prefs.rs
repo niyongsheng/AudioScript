@@ -145,6 +145,7 @@ mod tests {
             audio_source: "mix".into(),
             device_id: Some("dev-42".into()),
             translate_engine: TranslateEngine::Off,
+            asr_engine: crate::config::EngineType::LocalStreaming,
             source_lang: "zh".into(),
             target_lang: "en".into(),
             ..Default::default()
@@ -174,6 +175,8 @@ mod tests {
             mix_mic_device_id: Some("mic-3".into()),
             mix_system_device_id: Some("out-4".into()),
             translate_engine: TranslateEngine::Off,
+            asr_engine: crate::config::EngineType::LocalStreaming,
+            mt_model_tier: crate::config::MtModelTier::default(),
             source_lang: "zh".into(),
             target_lang: "en".into(),
             overlay: crate::config::OverlayConfig {

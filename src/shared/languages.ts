@@ -35,6 +35,21 @@ export const SOURCE_LANGUAGES: readonly LanguageChoice[] = LANGUAGES.filter(
   (language) => language.backend === 'en' || language.backend === 'zh',
 )
 
+export function multilingualChoices(codes: readonly string[], displayName: (code: string) => string): LanguageChoice[] {
+  if (codes.length === 0) return []
+  const known = LANGUAGES.filter((language) => language.backend !== 'zh' && codes.includes(language.backend))
+  const extra = codes
+    .filter((code) => code !== 'zh' && !known.some((language) => language.backend === code))
+    .map((code) => ({
+      id: code,
+      label: displayName(code),
+      backend: code,
+      subtitle: code,
+    }))
+  const zh = codes.includes('zh') ? LANGUAGES.filter((language) => language.backend === 'zh') : []
+  return [...zh, ...known, ...extra]
+}
+
 export const SUPPORTED_PAIRS: ReadonlyArray<readonly [string, string]> = [
   ['en', 'zh'],
   ['zh', 'en'],
@@ -68,6 +83,16 @@ export function baseLanguage(tag: string): string {
   return tag.split('-')[0] ?? tag
 }
 
+export function displayNameFormatter(locale: string): (code: string) => string {
+  let names: Intl.DisplayNames | null = null
+  try {
+    names = new Intl.DisplayNames([locale], { type: 'language' })
+  } catch {
+    names = null
+  }
+  return (code) => names?.of(code) ?? code
+}
+
 export function languageLabel(language: LanguageChoice, t: (key: MessageKey) => string): string {
   return language.labelKey ? t(language.labelKey) : (language.label ?? language.id)
 }
@@ -79,9 +104,23 @@ export function languageSubtitle(language: LanguageChoice): string {
 export function targetLanguagesFor(
   engine: TranslateEngine,
   appleChoices: readonly LanguageChoice[] = [],
+  multilingual: readonly LanguageChoice[] = [],
 ): readonly LanguageChoice[] {
-  if (engine !== TranslateEngine.MacTranslation) return SOURCE_LANGUAGES
-  return appleChoices.length > 0 ? appleChoices : LANGUAGES
+  if (engine === TranslateEngine.MacTranslation) {
+    return appleChoices.length > 0 ? appleChoices : LANGUAGES
+  }
+  if (multilingual.length > 0) return multilingual
+  return SOURCE_LANGUAGES
+}
+
+export function sourceLanguagesFor(
+  engine: TranslateEngine,
+  multilingualAsr: boolean,
+  appleChoices: readonly LanguageChoice[] = [],
+  multilingual: readonly LanguageChoice[] = [],
+): readonly LanguageChoice[] {
+  if (!multilingualAsr) return SOURCE_LANGUAGES
+  return targetLanguagesFor(engine, appleChoices, multilingual)
 }
 
 export function appleTargetChoices(
@@ -131,25 +170,36 @@ export function languageIdFor(
   )
 }
 
-export function isSupportedPair(source: LanguageChoice, target: LanguageChoice, engine: TranslateEngine): boolean {
+export function isSupportedPair(
+  source: LanguageChoice,
+  target: LanguageChoice,
+  engine: TranslateEngine,
+  multilingualMt = false,
+): boolean {
   const sourceBase = baseLanguage(source.backend)
   const targetBase = baseLanguage(target.backend)
   if (sourceBase === targetBase) return false
 
-  if (engine === TranslateEngine.MacTranslation) {
-    return sourceBase === 'en' || sourceBase === 'zh'
+  if (engine === TranslateEngine.MacTranslation || multilingualMt) {
+    return true
   }
 
   return SUPPORTED_PAIRS.some(([from, to]) => from === sourceBase && to === targetBase)
 }
 
-function preferredBy(
-  matches: (language: LanguageChoice) => boolean,
+function preferredByRank(
+  candidates: LanguageChoice[],
   zhScript: ZhScript,
-  catalog: readonly LanguageChoice[],
+  order: readonly string[],
 ): LanguageChoice | undefined {
-  const candidates = catalog.filter(matches)
-  return candidates.find((language) => language.script === zhScript) ?? candidates[0]
+  if (candidates.length === 0) return undefined
+  const rank = (language: LanguageChoice) => {
+    const index = order.indexOf(language.backend)
+    return index === -1 ? order.length : index
+  }
+  const best = Math.min(...candidates.map(rank))
+  const top = candidates.filter((language) => rank(language) === best)
+  return top.find((language) => language.script === zhScript) ?? top[0]
 }
 
 export function preferredTarget(
@@ -157,8 +207,13 @@ export function preferredTarget(
   zhScript: ZhScript,
   engine: TranslateEngine,
   catalog: readonly LanguageChoice[] = LANGUAGES,
+  multilingualMt = false,
 ): LanguageChoice | undefined {
-  return preferredBy((language) => isSupportedPair(source, language, engine), zhScript, catalog)
+  return preferredByRank(
+    catalog.filter((language) => isSupportedPair(source, language, engine, multilingualMt)),
+    zhScript,
+    ['zh', 'en'],
+  )
 }
 
 export function preferredSource(
@@ -166,8 +221,13 @@ export function preferredSource(
   zhScript: ZhScript,
   engine: TranslateEngine,
   catalog: readonly LanguageChoice[] = SOURCE_LANGUAGES,
+  multilingualMt = false,
 ): LanguageChoice | undefined {
-  return preferredBy((language) => isSupportedPair(language, target, engine), zhScript, catalog)
+  return preferredByRank(
+    catalog.filter((language) => isSupportedPair(language, target, engine, multilingualMt)),
+    zhScript,
+    ['en', 'zh'],
+  )
 }
 
 export function scriptForPair(source: LanguageChoice, target: LanguageChoice, fallback: ZhScript): ZhScript {

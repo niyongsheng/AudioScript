@@ -574,6 +574,16 @@ messages! {
         de: "OPUS-MT Basis",
         es: "OPUS-MT base"
     },
+    ModelMtMultilingualTitle {
+        zh_cn: "NLLB-200 多语言",
+        zh_tw: "NLLB-200 多語言",
+        en: "NLLB-200 multilingual",
+        ja: "NLLB-200 多言語",
+        ko: "NLLB-200 다국어",
+        fr: "NLLB-200 multilingue",
+        de: "NLLB-200 mehrsprachig",
+        es: "NLLB-200 multilingüe"
+    },
     CmdUnknownAsrTier {
         zh_cn: "未知 ASR 档位：{0}",
         zh_tw: "未知 ASR 等級：{0}",
@@ -583,6 +593,16 @@ messages! {
         fr: "Niveau ASR inconnu : {0}",
         de: "Unbekannte ASR-Stufe: {0}",
         es: "Nivel de ASR desconocido: {0}"
+    },
+    CmdUnknownMtTier {
+        zh_cn: "未知翻译模型档位：{0}",
+        zh_tw: "未知翻譯模型等級：{0}",
+        en: "Unknown translation model tier: {0}",
+        ja: "不明な翻訳モデルティア：{0}",
+        ko: "알 수 없는 번역 모델 등급: {0}",
+        fr: "Niveau de modèle de traduction inconnu : {0}",
+        de: "Unbekannte Übersetzungsmodell-Stufe: {0}",
+        es: "Nivel de modelo de traducción desconocido: {0}"
     },
     CmdUnknownMode {
         zh_cn: "未知模式 {0}",
@@ -1056,6 +1076,66 @@ messages! {
         de: "VoiceActivityDetector::create gab None zurück (Modell {0})",
         es: "VoiceActivityDetector::create devolvió None (modelo {0})"
     },
+    AsrMacSpeechUnsupported {
+        zh_cn: "macOS 系统语音不可用：需要 macOS 26+ Apple Silicon",
+        zh_tw: "macOS 系統語音不可用：需要 macOS 26+ Apple Silicon",
+        en: "macOS system speech is unavailable: macOS 26+ on Apple Silicon is required",
+        ja: "macOS システム音声は利用できません：macOS 26 以降の Apple Silicon が必要です",
+        ko: "macOS 시스템 음성을 사용할 수 없습니다: macOS 26 이상 Apple Silicon이 필요합니다",
+        fr: "La parole système macOS n’est pas disponible : macOS 26+ sur Apple Silicon requis",
+        de: "macOS-Systemsprache ist nicht verfügbar: macOS 26+ auf Apple Silicon erforderlich",
+        es: "El dictado del sistema macOS no está disponible: se requiere macOS 26+ en Apple Silicon"
+    },
+    AsrMacSpeechUsageDescription {
+        zh_cn: "缺少 NSSpeechRecognitionUsageDescription：请在打包后的 .app 中运行（开发模式裸二进制没有权限描述，无法调用系统语音）",
+        zh_tw: "缺少 NSSpeechRecognitionUsageDescription：請在打包後的 .app 中執行（開發模式裸二進位沒有權限描述，無法呼叫系統語音）",
+        en: "NSSpeechRecognitionUsageDescription is missing: run the packaged .app (the bare development binary has no usage description and cannot access system speech)",
+        ja: "NSSpeechRecognitionUsageDescription がありません：パッケージ済みの .app で実行してください（開発用の裸のバイナリには権限説明がなく、システム音声を利用できません）",
+        ko: "NSSpeechRecognitionUsageDescription이 없습니다: 패키징된 .app에서 실행하세요(개발용 바이너리에는 권한 설명이 없어 시스템 음성을 사용할 수 없습니다)",
+        fr: "NSSpeechRecognitionUsageDescription est absente : exécutez l’application .app empaquetée (le binaire de développement n’a pas de description d’autorisation et ne peut pas accéder à la parole système)",
+        de: "NSSpeechRecognitionUsageDescription fehlt: Führen Sie die gepackte .app aus (das reine Entwicklungs-Binary hat keine Nutzungsbeschreibung und kann nicht auf die Systemsprache zugreifen)",
+        es: "Falta NSSpeechRecognitionUsageDescription: ejecute la .app empaquetada (el binario de desarrollo no tiene descripción de uso y no puede acceder al dictado del sistema)"
+    },
+    AsrMacSpeechPermission {
+        zh_cn: "未获得语音识别权限：请在「系统设置 → 隐私与安全性 → 语音识别」中允许 AudioScript",
+        zh_tw: "未取得語音辨識權限：請在「系統設定 → 隱私權與安全性 → 語音辨識」中允許 AudioScript",
+        en: "Speech recognition permission was denied: allow AudioScript in System Settings → Privacy & Security → Speech Recognition",
+        ja: "音声認識の権限がありません：「システム設定 → プライバシーとセキュリティ → 音声認識」で AudioScript を許可してください",
+        ko: "음성 인식 권한이 없습니다: 시스템 설정 → 개인정보 보호 및 보안 → 음성 인식에서 AudioScript를 허용하세요",
+        fr: "Autorisation de reconnaissance vocale refusée : autorisez AudioScript dans Réglages Système → Confidentialité et sécurité → Reconnaissance vocale",
+        de: "Spracherkennung nicht erlaubt: Erlauben Sie AudioScript in Systemeinstellungen → Datenschutz & Sicherheit → Spracherkennung",
+        es: "Permiso de reconocimiento de voz denegado: permita AudioScript en Ajustes del Sistema → Privacidad y seguridad → Reconocimiento de voz"
+    },
+    AsrMacSpeechLocaleUnavailable {
+        zh_cn: "macOS 系统语音不支持语言：{0}",
+        zh_tw: "macOS 系統語音不支援語言：{0}",
+        en: "macOS system speech does not support language: {0}",
+        ja: "macOS システム音声は言語 {0} に対応していません",
+        ko: "macOS 시스템 음성은 언어 {0}을(를) 지원하지 않습니다",
+        fr: "La parole système macOS ne prend pas en charge la langue : {0}",
+        de: "macOS-Systemsprache unterstützt folgende Sprache nicht: {0}",
+        es: "El dictado del sistema macOS no admite el idioma: {0}"
+    },
+    AsrMacSpeechAssetsMissing {
+        zh_cn: "macOS 尚未安装语言 {0} 的语音资产：请在「系统设置 → 键盘 → 听写语言」中添加该语言后重试",
+        zh_tw: "macOS 尚未安裝語言 {0} 的語音資產：請在「系統設定 → 鍵盤 → 聽寫語言」中加入該語言後重試",
+        en: "macOS has not installed speech assets for {0}: add the language in System Settings → Keyboard → Dictation Languages, then retry",
+        ja: "macOS に言語 {0} の音声アセットがありません：「システム設定 → キーボード → 音声入力言語」で追加してから再試行してください",
+        ko: "macOS에 언어 {0}의 음성 자산이 설치되어 있지 않습니다: 시스템 설정 → 키보드 → 받아쓰기 언어에서 추가한 뒤 다시 시도하세요",
+        fr: "macOS n’a pas installé les ressources vocales pour {0} : ajoutez la langue dans Réglages Système → Clavier → Langues de dictée, puis réessayez",
+        de: "macOS hat keine Sprachressourcen für {0} installiert: Fügen Sie die Sprache unter Systemeinstellungen → Tastatur → Diktiersprachen hinzu und versuchen Sie es erneut",
+        es: "macOS no ha instalado los recursos de voz para {0}: añada el idioma en Ajustes del Sistema → Teclado → Idiomas de dictado y vuelva a intentarlo"
+    },
+    AsrMacSpeechFailed {
+        zh_cn: "macOS 系统语音失败：{0}",
+        zh_tw: "macOS 系統語音失敗：{0}",
+        en: "macOS system speech failed: {0}",
+        ja: "macOS システム音声に失敗しました：{0}",
+        ko: "macOS 시스템 음성 실패: {0}",
+        fr: "Échec de la parole système macOS : {0}",
+        de: "macOS-Systemsprache fehlgeschlagen: {0}",
+        es: "Error del dictado del sistema macOS: {0}"
+    },
     AsrOfflineWorkerStartFailed {
         zh_cn: "无法启动离线 ASR 线程：{0}",
         zh_tw: "無法啟動離線 ASR 執行緒：{0}",
@@ -1378,6 +1458,16 @@ messages! {
         de: "→ Laden Sie dieses Modell auf der Modellseite herunter oder wechseln Sie zurück zum integrierten Modell.\n({0} wird ebenfalls zuerst durchsucht, wenn gesetzt.)",
         es: "→ Descargue este modelo en la página Modelos o vuelva al modelo incluido.\n(También se busca primero {0} si está definido.)"
     },
+    PathOptionalRemedyMt {
+        zh_cn: "→ 打开「模型」页下载该翻译模型，或切换回 OPUS-MT 基础版。\n（若设置了 {0}，它也会被优先查找。）",
+        zh_tw: "→ 開啟「模型」頁下載該翻譯模型，或切換回 OPUS-MT 基礎版。\n（若設定了 {0}，它也會被優先查找。）",
+        en: "→ Download this translation model on the Models page, or switch back to OPUS-MT base.\n({0} is also searched first when set.)",
+        ja: "→ 「モデル」ページでこの翻訳モデルをダウンロードするか、OPUS-MT ベースに戻してください。\n（{0} が設定されている場合も優先的に検索されます。）",
+        ko: "→ 모델 페이지에서 이 번역 모델을 다운로드하거나 OPUS-MT 기본으로 다시 전환하세요.\n({0}이(가) 설정된 경우 먼저 검색됩니다.)",
+        fr: "→ Téléchargez ce modèle de traduction sur la page Modèles ou revenez à OPUS-MT de base.\n({0} est aussi recherché en premier s’il est défini.)",
+        de: "→ Laden Sie dieses Übersetzungsmodell auf der Modellseite herunter oder wechseln Sie zurück zu OPUS-MT Basis.\n({0} wird ebenfalls zuerst durchsucht, wenn gesetzt.)",
+        es: "→ Descargue este modelo de traducción en la página Modelos o vuelva a OPUS-MT base.\n(También se busca primero {0} si está definido.)"
+    },
     SessionAlreadyCapturing {
         zh_cn: "已在采集中",
         zh_tw: "已在擷取中",
@@ -1399,14 +1489,14 @@ messages! {
         es: "La sesión anterior aún se está cerrando (el dispositivo de audio no se ha liberado). Inténtelo de nuevo en unos instantes."
     },
     SessionEngineNotWired {
-        zh_cn: "引擎 {0} 尚未接入（当前仅支持 local-streaming）",
-        zh_tw: "引擎 {0} 尚未接入（目前僅支援 local-streaming）",
-        en: "Engine {0} is not available (only local-streaming is supported)",
-        ja: "エンジン {0} は未対応です（現在は local-streaming のみ対応）",
-        ko: "엔진 {0}을(를) 사용할 수 없습니다(local-streaming만 지원됨)",
-        fr: "Le moteur {0} n’est pas disponible (seul local-streaming est pris en charge)",
-        de: "Engine {0} ist nicht verfügbar (nur local-streaming wird unterstützt)",
-        es: "El motor {0} no está disponible (solo se admite local-streaming)"
+        zh_cn: "引擎 {0} 尚未接入（当前支持 local-streaming / mac-native）",
+        zh_tw: "引擎 {0} 尚未接入（目前支援 local-streaming / mac-native）",
+        en: "Engine {0} is not available (local-streaming / mac-native are supported)",
+        ja: "エンジン {0} は未対応です（現在は local-streaming / mac-native に対応）",
+        ko: "엔진 {0}을(를) 사용할 수 없습니다(local-streaming / mac-native 지원)",
+        fr: "Le moteur {0} n’est pas disponible (local-streaming / mac-native sont pris en charge)",
+        de: "Engine {0} ist nicht verfügbar (local-streaming / mac-native werden unterstützt)",
+        es: "El motor {0} no está disponible (se admiten local-streaming / mac-native)"
     },
     SessionCustomAsrMissing {
         zh_cn: "自定义 ASR 模型目录不存在：{0}",
@@ -2005,6 +2095,16 @@ messages! {
         fr: "Langue source inconnue {0} (auto n’est pas encore pris en charge)",
         de: "Unbekannte Ausgangssprache {0} (auto wird noch nicht unterstützt)",
         es: "Idioma de origen desconocido {0} (auto aún no es compatible)"
+    },
+    PrefsUnknownAsrEngine {
+        zh_cn: "未知的 ASR 引擎：{0}",
+        zh_tw: "未知的 ASR 引擎：{0}",
+        en: "Unknown ASR engine: {0}",
+        ja: "不明な ASR エンジン：{0}",
+        ko: "알 수 없는 ASR 엔진: {0}",
+        fr: "Moteur ASR inconnu : {0}",
+        de: "Unbekannte ASR-Engine: {0}",
+        es: "Motor ASR desconocido: {0}"
     },
     PrefsUnknownTargetLang {
         zh_cn: "未知目标语言 {0}",

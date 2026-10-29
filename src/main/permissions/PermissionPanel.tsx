@@ -3,10 +3,11 @@ import { useStore } from '@/main/store'
 import { type MessageKey, useI18n } from '@/shared/i18n'
 import {
   formatCmdError,
+  type MacSpeechStatus,
   MicPermission,
+  macSpeechRequest,
   openPrivacySettings,
   type PrivacyPane,
-  permissionProbeSystemAudio,
   permissionRequestMic,
   type SystemAudioProbe,
   SystemAudioVerdict,
@@ -55,18 +56,60 @@ const PROBE_TEXT: Record<SystemAudioVerdict, MessageKey> = {
   inconclusive: 'permissions.verdictInconclusive',
 }
 
+type SpeechState = 'authorized' | 'denied' | 'pending' | 'unsupported'
+
+const SPEECH_TONE: Record<SpeechState, 'ok' | 'warn' | 'danger' | 'muted'> = {
+  authorized: 'ok',
+  denied: 'danger',
+  pending: 'warn',
+  unsupported: 'muted',
+}
+
+const SPEECH_TEXT: Record<SpeechState, MessageKey> = {
+  authorized: 'permissions.speechAuthorized',
+  denied: 'permissions.speechDenied',
+  pending: 'permissions.speechNotDetermined',
+  unsupported: 'permissions.speechUnsupported',
+}
+
+const SPEECH_DESC: Record<SpeechState, MessageKey> = {
+  authorized: 'permissions.speechDescGranted',
+  denied: 'permissions.speechDescDenied',
+  pending: 'permissions.speechDescNotDetermined',
+  unsupported: 'permissions.speechDescNotDetermined',
+}
+
+function speechState(status: MacSpeechStatus | null): SpeechState {
+  const authorization = status?.authorization
+  if (authorization === 'authorized') return 'authorized'
+  if (authorization === 'denied' || authorization === 'restricted') return 'denied'
+  if (status === null || authorization === 'notDetermined') return 'pending'
+  return 'unsupported'
+}
+
 export function PermissionPanel() {
-  const { permissions, refreshPermission, refreshDevices, status } = useStore()
+  const {
+    info,
+    permissions,
+    refreshPermission,
+    refreshDevices,
+    status,
+    speechStatus,
+    setSpeechStatus,
+    systemAudioProbe,
+    runSystemAudioProbe,
+  } = useStore()
   const { t } = useI18n()
   const capturing = status === TaskStatus.Capturing
   const [probing, setProbing] = useState(false)
   const [requesting, setRequesting] = useState(false)
-  const [probe, setProbe] = useState<SystemAudioProbe | null>(null)
+  const [speechBusy, setSpeechBusy] = useState(false)
   const [note, setNote] = useState<string | null>(null)
   const [failure, setFailure] = useState<string | null>(null)
 
   const mic = permissions?.microphone ?? MicPermission.Unknown
   const promptable = permissions?.microphonePromptable ?? false
+  const speech = speechState(speechStatus)
 
   const micDescription = (value: MicPermission, canPrompt: boolean): string => {
     if (value === MicPermission.Granted) return t('permissions.micDescGranted')
@@ -105,19 +148,31 @@ export function PermissionPanel() {
     }
   }
 
+  const askSpeech = useCallback(async () => {
+    setSpeechBusy(true)
+    setNote(null)
+    setFailure(null)
+    try {
+      setSpeechStatus(await macSpeechRequest())
+    } catch (e) {
+      setFailure(formatCmdError(e))
+    } finally {
+      setSpeechBusy(false)
+    }
+  }, [setSpeechStatus])
+
   const runProbe = useCallback(async () => {
     setProbing(true)
     setNote(null)
     setFailure(null)
     try {
-      const result = await permissionProbeSystemAudio()
-      setProbe(result)
+      await runSystemAudioProbe()
     } catch (e) {
       setFailure(formatCmdError(e))
     } finally {
       setProbing(false)
     }
-  }, [])
+  }, [runSystemAudioProbe])
 
   const askMic = useCallback(async () => {
     setRequesting(true)
@@ -182,26 +237,58 @@ export function PermissionPanel() {
           }
         />
 
+        {info?.macSpeechSupported && (
+          <SettingsRow
+            icon="waveform"
+            title={t('permissions.speech')}
+            description={
+              <>
+                {t(SPEECH_DESC[speech])}
+                {speechStatus && speechStatus.installedLocales.length > 0 && (
+                  <span className="mt-1 block">
+                    {t('permissions.speechAssets', { count: speechStatus.installedLocales.length })}
+                  </span>
+                )}
+              </>
+            }
+            control={
+              <div className="flex items-center gap-1.5">
+                <StatusBadge tone={SPEECH_TONE[speech]}>{t(SPEECH_TEXT[speech])}</StatusBadge>
+                {speech === 'pending' && (
+                  <Button size="sm" pending={speechBusy} onClick={() => void askSpeech()}>
+                    {t('permissions.requestPermission')}
+                  </Button>
+                )}
+                {speech === 'denied' && (
+                  <Button size="sm" onClick={() => void open('speech')}>
+                    {t('permissions.openSettings')}
+                  </Button>
+                )}
+              </div>
+            }
+          />
+        )}
+
         {!isWindows && (
           <SettingsRow
             icon="speaker"
             title={t('permissions.systemAudio')}
             description={
               <>
-                {probing ? t('permissions.probing') : probeDescription(probe)}
+                {probing ? t('permissions.probing') : probeDescription(systemAudioProbe)}
                 {probing && (
                   <span className="mt-1 flex items-center gap-2">
                     <LevelMeter active />
                     <span className="font-mono">{t('permissions.liveLevel')}</span>
                   </span>
                 )}
-                {!probing && probe && (
+                {!probing && systemAudioProbe && (
                   <span className="mt-1 flex items-center gap-2">
-                    <LevelBars level={probe.peak} />
+                    <LevelBars level={systemAudioProbe.peak} />
                     <span className="font-mono">
                       {t('permissions.peakRms', {
-                        peak: formatDbfs(probe.peak),
-                        rms: formatDbfs(probe.rms),
+                        peak: formatDbfs(systemAudioProbe.peak),
+                        rms: formatDbfs(systemAudioProbe.rms),
                       })}
                     </span>
                   </span>
@@ -210,11 +297,11 @@ export function PermissionPanel() {
             }
             control={
               <div className="flex items-center gap-1.5">
-                <StatusBadge tone={probe ? PROBE_TONE[probe.verdict] : 'muted'}>
-                  {probe ? t(PROBE_TEXT[probe.verdict]) : t('permissions.notDetected')}
+                <StatusBadge tone={systemAudioProbe ? PROBE_TONE[systemAudioProbe.verdict] : 'muted'}>
+                  {systemAudioProbe ? t(PROBE_TEXT[systemAudioProbe.verdict]) : t('permissions.notDetected')}
                 </StatusBadge>
-                {(probe?.verdict === SystemAudioVerdict.SilentWhilePlaying ||
-                  probe?.verdict === SystemAudioVerdict.TapRejected) && (
+                {(systemAudioProbe?.verdict === SystemAudioVerdict.SilentWhilePlaying ||
+                  systemAudioProbe?.verdict === SystemAudioVerdict.TapRejected) && (
                   <Button size="sm" onClick={() => void open('systemAudio')}>
                     {t('permissions.openSettings')}
                   </Button>

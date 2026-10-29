@@ -51,6 +51,11 @@ export interface InputDevice {
 	isLoopback: boolean;
 }
 
+export interface MacSpeechStatus {
+	authorization: string;
+	installedLocales: string[];
+}
+
 export enum MicPermission {
 	Granted = "granted",
 	Denied = "denied",
@@ -110,6 +115,8 @@ export interface ModelStatus {
 	complete: boolean;
 	selected: boolean;
 	multilingual: boolean;
+	languages: string[];
+	streaming: boolean;
 	path?: string;
 	via?: string;
 	installedBytes: number;
@@ -201,12 +208,18 @@ export enum AsrModelTier {
 	Qwen3 = "qwen3",
 }
 
+export enum MtModelTier {
+	Base = "base",
+	Multilingual = "multilingual",
+}
+
 export interface Preferences {
 	audioSource: string;
 	deviceId?: string;
 	mixMicDeviceId?: string;
 	mixSystemDeviceId?: string;
 	translateEngine: TranslateEngine;
+	asrEngine: EngineType;
 	sourceLang: string;
 	targetLang: string;
 	zhScript: ZhScript;
@@ -219,6 +232,7 @@ export interface Preferences {
 	overlayGeometry?: WindowGeometry;
 	onboardingDone: boolean;
 	asrModelTier: AsrModelTier;
+	mtModelTier: MtModelTier;
 	analyticsEnabled: boolean;
 }
 
@@ -228,6 +242,7 @@ export interface PrefsPatch {
 	mixMicDeviceId?: string;
 	mixSystemDeviceId?: string;
 	translateEngine?: TranslateEngine;
+	asrEngine?: EngineType;
 	sourceLang?: string;
 	targetLang?: string;
 	zhScript?: ZhScript;
@@ -246,6 +261,7 @@ export interface TranslateConfig {
 	targetLang: string;
 	zhScript: ZhScript;
 	modelDir?: string;
+	mtModelTier: MtModelTier;
 }
 
 export interface SessionConfig {

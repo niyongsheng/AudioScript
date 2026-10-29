@@ -1,2 +1,3 @@
 "NSMicrophoneUsageDescription" = "AudioScript 需要使用麥克風進行即時語音轉寫。音訊僅在本機由離線模型處理，不會上傳到任何伺服器。";
 "NSAudioCaptureUsageDescription" = "AudioScript 需要錄製系統聲音，才能把正在播放的影片或播客即時轉成字幕。音訊僅在本機由離線模型處理，不會上傳到任何伺服器。";
+"NSSpeechRecognitionUsageDescription" = "AudioScript 需要使用語音辨識，才能透過 macOS 系統語音轉寫正在播放的音訊。辨識在系統語音框架中完成，音訊不會由本應用程式上傳。";

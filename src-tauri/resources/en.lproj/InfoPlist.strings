@@ -1,2 +1,3 @@
 "NSMicrophoneUsageDescription" = "AudioScript needs microphone access for real-time speech transcription. Audio is processed locally by offline models and is never uploaded to any server.";
 "NSAudioCaptureUsageDescription" = "AudioScript records system audio to turn playing videos or podcasts into live subtitles. Audio is processed locally by offline models and is never uploaded to any server.";
+"NSSpeechRecognitionUsageDescription" = "AudioScript needs speech recognition to transcribe audio with macOS system speech. Recognition runs in the system speech framework; this app never uploads your audio.";

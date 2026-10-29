@@ -2,8 +2,11 @@ pub mod local_nmt;
 #[cfg(target_os = "macos")]
 pub mod mac_translation;
 pub mod mock;
+pub mod nllb;
 pub mod queue;
 pub mod script;
+
+use std::path::Path;
 
 use crate::config::TranslateConfig;
 use crate::i18n::{tf, tr, Key};
@@ -41,6 +44,27 @@ const REPEAT_RATIO: f32 = 0.6;
 const REPEAT_FLOOR: usize = 4;
 
 const TRAILING_RUN: usize = 4;
+
+pub fn check_model_dir(dir: &Path, files: &[&str]) -> Result<(), TranslateError> {
+    let remedy = tr(Key::TranslateRemedyFetchMt);
+
+    if !dir.is_dir() {
+        return Err(TranslateError::MissingModelFile(tf(
+            Key::TranslatePathMissing,
+            &[&dir.display().to_string(), remedy],
+        )));
+    }
+
+    for f in files {
+        if !dir.join(f).is_file() {
+            return Err(TranslateError::MissingModelFile(tf(
+                Key::TranslateFileMissing,
+                &[&dir.display().to_string(), f, remedy],
+            )));
+        }
+    }
+    Ok(())
+}
 
 pub fn degenerate_translation(text: &str) -> Option<String> {
     let t = text.trim();
@@ -102,6 +126,12 @@ impl TranslateCaps {
         incremental: false,
         offline: true,
         typical_latency_ms: 200,
+    };
+
+    pub const LOCAL_MULTILINGUAL: Self = Self {
+        incremental: false,
+        offline: true,
+        typical_latency_ms: 500,
     };
 }
 

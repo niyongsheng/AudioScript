@@ -40,8 +40,12 @@
     <string>AudioScript 需要录制系统声音，才能把正在播放的视频或播客实时转成字幕。音频仅在本机由离线模型处理，不会上传到任何服务器。</string>
 
     <!--
-      仍未加：NSSpeechRecognitionUsageDescription —— V0.2 接入 macOS SFSpeech 时才需要。
-      在真正用到之前写进来，只会让首次启动弹出无关的权限请求。
+      系统语音（SpeechAnalyzer / SpeechTranscriber，macOS 26+）的权限说明。
+      ⚠️ 缺少这一条时，调用 SFSpeechRecognizer.requestAuthorization 会让进程直接
+      被 TCC 以 SIGABRT 终止（不是弹窗被拒）。开发模式的裸二进制没有 Info.plist，
+      所以系统语音只在打包后的 .app 里可用。
     -->
+    <key>NSSpeechRecognitionUsageDescription</key>
+    <string>AudioScript 需要使用语音识别，才能通过 macOS 系统语音转写正在播放的音频。识别在系统语音框架中完成，音频不会由本应用上传。</string>
 </dict>
 </plist>

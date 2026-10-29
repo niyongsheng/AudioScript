@@ -8,6 +8,7 @@ import {
   appInfo,
   audioDevices,
   type CmdPermissionError,
+  EngineType,
   EVENT,
   formatCmdError,
   type HotkeyFailure,
@@ -15,6 +16,8 @@ import {
   hotkeyFailures,
   type InputDevice,
   Language,
+  type MacSpeechStatus,
+  macSpeechStatus,
   type OverlayConfig,
   on,
   overlayConfigGet,
@@ -25,9 +28,11 @@ import {
   type Preferences,
   type PrefsPatch,
   permissionOf,
+  permissionProbeSystemAudio,
   permissionStatus,
   prefsGet,
   prefsSet,
+  type SystemAudioProbe,
   sessionClear,
   sessionStart,
   sessionStatus,
@@ -60,6 +65,7 @@ interface Store {
   mixMicDevice: string
   mixSystemDevice: string
   translateEngine: TranslateEngine
+  asrEngine: EngineType
   sourceLang: string
   targetLang: string
   zhScript: ZhScript
@@ -100,6 +106,11 @@ interface Store {
 
   permissions: PermissionSnapshot | null
   refreshPermission: () => Promise<void>
+  speechStatus: MacSpeechStatus | null
+  setSpeechStatus: (status: MacSpeechStatus | null) => void
+  refreshSpeechStatus: () => Promise<void>
+  systemAudioProbe: SystemAudioProbe | null
+  runSystemAudioProbe: () => Promise<SystemAudioProbe>
   permissionError: CmdPermissionError | null
   setPermissionError: (e: CmdPermissionError | null) => void
 
@@ -114,6 +125,7 @@ interface Store {
   setMixMicDevice: (v: string) => void
   setMixSystemDevice: (v: string) => void
   setTranslateEngine: (v: TranslateEngine) => void
+  setAsrEngine: (v: EngineType) => void
   setEngineAndDirection: (engine: TranslateEngine, source: string, target: string, script: ZhScript) => void
   setDirection: (source: string, target: string, script: ZhScript) => void
   changeTheme: (v: Theme) => Promise<void>
@@ -146,6 +158,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [mixMicDevice, setMixMicDevice] = useState('')
   const [mixSystemDevice, setMixSystemDevice] = useState('')
   const [translateEngine, setTranslateEngine] = useState<TranslateEngine>(TranslateEngine.LocalNmt)
+  const [asrEngine, setAsrEngine] = useState<EngineType>(EngineType.LocalStreaming)
   const [sourceLang, setSourceLang] = useState('en')
   const [targetLang, setTargetLang] = useState('zh')
   const [zhScript, setZhScript] = useState(ZhScript.Simplified)
@@ -176,6 +189,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [onboardingDone, setOnboardingDone] = useState(false)
   const [analyticsEnabled, setAnalyticsEnabledState] = useState(false)
   const [permissions, setPermissions] = useState<PermissionSnapshot | null>(null)
+  const [speechStatus, setSpeechStatus] = useState<MacSpeechStatus | null>(null)
+  const [systemAudioProbe, setSystemAudioProbe] = useState<SystemAudioProbe | null>(null)
   const [permissionError, setPermissionError] = useState<CmdPermissionError | null>(null)
 
   const [error, setError] = useState<string | null>(null)
@@ -237,6 +252,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       .then((p) => {
         setAudioSource(p.audioSource as AudioSourceKind)
         setTranslateEngine(p.translateEngine)
+        setAsrEngine(p.asrEngine)
         setSourceLang(p.sourceLang)
         setTargetLang(p.targetLang)
         setZhScript(p.zhScript)
@@ -269,12 +285,35 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const refreshSpeechStatus = useCallback(async () => {
+    if (!info?.macSpeechSupported) {
+      setSpeechStatus(null)
+      return
+    }
+    try {
+      setSpeechStatus(await macSpeechStatus())
+    } catch {
+      setSpeechStatus(null)
+    }
+  }, [info?.macSpeechSupported])
+
+  const runSystemAudioProbe = useCallback(async () => {
+    const result = await permissionProbeSystemAudio()
+    setSystemAudioProbe(result)
+    return result
+  }, [])
+
   useEffect(() => {
     void refreshPermission()
-    const onFocus = () => void refreshPermission()
+    void refreshSpeechStatus()
+    const onFocus = () => {
+      void refreshPermission()
+      void refreshSpeechStatus()
+      setSystemAudioProbe(null)
+    }
     window.addEventListener('focus', onFocus)
     return () => window.removeEventListener('focus', onFocus)
-  }, [refreshPermission])
+  }, [refreshPermission, refreshSpeechStatus])
 
   const applyTheme = useCallback((pref: Theme) => {
     const systemDark = window.matchMedia('(prefers-color-scheme: dark)').matches
@@ -298,6 +337,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     try {
       const p = await prefsSet(patch)
       if (patch.theme !== undefined) setTheme(p.theme)
+      if (patch.asrEngine !== undefined) setAsrEngine(p.asrEngine)
       if (patch.endpoint !== undefined) setEndpoint(p.endpoint)
     } catch (e) {
       setError(formatCmdError(e))
@@ -508,6 +548,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [patchPrefs],
   )
 
+  const changeAsrEngine = useCallback(
+    (v: EngineType) => {
+      setAsrEngine(v)
+      void patchPrefs({ asrEngine: v })
+      track('setting_changed', { key: 'asr_engine', value: v })
+    },
+    [patchPrefs],
+  )
+
   const changeEngineAndDirection = useCallback(
     (engine: TranslateEngine, source: string, target: string, script: ZhScript) => {
       setTranslateEngine(engine)
@@ -617,6 +666,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       mixMicDevice,
       mixSystemDevice,
       translateEngine,
+      asrEngine,
       sourceLang,
       targetLang,
       zhScript,
@@ -641,6 +691,11 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setAnalyticsEnabled,
       permissions,
       refreshPermission,
+      speechStatus,
+      setSpeechStatus,
+      refreshSpeechStatus,
+      systemAudioProbe,
+      runSystemAudioProbe,
       permissionError,
       setPermissionError,
       error,
@@ -653,6 +708,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setMixMicDevice: changeMixMicDevice,
       setMixSystemDevice: changeMixSystemDevice,
       setTranslateEngine: changeTranslateEngine,
+      setAsrEngine: changeAsrEngine,
       setEngineAndDirection: changeEngineAndDirection,
       setDirection: changeDirection,
       changeTheme,
@@ -680,6 +736,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       mixMicDevice,
       mixSystemDevice,
       translateEngine,
+      asrEngine,
       sourceLang,
       targetLang,
       zhScript,
@@ -704,6 +761,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setAnalyticsEnabled,
       permissions,
       refreshPermission,
+      speechStatus,
+      refreshSpeechStatus,
+      systemAudioProbe,
+      runSystemAudioProbe,
       permissionError,
       error,
       pending,
@@ -714,6 +775,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       changeMixMicDevice,
       changeMixSystemDevice,
       changeTranslateEngine,
+      changeAsrEngine,
       changeEngineAndDirection,
       changeDirection,
       changeTheme,

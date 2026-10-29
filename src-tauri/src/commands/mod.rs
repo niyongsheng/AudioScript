@@ -183,6 +183,8 @@ pub async fn route_async(app: &AppHandle, name: &str, args: &Value) -> Result<Va
         "permission_request_mic" => Some((Lane::Quick, std::time::Duration::from_secs(40))),
         "models_list" => Some((Lane::Quick, std::time::Duration::from_secs(10))),
         "mac_translation_languages" => Some((Lane::Quick, std::time::Duration::from_secs(10))),
+        "mac_speech_status" => Some((Lane::Quick, std::time::Duration::from_secs(20))),
+        "mac_speech_request" => Some((Lane::Quick, std::time::Duration::from_secs(30))),
         "model_remove" => Some((Lane::Quick, std::time::Duration::from_secs(60))),
         _ => None,
     };
@@ -199,6 +201,21 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
     match name {
         "app_info" => Ok(app_info()),
         "mac_translation_languages" => mac_translation_languages(),
+        "mac_speech_status" => {
+            let status = crate::asr::mac_native::status();
+            tracing::info!(
+                availability = crate::asr::mac_native::available(),
+                authorization = %status.authorization,
+                installed = ?status.installed_locales,
+                "macOS 系统语音状态"
+            );
+            Ok(json!(status))
+        }
+        "mac_speech_request" => {
+            let code = crate::asr::mac_native::request_authorization(20_000);
+            tracing::info!(authorization = code, "macOS 系统语音授权请求完成");
+            Ok(json!(crate::asr::mac_native::status()))
+        }
         "locale_get" => Ok(json!(crate::i18n::locale().as_str())),
 
         "update_restart" => {
@@ -473,12 +490,18 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
             };
 
             let mut cfg = cfg;
-            cfg.asr.endpoint = prefs::load(app).endpoint.sanitized();
+            let prefs = prefs::load(app);
+            cfg.asr.engine_type = prefs.asr_engine;
+            cfg.asr.source_lang = cfg.translate.source_lang.clone();
+            cfg.asr.endpoint = prefs.endpoint.sanitized();
+            cfg.translate.mt_model_tier = prefs.mt_model_tier;
 
             tracing::info!(
+                asr_engine = cfg.asr.engine_type.as_str(),
                 source_lang = %cfg.translate.source_lang,
                 target_lang = %effective_target_lang(
                     cfg.translate.engine,
+                    cfg.translate.mt_model_tier,
                     &cfg.translate.source_lang,
                     &cfg.translate.target_lang
                 ),
@@ -577,6 +600,7 @@ fn app_info() -> Value {
         "platform": std::env::consts::OS,
         "arch": std::env::consts::ARCH,
         "osVersion": os_version(),
+        "macSpeechSupported": crate::asr::mac_native::available() == crate::asr::mac_native::AVAILABLE,
         "builtAtMs": exe_mtime_ms(),
     })
 }
@@ -837,6 +861,9 @@ fn select_model(app: &AppHandle, id: &str) -> Result<crate::models::status::Mode
             }
         }
         crate::models::ModelKind::Mt => {
+            let tier = crate::config::MtModelTier::parse(&entry.tier)
+                .ok_or_else(|| CmdError::BadArgs(tf(Key::CmdUnknownMtTier, &[&entry.tier])))?;
+            crate::prefs::update(app, |p| p.mt_model_tier = tier).map_err(CmdError::Failed)?;
             for m in &mut list.mt {
                 m.selected = m.id == id;
             }

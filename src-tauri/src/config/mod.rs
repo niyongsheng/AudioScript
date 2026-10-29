@@ -21,6 +21,10 @@ impl EngineType {
             Self::RemoteApi => "remote-api",
         }
     }
+
+    pub fn is_wired(self) -> bool {
+        matches!(self, Self::LocalStreaming | Self::MacNative)
+    }
 }
 
 #[typeshare]
@@ -165,6 +169,7 @@ pub struct TranslateConfig {
     pub target_lang: String,
     pub zh_script: ZhScript,
     pub model_dir: Option<String>,
+    pub mt_model_tier: MtModelTier,
 }
 
 impl Default for TranslateConfig {
@@ -175,6 +180,7 @@ impl Default for TranslateConfig {
             target_lang: "zh".into(),
             zh_script: ZhScript::default(),
             model_dir: None,
+            mt_model_tier: MtModelTier::default(),
         }
     }
 }
@@ -301,6 +307,32 @@ impl AsrModelTier {
             "builtin" => Some(Self::Builtin),
             "high-accuracy" => Some(Self::HighAccuracy),
             "qwen3" => Some(Self::Qwen3),
+            _ => None,
+        }
+    }
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum MtModelTier {
+    #[default]
+    Base,
+    Multilingual,
+}
+
+impl MtModelTier {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::Base => "base",
+            Self::Multilingual => "multilingual",
+        }
+    }
+
+    pub fn parse(s: &str) -> Option<Self> {
+        match s {
+            "base" => Some(Self::Base),
+            "multilingual" => Some(Self::Multilingual),
             _ => None,
         }
     }
@@ -439,6 +471,7 @@ pub struct Preferences {
     pub mix_mic_device_id: Option<String>,
     pub mix_system_device_id: Option<String>,
     pub translate_engine: TranslateEngine,
+    pub asr_engine: EngineType,
     pub source_lang: String,
     pub target_lang: String,
     pub zh_script: ZhScript,
@@ -451,6 +484,7 @@ pub struct Preferences {
     pub overlay_geometry: Option<WindowGeometry>,
     pub onboarding_done: bool,
     pub asr_model_tier: AsrModelTier,
+    pub mt_model_tier: MtModelTier,
     pub analytics_enabled: bool,
 }
 
@@ -462,6 +496,7 @@ impl Default for Preferences {
             mix_mic_device_id: None,
             mix_system_device_id: None,
             translate_engine: TranslateEngine::default(),
+            asr_engine: EngineType::default(),
             source_lang: "en".into(),
             target_lang: "zh".into(),
             zh_script: ZhScript::default(),
@@ -474,6 +509,7 @@ impl Default for Preferences {
             overlay_geometry: None,
             onboarding_done: false,
             asr_model_tier: AsrModelTier::default(),
+            mt_model_tier: MtModelTier::default(),
             analytics_enabled: true,
         }
     }
@@ -488,6 +524,7 @@ pub struct PrefsPatch {
     pub mix_mic_device_id: Option<String>,
     pub mix_system_device_id: Option<String>,
     pub translate_engine: Option<TranslateEngine>,
+    pub asr_engine: Option<EngineType>,
     pub source_lang: Option<String>,
     pub target_lang: Option<String>,
     pub zh_script: Option<ZhScript>,
@@ -510,8 +547,16 @@ impl PrefsPatch {
                 ));
             }
         }
+        if let Some(engine) = self.asr_engine {
+            if !engine.is_wired() {
+                return Err(crate::i18n::tf(
+                    crate::i18n::Key::PrefsUnknownAsrEngine,
+                    &[engine.as_str()],
+                ));
+            }
+        }
         if let Some(s) = &self.source_lang {
-            if !is_supported_source_lang(s) {
+            if s == "auto" || !is_language_tag(s) {
                 return Err(crate::i18n::tf(
                     crate::i18n::Key::PrefsUnknownSourceLang,
                     &[s],
@@ -544,6 +589,9 @@ impl PrefsPatch {
         }
         if let Some(v) = self.translate_engine {
             p.translate_engine = v;
+        }
+        if let Some(v) = self.asr_engine {
+            p.asr_engine = v;
         }
         if let Some(v) = self.source_lang {
             p.source_lang = v;
@@ -585,12 +633,25 @@ impl Preferences {
         if !matches!(self.audio_source.as_str(), "mic" | "loopback" | "mix") {
             self.audio_source = d.audio_source;
         }
-        if !is_supported_source_lang(&self.source_lang) {
+        if !self.asr_engine.is_wired() {
+            self.asr_engine = d.asr_engine;
+        }
+        if !source_lang_allowed(
+            self.translate_engine,
+            self.asr_engine,
+            self.asr_model_tier,
+            self.mt_model_tier,
+            &self.source_lang,
+        ) {
             self.source_lang = d.source_lang;
         }
-        let target_lang =
-            effective_target_lang(self.translate_engine, &self.source_lang, &self.target_lang)
-                .to_owned();
+        let target_lang = effective_target_lang(
+            self.translate_engine,
+            self.mt_model_tier,
+            &self.source_lang,
+            &self.target_lang,
+        )
+        .to_owned();
         self.target_lang = target_lang;
         self.device_id = normalize_device(self.device_id.take());
         self.mix_mic_device_id = normalize_device(self.mix_mic_device_id.take());
@@ -655,6 +716,28 @@ pub fn is_supported_source_lang(lang: &str) -> bool {
     matches!(lang, "en" | "zh")
 }
 
+fn multilingual_pair_allowed(engine: TranslateEngine, mt_tier: MtModelTier) -> bool {
+    engine == TranslateEngine::MacTranslation
+        || (engine == TranslateEngine::LocalNmt && mt_tier == MtModelTier::Multilingual)
+}
+
+pub fn source_lang_allowed(
+    engine: TranslateEngine,
+    asr_engine: EngineType,
+    asr_tier: AsrModelTier,
+    mt_tier: MtModelTier,
+    lang: &str,
+) -> bool {
+    if lang == "auto" {
+        return false;
+    }
+    let multilingual_asr = asr_engine == EngineType::MacNative || asr_tier == AsrModelTier::Qwen3;
+    if multilingual_asr && multilingual_pair_allowed(engine, mt_tier) {
+        return is_language_tag(lang);
+    }
+    is_supported_source_lang(lang)
+}
+
 pub fn is_language_tag(value: &str) -> bool {
     !value.is_empty()
         && value.split('-').all(|part| {
@@ -672,10 +755,12 @@ pub fn normalize_device(id: Option<String>) -> Option<String> {
 
 pub fn effective_target_lang<'a>(
     engine: TranslateEngine,
+    mt_tier: MtModelTier,
     source_lang: &str,
     target_lang: &'a str,
 ) -> &'a str {
-    let supported = if engine == TranslateEngine::MacTranslation {
+    let multilingual = multilingual_pair_allowed(engine, mt_tier);
+    let supported = if multilingual {
         is_language_tag(target_lang) && base_lang(target_lang) != base_lang(source_lang)
     } else {
         matches!(target_lang, "en" | "zh") && target_lang != source_lang
@@ -734,6 +819,24 @@ mod tests {
     }
 
     #[test]
+    fn asr_engine_pref_accepts_only_wired_engines() {
+        let ok: PrefsPatch = serde_json::from_str(r#"{"asrEngine":"mac-native"}"#).unwrap();
+        assert_eq!(ok.asr_engine, Some(EngineType::MacNative));
+        assert!(ok.validate().is_ok());
+
+        let bad: PrefsPatch = serde_json::from_str(r#"{"asrEngine":"local-whisper"}"#).unwrap();
+        assert!(bad.validate().is_err(), "未接线的引擎必须被偏好校验拒绝");
+    }
+
+    #[test]
+    fn asr_engine_defaults_to_local_streaming() {
+        assert_eq!(
+            Preferences::default().asr_engine,
+            EngineType::LocalStreaming
+        );
+    }
+
+    #[test]
     fn engine_type_serializes_kebab_case() {
         let json = serde_json::to_string(&EngineType::LocalStreaming).unwrap();
         assert_eq!(json, r#""local-streaming""#);
@@ -768,6 +871,7 @@ mod tests {
             audio_source: "speaker".into(),
             device_id: Some("keep-me".into()),
             translate_engine: TranslateEngine::Off,
+            asr_engine: crate::config::EngineType::LocalStreaming,
             source_lang: "zh".into(),
             ..Default::default()
         }
@@ -787,6 +891,109 @@ mod tests {
         }
         .sanitized();
         assert_eq!(p.source_lang, "en");
+    }
+
+    #[test]
+    fn sanitize_keeps_multilingual_source_only_for_qwen3_mac() {
+        let kept = Preferences {
+            translate_engine: TranslateEngine::MacTranslation,
+            asr_model_tier: AsrModelTier::Qwen3,
+            source_lang: "ja".into(),
+            target_lang: "zh".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(kept.source_lang, "ja");
+
+        let streaming = Preferences {
+            translate_engine: TranslateEngine::MacTranslation,
+            source_lang: "ja".into(),
+            target_lang: "zh".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(streaming.source_lang, "en");
+
+        let local = Preferences {
+            translate_engine: TranslateEngine::LocalNmt,
+            asr_model_tier: AsrModelTier::Qwen3,
+            source_lang: "ja".into(),
+            target_lang: "zh".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(local.source_lang, "en");
+
+        let multilingual = Preferences {
+            translate_engine: TranslateEngine::LocalNmt,
+            asr_model_tier: AsrModelTier::Qwen3,
+            mt_model_tier: MtModelTier::Multilingual,
+            source_lang: "ja".into(),
+            target_lang: "zh".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(multilingual.source_lang, "ja");
+    }
+
+    #[test]
+    fn source_lang_allowed_follows_engine_and_tier() {
+        assert!(source_lang_allowed(
+            TranslateEngine::MacTranslation,
+            EngineType::LocalStreaming,
+            AsrModelTier::Qwen3,
+            MtModelTier::Base,
+            "ja"
+        ));
+        assert!(!source_lang_allowed(
+            TranslateEngine::MacTranslation,
+            EngineType::LocalStreaming,
+            AsrModelTier::Builtin,
+            MtModelTier::Base,
+            "ja"
+        ));
+        assert!(!source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::Qwen3,
+            MtModelTier::Base,
+            "ja"
+        ));
+        assert!(source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::Qwen3,
+            MtModelTier::Multilingual,
+            "ja"
+        ));
+        assert!(!source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::Builtin,
+            MtModelTier::Multilingual,
+            "ja"
+        ));
+        assert!(!source_lang_allowed(
+            TranslateEngine::MacTranslation,
+            EngineType::LocalStreaming,
+            AsrModelTier::Qwen3,
+            MtModelTier::Base,
+            "auto"
+        ));
+        assert!(source_lang_allowed(
+            TranslateEngine::MacTranslation,
+            EngineType::MacNative,
+            AsrModelTier::Builtin,
+            MtModelTier::Base,
+            "ja"
+        ));
+        assert!(!source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::MacNative,
+            AsrModelTier::Builtin,
+            MtModelTier::Base,
+            "ja"
+        ));
     }
 
     #[test]
@@ -836,20 +1043,49 @@ mod tests {
     #[test]
     fn extra_target_languages_survive_sanitizing() {
         assert_eq!(
-            effective_target_lang(TranslateEngine::MacTranslation, "en", "ja"),
+            effective_target_lang(
+                TranslateEngine::MacTranslation,
+                MtModelTier::Base,
+                "en",
+                "ja"
+            ),
             "ja"
         );
         assert_eq!(
-            effective_target_lang(TranslateEngine::MacTranslation, "zh", "fr"),
+            effective_target_lang(
+                TranslateEngine::MacTranslation,
+                MtModelTier::Base,
+                "zh",
+                "fr"
+            ),
             "fr"
         );
         assert_eq!(
-            effective_target_lang(TranslateEngine::MacTranslation, "en", "ko"),
+            effective_target_lang(
+                TranslateEngine::MacTranslation,
+                MtModelTier::Base,
+                "en",
+                "ko"
+            ),
             "ko"
         );
         assert_eq!(
-            effective_target_lang(TranslateEngine::MacTranslation, "en", "de-Latn-DE"),
+            effective_target_lang(
+                TranslateEngine::MacTranslation,
+                MtModelTier::Base,
+                "en",
+                "de-Latn-DE"
+            ),
             "de-Latn-DE"
+        );
+        assert_eq!(
+            effective_target_lang(
+                TranslateEngine::LocalNmt,
+                MtModelTier::Multilingual,
+                "en",
+                "ja"
+            ),
+            "ja"
         );
 
         let mac = Preferences {
@@ -869,10 +1105,20 @@ mod tests {
         }
         .sanitized();
         assert_eq!(local.target_lang, "zh", "Opus-MT 不支持的目标语言必须回退");
+
+        let multilingual = Preferences {
+            translate_engine: TranslateEngine::LocalNmt,
+            mt_model_tier: MtModelTier::Multilingual,
+            source_lang: "en".into(),
+            target_lang: "ja".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(multilingual.target_lang, "ja");
     }
 
     #[test]
-    fn extra_targets_are_patchable_but_not_sources() {
+    fn extra_sources_pass_patch_validation_and_are_gated_at_sanitize() {
         let target = PrefsPatch {
             target_lang: Some("fr".into()),
             ..Default::default()
@@ -883,7 +1129,30 @@ mod tests {
             source_lang: Some("fr".into()),
             ..Default::default()
         };
-        assert!(source.validate().is_err());
+        assert!(source.validate().is_ok(), "补丁层只校验语言标签格式");
+
+        let auto = PrefsPatch {
+            source_lang: Some("auto".into()),
+            ..Default::default()
+        };
+        assert!(auto.validate().is_err(), "auto 必须在补丁层拒绝");
+
+        let streaming = Preferences {
+            source_lang: "fr".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(streaming.source_lang, "en", "非 Qwen3+macOS 组合必须回退");
+
+        let multilingual = Preferences {
+            translate_engine: TranslateEngine::MacTranslation,
+            asr_model_tier: AsrModelTier::Qwen3,
+            source_lang: "fr".into(),
+            target_lang: "zh".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(multilingual.source_lang, "fr");
     }
 
     #[test]
@@ -955,6 +1224,7 @@ mod tests {
                 },
             }),
             translate_engine: TranslateEngine::Off,
+            asr_engine: crate::config::EngineType::LocalStreaming,
             source_lang: "zh".into(),
             ..Default::default()
         };

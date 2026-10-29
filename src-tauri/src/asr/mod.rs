@@ -1,3 +1,4 @@
+pub mod mac_native;
 pub mod offline;
 pub mod segment;
 pub mod streaming;
@@ -23,6 +24,24 @@ pub enum AsrError {
 
     #[error("{}", tf(Key::AsrModelDirMissing, &[.0.as_str()]))]
     MissingModelFile(String),
+
+    #[error("{}", tr(Key::AsrMacSpeechUnsupported))]
+    MacSpeechUnsupported,
+
+    #[error("{}", tr(Key::AsrMacSpeechUsageDescription))]
+    MacSpeechUsageDescription,
+
+    #[error("{}", tr(Key::AsrMacSpeechPermission))]
+    MacSpeechPermission,
+
+    #[error("{}", tf(Key::AsrMacSpeechLocaleUnavailable, &[.0.as_str()]))]
+    MacSpeechLocaleUnavailable(String),
+
+    #[error("{}", tf(Key::AsrMacSpeechAssetsMissing, &[.0.as_str()]))]
+    MacSpeechAssetsMissing(String),
+
+    #[error("{}", tf(Key::AsrMacSpeechFailed, &[.0.as_str()]))]
+    MacSpeechFailed(String),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -46,6 +65,13 @@ impl EngineCaps {
         produces_partial: false,
         requires_full_utterance: true,
         supports_endpoint: true,
+    };
+
+    pub const MAC_NATIVE: Self = Self {
+        streaming: true,
+        produces_partial: true,
+        requires_full_utterance: false,
+        supports_endpoint: false,
     };
 }
 

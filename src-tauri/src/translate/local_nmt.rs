@@ -3,8 +3,8 @@ use std::path::{Path, PathBuf};
 use ct2rs::tokenizers::hf::Tokenizer as HfTokenizer;
 
 use super::{script, TranslateCaps, TranslateError, Translator};
-use crate::config::{TranslateConfig, ZhScript};
-use crate::i18n::{tf, tr, Key};
+use crate::config::{MtModelTier, TranslateConfig, ZhScript};
+use crate::i18n::{tr, Key};
 use crate::models::catalog;
 
 const SOURCE_TOKENIZER: &str = "source-tokenizer.json";
@@ -56,7 +56,7 @@ enum Direction {
 
 impl Direction {
     fn dir_name(self) -> &'static str {
-        let dirs = catalog::mt_entry().direction_dirs();
+        let dirs = catalog::mt_entry(MtModelTier::Base).direction_dirs();
         match self {
             Self::EnZh => dirs
                 .first()
@@ -126,24 +126,7 @@ impl LocalNmt {
     }
 
     fn check_model_dir(dir: &Path) -> Result<(), TranslateError> {
-        let remedy = tr(Key::TranslateRemedyFetchMt);
-
-        if !dir.is_dir() {
-            return Err(TranslateError::MissingModelFile(tf(
-                Key::TranslatePathMissing,
-                &[&dir.display().to_string(), remedy],
-            )));
-        }
-
-        for f in ["model.bin", SOURCE_TOKENIZER, TARGET_TOKENIZER] {
-            if !dir.join(f).is_file() {
-                return Err(TranslateError::MissingModelFile(tf(
-                    Key::TranslateFileMissing,
-                    &[&dir.display().to_string(), f, remedy],
-                )));
-            }
-        }
-        Ok(())
+        super::check_model_dir(dir, &["model.bin", SOURCE_TOKENIZER, TARGET_TOKENIZER])
     }
 }
 

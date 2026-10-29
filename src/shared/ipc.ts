@@ -6,6 +6,7 @@ import type {
   AudioStatus,
   EndpointConfig,
   InputDevice,
+  MacSpeechStatus,
   MicRequestResult,
   ModelJobStatus,
   ModelStatus,
@@ -21,6 +22,7 @@ import type {
 } from './types'
 import {
   AudioSourceKind,
+  EngineType,
   Language,
   MicPermission,
   ModelPhase,
@@ -34,6 +36,7 @@ import {
 export type {
   AudioStatus,
   InputDevice,
+  MacSpeechStatus,
   ModelJobStatus,
   ModelStatus,
   ModelsList,
@@ -43,7 +46,17 @@ export type {
   PrefsPatch,
   SystemAudioProbe,
 }
-export { AudioSourceKind, Language, MicPermission, ModelPhase, SystemAudioVerdict, Theme, TranslateEngine, ZhScript }
+export {
+  AudioSourceKind,
+  EngineType,
+  Language,
+  MicPermission,
+  ModelPhase,
+  SystemAudioVerdict,
+  Theme,
+  TranslateEngine,
+  ZhScript,
+}
 
 export async function call<T = unknown>(name: string, args: Record<string, unknown> = {}): Promise<T> {
   return invoke<T>('dispatch', { name, args })
@@ -73,6 +86,7 @@ export interface AppInfo {
   platform: string
   arch: string
   osVersion?: string | null
+  macSpeechSupported: boolean
   builtAtMs: number | null
 }
 
@@ -92,6 +106,14 @@ export function appInfo(): Promise<AppInfo> {
 
 export function macTranslationLanguages(): Promise<string[]> {
   return call<string[]>('mac_translation_languages')
+}
+
+export function macSpeechStatus(): Promise<MacSpeechStatus> {
+  return call<MacSpeechStatus>('mac_speech_status')
+}
+
+export function macSpeechRequest(): Promise<MacSpeechStatus> {
+  return call<MacSpeechStatus>('mac_speech_request')
 }
 
 export function localeGet(): Promise<string> {
@@ -237,7 +259,7 @@ export function shortcutsSet(id: string, accelerator: string): Promise<HotkeyInf
   return call<HotkeyInfo[]>('shortcuts_set', { id, accelerator })
 }
 
-export type PrivacyPane = 'microphone' | 'systemAudio'
+export type PrivacyPane = 'microphone' | 'systemAudio' | 'speech'
 
 export function openPrivacySettings(pane: PrivacyPane = 'systemAudio'): Promise<null> {
   return call<null>('open_privacy_settings', { pane })

@@ -230,6 +230,9 @@ pub fn settings_url(pane: &str) -> Option<&'static str> {
         "systemAudio" => {
             Some("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
         }
+        "speech" => {
+            Some("x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition")
+        }
         _ => None,
     }
 }
@@ -333,6 +336,9 @@ mod tests {
         assert!(settings_url("systemAudio")
             .unwrap()
             .contains("Privacy_ScreenCapture"));
+        assert!(settings_url("speech")
+            .unwrap()
+            .contains("Privacy_SpeechRecognition"));
         assert!(settings_url("nope").is_none());
     }
 
