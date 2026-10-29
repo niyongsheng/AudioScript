@@ -65,6 +65,9 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
+    "macOS": {
+      "minimumSystemVersion": "14.2"
+    },
     "resources": {
       "assets/models": "models",
       "resources/en.lproj": "en.lproj",
