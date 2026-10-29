@@ -131,6 +131,7 @@ export interface ModelsList {
 	mt: ModelStatus[];
 	job?: ModelJobStatus;
 	userRoot?: string;
+	userRootCustom: boolean;
 }
 
 export enum OverlayMode {
@@ -233,6 +234,7 @@ export interface Preferences {
 	onboardingDone: boolean;
 	asrModelTier: AsrModelTier;
 	mtModelTier: MtModelTier;
+	modelsDir?: string;
 	analyticsEnabled: boolean;
 }
 

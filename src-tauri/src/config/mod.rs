@@ -485,6 +485,7 @@ pub struct Preferences {
     pub onboarding_done: bool,
     pub asr_model_tier: AsrModelTier,
     pub mt_model_tier: MtModelTier,
+    pub models_dir: Option<String>,
     pub analytics_enabled: bool,
 }
 
@@ -510,6 +511,7 @@ impl Default for Preferences {
             onboarding_done: false,
             asr_model_tier: AsrModelTier::default(),
             mt_model_tier: MtModelTier::default(),
+            models_dir: None,
             analytics_enabled: true,
         }
     }
@@ -656,6 +658,11 @@ impl Preferences {
         self.device_id = normalize_device(self.device_id.take());
         self.mix_mic_device_id = normalize_device(self.mix_mic_device_id.take());
         self.mix_system_device_id = normalize_device(self.mix_system_device_id.take());
+        self.models_dir = self
+            .models_dir
+            .take()
+            .map(|s| s.trim().to_owned())
+            .filter(|s| !s.is_empty());
 
         self.endpoint = self.endpoint.sanitized();
 

@@ -40,6 +40,7 @@ pub struct ModelSearchRoots {
     pub bundled: Option<PathBuf>,
     pub dev: Option<PathBuf>,
     pub user: Option<PathBuf>,
+    pub user_fallback: Option<PathBuf>,
 }
 
 fn simplify(path: PathBuf) -> PathBuf {
@@ -53,11 +54,40 @@ fn resolved(path: PathBuf, via: ResolutionVia) -> ResolvedModelDir {
     }
 }
 
-pub fn user_models_root(app: &AppHandle) -> Option<PathBuf> {
+pub fn default_user_models_root(app: &AppHandle) -> Option<PathBuf> {
     app.path()
         .app_local_data_dir()
         .ok()
         .map(|dir| simplify(dir.join("models")))
+}
+
+pub fn custom_models_root(app: &AppHandle) -> Option<PathBuf> {
+    crate::prefs::load(app)
+        .models_dir
+        .map(PathBuf::from)
+        .filter(|p| p.is_absolute())
+        .map(simplify)
+}
+
+pub fn user_models_root(app: &AppHandle) -> Option<PathBuf> {
+    custom_models_root(app).or_else(|| default_user_models_root(app))
+}
+
+pub fn user_models_roots(app: &AppHandle) -> Vec<PathBuf> {
+    combine_user_roots(custom_models_root(app), default_user_models_root(app))
+}
+
+fn combine_user_roots(custom: Option<PathBuf>, default: Option<PathBuf>) -> Vec<PathBuf> {
+    let mut roots = Vec::new();
+    if let Some(custom) = custom {
+        roots.push(custom);
+    }
+    if let Some(default) = default {
+        if !roots.iter().any(|root| root == &default) {
+            roots.push(default);
+        }
+    }
+    roots
 }
 
 pub fn ensure_user_models_root(app: &AppHandle) -> Result<PathBuf, String> {
@@ -69,6 +99,53 @@ pub fn ensure_user_models_root(app: &AppHandle) -> Result<PathBuf, String> {
         )
     })?;
     Ok(dir)
+}
+
+pub fn validate_models_dir(app: &AppHandle, raw: &str) -> Result<PathBuf, String> {
+    let resource = app.path().resource_dir().ok();
+    validate_models_dir_within(raw, resource.as_deref())
+}
+
+fn validate_models_dir_within(raw: &str, resource: Option<&Path>) -> Result<PathBuf, String> {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return Err(tr(Key::PathCustomDirEmpty).to_string());
+    }
+
+    let path = PathBuf::from(trimmed);
+    if !path.is_absolute() {
+        return Err(tf(Key::PathCustomDirRelative, &[trimmed]));
+    }
+    let path = simplify(path);
+
+    if let Some(resource) = resource {
+        let resource = std::fs::canonicalize(resource).unwrap_or_else(|_| resource.to_path_buf());
+        let candidate = std::fs::canonicalize(&path).unwrap_or_else(|_| path.clone());
+        if candidate.starts_with(&resource) {
+            return Err(tf(
+                Key::PathCustomDirInBundle,
+                &[&path.display().to_string()],
+            ));
+        }
+    }
+
+    std::fs::create_dir_all(&path).map_err(|e| {
+        tf(
+            Key::PathCreateFailed,
+            &[&path.display().to_string(), &e.to_string()],
+        )
+    })?;
+
+    let probe = path.join(".audioscript-write-test");
+    let probe_result = std::fs::write(&probe, b"probe").and_then(|_| std::fs::remove_file(&probe));
+    if let Err(e) = probe_result {
+        return Err(tf(
+            Key::PathCustomDirNotWritable,
+            &[&path.display().to_string(), &e.to_string()],
+        ));
+    }
+
+    Ok(path)
 }
 
 pub fn search_roots(app: &AppHandle) -> ModelSearchRoots {
@@ -89,11 +166,16 @@ pub fn search_roots(app: &AppHandle) -> ModelSearchRoots {
         p.is_dir().then_some(p)
     };
 
+    let mut user_roots = user_models_roots(app);
+    let user = user_roots.first().cloned();
+    let user_fallback = user_roots.drain(1..).next();
+
     ModelSearchRoots {
         env,
         bundled,
         dev,
-        user: user_models_root(app),
+        user,
+        user_fallback,
     }
 }
 
@@ -171,6 +253,12 @@ fn locate(
         );
     } else {
         add_candidate(&mut candidates, &roots.user, rel, ResolutionVia::UserData);
+        add_candidate(
+            &mut candidates,
+            &roots.user_fallback,
+            rel,
+            ResolutionVia::UserData,
+        );
     }
     first_existing(candidates, &what, &remedy)
 }
@@ -486,6 +574,7 @@ mod tests {
             bundled: Some(bundled),
             dev: Some(dev),
             user: None,
+            user_fallback: None,
         };
         let got = locate_asr(&roots, AsrModelTier::Builtin).unwrap();
         assert_eq!(got.via, ResolutionVia::EnvOverride);
@@ -503,6 +592,7 @@ mod tests {
             bundled: Some(bundled.clone()),
             dev: None,
             user: Some(user.clone()),
+            user_fallback: None,
         };
         let got = locate_asr(&roots, AsrModelTier::HighAccuracy).unwrap();
         assert_eq!(got.via, ResolutionVia::UserData);
@@ -513,9 +603,50 @@ mod tests {
             bundled: Some(bundled),
             dev: None,
             user: None,
+            user_fallback: None,
         };
         assert!(locate_asr(&bundled_only, AsrModelTier::HighAccuracy).is_err());
         std::fs::remove_dir_all(&user).ok();
+    }
+
+    #[test]
+    fn optional_tier_falls_back_to_default_user_root() {
+        let rel = catalog::asr_entry(AsrModelTier::HighAccuracy).installed_dir();
+        let legacy = root_with(rel, &[]);
+        let missing = std::env::temp_dir().join(format!("paths-none-{}", uuid::Uuid::new_v4()));
+        let roots = ModelSearchRoots {
+            env: None,
+            bundled: None,
+            dev: None,
+            user: Some(missing),
+            user_fallback: Some(legacy.clone()),
+        };
+
+        let got = locate_asr(&roots, AsrModelTier::HighAccuracy).unwrap();
+        assert_eq!(got.via, ResolutionVia::UserData);
+        assert!(got.path.starts_with(&legacy));
+
+        std::fs::remove_dir_all(&legacy).ok();
+    }
+
+    #[test]
+    fn primary_user_root_wins_over_fallback() {
+        let rel = catalog::asr_entry(AsrModelTier::HighAccuracy).installed_dir();
+        let primary = root_with(rel, &[]);
+        let legacy = root_with(rel, &[]);
+        let roots = ModelSearchRoots {
+            env: None,
+            bundled: None,
+            dev: None,
+            user: Some(primary.clone()),
+            user_fallback: Some(legacy.clone()),
+        };
+
+        let got = locate_asr(&roots, AsrModelTier::HighAccuracy).unwrap();
+        assert!(got.path.starts_with(&primary));
+
+        std::fs::remove_dir_all(&primary).ok();
+        std::fs::remove_dir_all(&legacy).ok();
     }
 
     #[test]
@@ -527,6 +658,7 @@ mod tests {
             bundled: None,
             dev: None,
             user: Some(user.clone()),
+            user_fallback: None,
         };
         let got = locate_asr(&roots, AsrModelTier::HighAccuracy).unwrap();
         assert!(got.path.starts_with(&user));
@@ -590,6 +722,60 @@ mod tests {
     }
 
     #[test]
+    fn user_roots_put_custom_first_and_keep_default_as_fallback() {
+        let custom = PathBuf::from("/custom");
+        let default = PathBuf::from("/default");
+        assert_eq!(
+            combine_user_roots(Some(custom.clone()), Some(default.clone())),
+            vec![custom, default]
+        );
+        assert_eq!(
+            combine_user_roots(None, Some(PathBuf::from("/default"))),
+            vec![PathBuf::from("/default")]
+        );
+    }
+
+    #[test]
+    fn user_roots_deduplicate_identical_custom_and_default() {
+        let same = PathBuf::from("/models");
+        assert_eq!(
+            combine_user_roots(Some(same.clone()), Some(same.clone())),
+            vec![same]
+        );
+    }
+
+    #[test]
+    fn custom_dir_rejects_blank_and_relative_paths() {
+        assert!(validate_models_dir_within("   ", None).is_err());
+        assert!(validate_models_dir_within("relative/models", None).is_err());
+    }
+
+    #[test]
+    fn custom_dir_rejects_app_bundle_subfolder() {
+        let bundle = std::env::temp_dir().join(format!("paths-bundle-{}", uuid::Uuid::new_v4()));
+        let inside = bundle.join("models");
+        std::fs::create_dir_all(&inside).unwrap();
+        assert!(
+            validate_models_dir_within(&inside.display().to_string(), Some(&bundle)).is_err(),
+            "应用安装目录内不能存模型"
+        );
+        std::fs::remove_dir_all(&bundle).ok();
+    }
+
+    #[test]
+    fn custom_dir_is_created_and_probed() {
+        let root = std::env::temp_dir().join(format!("paths-custom-{}", uuid::Uuid::new_v4()));
+        let path = root.join("nested/models");
+        let got = validate_models_dir_within(&path.display().to_string(), None).unwrap();
+        assert!(got.is_dir());
+        assert!(
+            !got.join(".audioscript-write-test").exists(),
+            "写入探测文件必须被清理"
+        );
+        std::fs::remove_dir_all(&root).ok();
+    }
+
+    #[test]
     fn mt_base_locates_bundled_mt_dir() {
         let entry = catalog::mt_entry(MtModelTier::Base);
         let rel = entry.installed_dir();
@@ -599,6 +785,7 @@ mod tests {
             bundled: Some(bundled.clone()),
             dev: None,
             user: None,
+            user_fallback: None,
         };
         let got = locate_mt_root(&roots, entry).unwrap();
         assert_eq!(got.via, ResolutionVia::BundledResource);

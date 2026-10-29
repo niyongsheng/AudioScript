@@ -324,6 +324,17 @@ export const de: Messages = {
   'models.switchHint': 'Modelle wechseln Sie auf der Seite „Übersetzung“.',
   'models.noStorage': 'Der Modellspeicherordner kann nicht ermittelt werden; optionale Modelle sind nicht verfügbar.',
   'models.openDir': 'Modellordner öffnen',
+  'models.storageGroup': 'Speicher',
+  'models.storageLocation': 'Modellspeicherort',
+  'models.storageHint':
+    'Neue Downloads werden hier gespeichert. Ein Wechsel des Ordners löscht bereits heruntergeladene Modelle anderswo nicht.',
+  'models.storageChange': 'Ändern…',
+  'models.storageReset': 'Standardort verwenden',
+  'models.storagePickTitle': 'Ordner für heruntergeladene Modelle wählen',
+  'models.storageResetTitle': 'Standard-Speicherort wiederherstellen?',
+  'models.storageResetWarn':
+    'Modelle, die nach {path} heruntergeladen wurden, bleiben auf dem Datenträger, werden aber nicht mehr aufgelistet. Löschen Sie sie zuerst, um den Speicherplatz freizugeben.',
+  'models.storageResetConfirm': 'Standardort wiederherstellen',
   'models.inUse': 'In Verwendung',
   'models.bundled': 'Integriert',
   'models.multilingual': 'Mehrsprachig',

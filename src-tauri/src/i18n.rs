@@ -1328,6 +1328,56 @@ messages! {
         de: "{0} konnte nicht erstellt werden: {1}",
         es: "No se pudo crear {0}: {1}"
     },
+    PathCustomDirEmpty {
+        zh_cn: "请选择一个文件夹作为模型存储位置",
+        zh_tw: "請選擇一個資料夾作為模型儲存位置",
+        en: "Choose a folder to store downloaded models",
+        ja: "ダウンロードしたモデルの保存先フォルダーを選択してください",
+        ko: "다운로드한 모델을 저장할 폴더를 선택하세요",
+        fr: "Choisissez un dossier pour stocker les modèles téléchargés",
+        de: "Wählen Sie einen Ordner zum Speichern heruntergeladener Modelle",
+        es: "Elija una carpeta para guardar los modelos descargados"
+    },
+    PathCustomDirRelative {
+        zh_cn: "模型存储位置必须是绝对路径：{0}",
+        zh_tw: "模型儲存位置必須是絕對路徑：{0}",
+        en: "The model storage folder must be an absolute path: {0}",
+        ja: "モデルの保存先は絶対パスである必要があります：{0}",
+        ko: "모델 저장 위치는 절대 경로여야 합니다: {0}",
+        fr: "Le dossier de stockage des modèles doit être un chemin absolu : {0}",
+        de: "Der Modellspeicherordner muss ein absoluter Pfad sein: {0}",
+        es: "La carpeta de almacenamiento de modelos debe ser una ruta absoluta: {0}"
+    },
+    PathCustomDirInBundle {
+        zh_cn: "不能把模型存放在应用安装目录内：{0}",
+        zh_tw: "不能把模型存放在應用程式安裝目錄內：{0}",
+        en: "Models cannot be stored inside the app installation folder: {0}",
+        ja: "アプリのインストール先フォルダー内にモデルを保存できません：{0}",
+        ko: "앱 설치 폴더 안에 모델을 저장할 수 없습니다: {0}",
+        fr: "Les modèles ne peuvent pas être stockés dans le dossier d’installation de l’application : {0}",
+        de: "Modelle dürfen nicht im Installationsordner der App gespeichert werden: {0}",
+        es: "Los modelos no se pueden guardar dentro de la carpeta de instalación de la aplicación: {0}"
+    },
+    PathCustomDirNotWritable {
+        zh_cn: "无法写入模型目录 {0}：{1}",
+        zh_tw: "無法寫入模型目錄 {0}：{1}",
+        en: "Cannot write to the model folder {0}: {1}",
+        ja: "モデルフォルダー {0} に書き込めません：{1}",
+        ko: "모델 폴더 {0}에 쓸 수 없습니다: {1}",
+        fr: "Impossible d’écrire dans le dossier de modèles {0} : {1}",
+        de: "Der Modellordner {0} ist nicht beschreibbar: {1}",
+        es: "No se puede escribir en la carpeta de modelos {0}: {1}"
+    },
+    PathCustomDirBusy {
+        zh_cn: "模型下载进行中，请结束后再更改存储位置",
+        zh_tw: "模型下載進行中，請結束後再變更儲存位置",
+        en: "A model download is in progress; change the storage folder after it finishes",
+        ja: "モデルのダウンロード中です。完了後に保存先を変更してください",
+        ko: "모델 다운로드가 진행 중입니다. 완료된 후 저장 위치를 변경하세요",
+        fr: "Un téléchargement de modèle est en cours ; modifiez le dossier de stockage une fois terminé",
+        de: "Ein Modelldownload läuft; ändern Sie den Speicherordner nach dessen Abschluss",
+        es: "Hay una descarga de modelo en curso; cambie la carpeta de almacenamiento cuando termine"
+    },
     PathNotFound {
         zh_cn: "找不到{0}。已尝试：\n  - {1}\n\n{2}",
         zh_tw: "找不到{0}。已嘗試：\n  - {1}\n\n{2}",

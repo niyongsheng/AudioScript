@@ -326,6 +326,17 @@ export const es: Messages = {
   'models.noStorage':
     'No se puede resolver la carpeta de almacenamiento de modelos; los modelos opcionales no están disponibles.',
   'models.openDir': 'Abrir carpeta de modelos',
+  'models.storageGroup': 'Almacenamiento',
+  'models.storageLocation': 'Ubicación de los modelos',
+  'models.storageHint':
+    'Las descargas nuevas se guardan aquí. Cambiar la ubicación no elimina los modelos ya descargados en otras carpetas.',
+  'models.storageChange': 'Cambiar…',
+  'models.storageReset': 'Usar la predeterminada',
+  'models.storagePickTitle': 'Elegir una carpeta para los modelos descargados',
+  'models.storageResetTitle': '¿Restaurar la ubicación de almacenamiento predeterminada?',
+  'models.storageResetWarn':
+    'Los modelos descargados en {path} seguirán en el disco, pero dejarán de aparecer en la lista. Elimínelos primero si desea liberar ese espacio.',
+  'models.storageResetConfirm': 'Restaurar predeterminada',
   'models.inUse': 'En uso',
   'models.bundled': 'Incluido',
   'models.multilingual': 'Multilingüe',

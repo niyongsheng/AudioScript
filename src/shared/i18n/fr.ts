@@ -328,6 +328,17 @@ export const fr: Messages = {
   'models.noStorage':
     'Impossible de localiser le dossier de stockage des modèles ; les modèles optionnels sont indisponibles.',
   'models.openDir': 'Ouvrir le dossier des modèles',
+  'models.storageGroup': 'Stockage',
+  'models.storageLocation': 'Emplacement des modèles',
+  'models.storageHint':
+    'Les nouveaux téléchargements sont enregistrés ici. Changer d’emplacement ne supprime pas les modèles déjà téléchargés ailleurs.',
+  'models.storageChange': 'Modifier…',
+  'models.storageReset': 'Emplacement par défaut',
+  'models.storagePickTitle': 'Choisir un dossier pour les modèles téléchargés',
+  'models.storageResetTitle': 'Revenir à l’emplacement par défaut ?',
+  'models.storageResetWarn':
+    'Les modèles téléchargés dans {path} resteront sur le disque mais n’apparaîtront plus dans la liste. Supprimez-les d’abord pour libérer cet espace.',
+  'models.storageResetConfirm': 'Revenir au défaut',
   'models.inUse': 'Utilisé',
   'models.bundled': 'Intégré',
   'models.multilingual': 'Multilingue',

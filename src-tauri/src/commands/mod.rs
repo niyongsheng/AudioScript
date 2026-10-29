@@ -186,6 +186,7 @@ pub async fn route_async(app: &AppHandle, name: &str, args: &Value) -> Result<Va
         "mac_speech_status" => Some((Lane::Quick, std::time::Duration::from_secs(20))),
         "mac_speech_request" => Some((Lane::Quick, std::time::Duration::from_secs(30))),
         "model_remove" => Some((Lane::Quick, std::time::Duration::from_secs(60))),
+        "model_dir_set" => Some((Lane::Quick, std::time::Duration::from_secs(20))),
         _ => None,
     };
 
@@ -356,6 +357,11 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
             let dir = crate::paths::ensure_user_models_root(app).map_err(CmdError::Failed)?;
             open_with_system(dir.as_os_str(), tr(Key::OpenWhatModelDir))?;
             Ok(json!(null))
+        }
+
+        "model_dir_set" => {
+            let path = args.get("path").and_then(Value::as_str);
+            Ok(json!(set_model_dir(app, path)?))
         }
 
         "model_download" => {
@@ -872,6 +878,34 @@ fn select_model(app: &AppHandle, id: &str) -> Result<crate::models::status::Mode
 
     tracing::info!(model = %entry.id, "已切换模型（下次开始转写生效）");
     Ok(list)
+}
+
+fn set_model_dir(
+    app: &AppHandle,
+    raw: Option<&str>,
+) -> Result<crate::models::status::ModelsList, CmdError> {
+    if app.state::<crate::models::state::ModelState>().is_busy() {
+        return Err(CmdError::Failed(tr(Key::PathCustomDirBusy).into()));
+    }
+
+    let models_dir = match raw {
+        Some(value) => Some(
+            crate::paths::validate_models_dir(app, value)
+                .map_err(CmdError::Failed)?
+                .display()
+                .to_string(),
+        ),
+        None => None,
+    };
+
+    crate::prefs::update(app, |p| p.models_dir = models_dir.clone()).map_err(CmdError::Failed)?;
+
+    match &models_dir {
+        Some(dir) => tracing::info!(dir = %dir, "模型存储位置已更新"),
+        None => tracing::info!("模型存储位置已恢复默认"),
+    }
+
+    Ok(crate::models::status::inspect(app))
 }
 
 fn exe_mtime_ms() -> Option<u64> {

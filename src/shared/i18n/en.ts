@@ -314,6 +314,17 @@ export const en: Messages = {
   'models.switchHint': 'Switch models on the Translate page.',
   'models.noStorage': 'Cannot resolve the model storage folder; optional models are unavailable.',
   'models.openDir': 'Open model folder',
+  'models.storageGroup': 'Storage',
+  'models.storageLocation': 'Model storage location',
+  'models.storageHint':
+    'New downloads are saved here. Switching folders does not delete models already downloaded elsewhere.',
+  'models.storageChange': 'Change…',
+  'models.storageReset': 'Use default',
+  'models.storagePickTitle': 'Choose a folder for downloaded models',
+  'models.storageResetTitle': 'Restore the default storage location?',
+  'models.storageResetWarn':
+    'Models downloaded to {path} will stay on disk but will no longer be listed. Delete them first if you want to free that space.',
+  'models.storageResetConfirm': 'Restore default',
   'models.inUse': 'In use',
   'models.bundled': 'Bundled',
   'models.multilingual': 'Multilingual',

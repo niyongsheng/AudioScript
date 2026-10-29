@@ -326,27 +326,30 @@ pub fn remove_model(app: &AppHandle, model_id: &str) -> Result<(), ModelError> {
         return Err(ModelError::InUse);
     }
 
-    let root = paths::user_models_root(app)
-        .ok_or_else(|| ModelError::Internal(tr(Key::ModelNoDataDir).into()))?;
-    let dir = root.join(entry.installed_dir());
-    if dir.exists() {
-        std::fs::remove_dir_all(&dir)?;
-        tracing::info!(model = %entry.id, dir = %dir.display(), "模型已删除");
+    let roots = paths::user_models_roots(app);
+    if roots.is_empty() {
+        return Err(ModelError::Internal(tr(Key::ModelNoDataDir).into()));
+    }
+    for root in roots {
+        let dir = root.join(entry.installed_dir());
+        if dir.exists() {
+            std::fs::remove_dir_all(&dir)?;
+            tracing::info!(model = %entry.id, dir = %dir.display(), "模型已删除");
+        }
     }
 
     Ok(())
 }
 
 pub fn cleanup_stale(app: &AppHandle) {
-    let Some(root) = paths::user_models_root(app) else {
-        return;
-    };
-    for name in [DOWNLOADS, STAGING, TRASH] {
-        let dir = root.join(name);
-        if dir.exists() {
-            match std::fs::remove_dir_all(&dir) {
-                Ok(()) => tracing::debug!(path = %dir.display(), "已清理模型临时目录"),
-                Err(e) => tracing::warn!(path = %dir.display(), "清理模型临时目录失败：{e}"),
+    for root in paths::user_models_roots(app) {
+        for name in [DOWNLOADS, STAGING, TRASH] {
+            let dir = root.join(name);
+            if dir.exists() {
+                match std::fs::remove_dir_all(&dir) {
+                    Ok(()) => tracing::debug!(path = %dir.display(), "已清理模型临时目录"),
+                    Err(e) => tracing::warn!(path = %dir.display(), "清理模型临时目录失败：{e}"),
+                }
             }
         }
     }

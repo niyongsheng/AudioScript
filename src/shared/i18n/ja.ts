@@ -318,6 +318,17 @@ export const ja: Messages = {
   'models.switchHint': 'モデルの切り替えは「翻訳」ページで行います。',
   'models.noStorage': 'モデルの保存先を解決できないため、オプションのモデルは利用できません。',
   'models.openDir': 'モデルフォルダーを開く',
+  'models.storageGroup': 'ストレージ',
+  'models.storageLocation': 'モデルの保存先',
+  'models.storageHint':
+    '新しくダウンロードしたモデルはここに保存されます。保存先を切り替えても、他のフォルダーにあるモデルは削除されません。',
+  'models.storageChange': '変更…',
+  'models.storageReset': 'デフォルトに戻す',
+  'models.storagePickTitle': 'モデルのダウンロード先フォルダーを選択',
+  'models.storageResetTitle': '保存先をデフォルトに戻しますか？',
+  'models.storageResetWarn':
+    '{path} にダウンロードしたモデルはディスクに残りますが、一覧には表示されなくなります。容量を空ける場合は先に削除してください。',
+  'models.storageResetConfirm': 'デフォルトに戻す',
   'models.inUse': '使用中',
   'models.bundled': '内蔵',
   'models.multilingual': '多言語',

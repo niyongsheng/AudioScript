@@ -129,6 +129,17 @@ mod tests {
     }
 
     #[test]
+    fn models_dir_is_trimmed_and_blank_becomes_none() {
+        let p = parse(r#"{"modelsDir":" /Volumes/Data/models "}"#).unwrap();
+        assert_eq!(p.models_dir.as_deref(), Some("/Volumes/Data/models"));
+        assert_eq!(
+            parse(r#"{"modelsDir":"   "}"#).unwrap().models_dir,
+            None,
+            "空白路径必须回落到默认目录"
+        );
+    }
+
+    #[test]
     fn unknown_enum_value_fails_that_file_not_silently() {
         assert!(parse(r#"{"translateEngine":"gpt-5"}"#).is_err());
     }
@@ -207,6 +218,7 @@ mod tests {
             .collect(),
             onboarding_done: true,
             asr_model_tier: crate::config::AsrModelTier::HighAccuracy,
+            models_dir: Some("/Volumes/Data/AudioScript".into()),
             zh_script: crate::config::ZhScript::Traditional,
             analytics_enabled: false,
         };

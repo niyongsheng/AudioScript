@@ -222,6 +222,10 @@ export function modelOpenDir(): Promise<null> {
   return call<null>('model_open_dir')
 }
 
+export function modelDirSet(path: string | null): Promise<ModelsList> {
+  return call<ModelsList>('model_dir_set', { path })
+}
+
 export function modelCancel(jobId: string): Promise<{ cancelled: boolean }> {
   return call<{ cancelled: boolean }>('model_cancel', { jobId })
 }

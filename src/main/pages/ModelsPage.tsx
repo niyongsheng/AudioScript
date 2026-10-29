@@ -1,6 +1,8 @@
+import { open } from '@tauri-apps/plugin-dialog'
 import { useState } from 'react'
 import { useStore } from '@/main/store'
 import { useModels } from '@/main/useModels'
+import { track } from '@/shared/analytics'
 import { type MessageKey, useI18n } from '@/shared/i18n'
 import {
   formatCmdError,
@@ -9,6 +11,7 @@ import {
   type ModelStatus,
   type ModelsList,
   modelCancel,
+  modelDirSet,
   modelDownload,
   modelOpenDir,
   modelRemove,
@@ -41,6 +44,8 @@ export function ModelsPage() {
   const { list, setList, job, loadError, failure, dismissFailure, clearLoadError, refresh } = useModels()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
+  const [confirmResetDir, setConfirmResetDir] = useState(false)
+  const [dirBusy, setDirBusy] = useState(false)
 
   function retry() {
     void refresh()
@@ -85,6 +90,38 @@ export function ModelsPage() {
 
   function openModelsDir() {
     void modelOpenDir().catch((e) => setError(formatCmdError(e)))
+  }
+
+  async function changeDir() {
+    try {
+      const picked = await open({
+        directory: true,
+        multiple: false,
+        title: t('models.storagePickTitle'),
+        defaultPath: list?.userRoot,
+      })
+      if (typeof picked !== 'string') return
+      setDirBusy(true)
+      setList(await modelDirSet(picked))
+      track('setting_changed', { key: 'models_dir', value: 'custom' })
+    } catch (e) {
+      setError(formatCmdError(e))
+    } finally {
+      setDirBusy(false)
+    }
+  }
+
+  async function resetDir() {
+    setDirBusy(true)
+    try {
+      setList(await modelDirSet(null))
+      setConfirmResetDir(false)
+      track('setting_changed', { key: 'models_dir', value: 'default' })
+    } catch (e) {
+      setError(formatCmdError(e))
+    } finally {
+      setDirBusy(false)
+    }
   }
 
   if (!list) {
@@ -151,6 +188,26 @@ export function ModelsPage() {
         </Alert>
       )}
 
+      {confirmResetDir && (
+        <Alert
+          tone="warn"
+          title={t('models.storageResetTitle')}
+          onDismiss={() => setConfirmResetDir(false)}
+          actions={
+            <>
+              <Button size="sm" variant="danger" disabled={dirBusy} onClick={() => void resetDir()}>
+                {t('models.storageResetConfirm')}
+              </Button>
+              <Button size="sm" onClick={() => setConfirmResetDir(false)}>
+                {t('common.cancel')}
+              </Button>
+            </>
+          }
+        >
+          {t('models.storageResetWarn', { path: list.userRoot ?? '' })}
+        </Alert>
+      )}
+
       {[
         { title: t('models.asrGroup'), items: list.asr },
         { title: t('models.mtGroup'), items: list.mt },
@@ -172,6 +229,36 @@ export function ModelsPage() {
           ))}
         </SettingsGroup>
       ))}
+
+      <SettingsGroup title={t('models.storageGroup')}>
+        <SettingsRow
+          icon="folder"
+          title={t('models.storageLocation')}
+          description={
+            <span>
+              {list.userRoot ? <span className="break-all font-mono">{list.userRoot}</span> : t('models.noStorage')}
+              <span className="mt-0.5 block">{t('models.storageHint')}</span>
+            </span>
+          }
+          control={
+            <div className="flex items-center gap-1.5">
+              {list.userRootCustom && (
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  disabled={dirBusy || job !== null}
+                  onClick={() => setConfirmResetDir(true)}
+                >
+                  {t('models.storageReset')}
+                </Button>
+              )}
+              <Button size="sm" disabled={dirBusy || job !== null} onClick={() => void changeDir()}>
+                {t('models.storageChange')}
+              </Button>
+            </div>
+          }
+        />
+      </SettingsGroup>
 
       <p className="px-1 text-[var(--color-ink-2)] text-[0.7rem] leading-relaxed">
         {connected ? t('models.needsNetwork') : t('models.noStorage')}
@@ -247,6 +334,9 @@ function ModelRow({
           {!model.bundled && model.installed && !model.complete && t('models.incomplete')}
           {model.bundled && !model.complete && t('models.bundledMissing')}
           {!model.bundled && !model.downloadable && t('models.notPublished')}
+          {!model.bundled && model.installed && model.path && (
+            <span className="mt-0.5 block break-all font-mono text-[0.65rem] opacity-80">{model.path}</span>
+          )}
         </span>
       }
       control={

@@ -100,6 +100,7 @@ pub struct ModelsList {
     pub mt: Vec<ModelStatus>,
     pub job: Option<ModelJobStatus>,
     pub user_root: Option<String>,
+    pub user_root_custom: bool,
 }
 
 pub fn inspect(app: &AppHandle) -> ModelsList {
@@ -134,6 +135,7 @@ pub fn inspect(app: &AppHandle) -> ModelsList {
         mt,
         job,
         user_root: roots.user.map(|p| p.display().to_string()),
+        user_root_custom: prefs.models_dir.is_some(),
     }
 }
 

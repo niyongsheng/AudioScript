@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main-window",
-  "description": "主窗口专用的保存对话框与统计上报权限，悬浮窗不需要。",
+  "description": "主窗口专用的打开/保存对话框与统计上报权限，悬浮窗不需要。",
   "windows": ["main"],
-  "permissions": ["dialog:allow-save", "aptabase:allow-track-event"]
+  "permissions": ["dialog:allow-open", "dialog:allow-save", "aptabase:allow-track-event"]
 }

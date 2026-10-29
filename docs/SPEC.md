@@ -282,6 +282,7 @@ pub trait AsrEngine: Send {
 - **下载后 MUST 剪裁**（`scripts/fetch-model.mjs`）：官方包里的 fp32 权重、chunk-size 变体、`test_wavs/` 全用不到，而 `bundle.resources` 是整目录复制。剪裁规则与 `asr/streaming.rs` 的 `Precision` 耦合，改一处必须同步改另一处。
 - **模型文件 MUST NOT 提交进 git**；`src-tauri/assets/models/` 目录本身 MUST 进仓库（`.gitkeep`），否则 `bundle.resources` 在 `cargo check` 阶段就失败。
 - 内置模型 MUST 覆盖中英双语实时转写；模型切换 MUST NOT 要求重启应用；自定义模型路径 MUST 支持。
+- 可选模型下载位置 MUST 可在「模型」页更改（`modelsDir`）；下载、磁盘检查、删除与清理 MUST 跟随该目录，查找 MUST 先自定义目录、后默认应用数据目录，切换后旧目录中的模型仍可用。`AUDIOSCRIPT_MODEL_DIR` 只覆盖查找顺序，不改变下载位置。
 - 构建依赖外部下载步骤：CI MUST 加缓存，且首次跑通前 MUST NOT 写进发布流程。
 
 #### macOS 原生 ASR（实验性）
