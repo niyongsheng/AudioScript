@@ -2138,6 +2138,10 @@
               <summary><span class="zh" lang="zh-CN">为什么开始后要等一两秒才出字？</span><span class="en" lang="en">Why does the first line take a second or two?</span></summary>
               <p><span class="zh" lang="zh-CN">首次开始需要加载识别与翻译模型，默认模型实测约 1.25–2.2 秒；之后进入流式输出。Qwen3 为句末出字，首次加载也更久。</span><span class="en" lang="en">The first run loads the ASR and translation models; with the default model it takes about 1.25–2.2 seconds, then streams. Qwen3 emits whole sentences and takes longer to load the first time.</span></p>
             </details>
+            <details name="faq">
+              <summary><span class="zh" lang="zh-CN">Linux 上悬浮窗不置顶？</span><span class="en" lang="en">The overlay won't stay on top on Linux?</span></summary>
+              <p><span class="zh" lang="zh-CN">Wayland 协议不支持普通窗口置顶，GNOME 等 Wayland 桌面下悬浮窗会被其他窗口盖住。需要置顶时用 <code>GDK_BACKEND=x11</code> 启动（走 XWayland）；X11 桌面默认正常。</span><span class="en" lang="en">Wayland has no keep-above for regular windows, so on GNOME and other Wayland desktops the overlay can be covered by other windows. Launch with <code>GDK_BACKEND=x11</code> (XWayland) to pin it; X11 desktops work out of the box.</span></p>
+            </details>
           </div>
         </div>
       </section>

@@ -52,6 +52,10 @@ pnpm tauri dev        # dev mode
 pnpm tauri build      # package
 ```
 
+## Known limitations
+
+- **Linux / Wayland**: the overlay cannot stay always-on-top, because Wayland has no keep-above for regular windows. Launch with `GDK_BACKEND=x11` (XWayland) if you need it pinned above other windows; X11 desktops work out of the box.
+
 
 ## Contact
 
