@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hotkeyLabel } from '@/shared/hotkeys'
 import { useI18n } from '@/shared/i18n'
+import { openSystemSettings } from '@/shared/ipc'
 import { TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
 import { Button } from '@/ui/Button'
@@ -171,8 +172,17 @@ interface AlertsProps {
 
 function Alerts({ onOpenPermissions, onOpenTranslate }: AlertsProps) {
   const { t } = useI18n()
-  const { error, setError, hotkeyProblems, audio, languageMismatch, status, permissionError, setPermissionError } =
-    useStore()
+  const {
+    error,
+    errorSettingsPane,
+    setError,
+    hotkeyProblems,
+    audio,
+    languageMismatch,
+    status,
+    permissionError,
+    setPermissionError,
+  } = useStore()
 
   const showMismatch = languageMismatch && status === TaskStatus.Capturing
   const showSilent = Boolean(audio?.silent && audio.segments === 0 && status === TaskStatus.Capturing)
@@ -184,7 +194,18 @@ function Alerts({ onOpenPermissions, onOpenTranslate }: AlertsProps) {
   return (
     <div className="mx-auto w-full max-w-2xl space-y-2 px-6 pt-4">
       {error && (
-        <Alert tone="error" title={t('app.operationFailed')} onDismiss={() => setError(null)}>
+        <Alert
+          tone="error"
+          title={t('app.operationFailed')}
+          onDismiss={() => setError(null)}
+          actions={
+            errorSettingsPane && (
+              <Button size="sm" onClick={() => void openSystemSettings(errorSettingsPane).catch(() => {})}>
+                {t('translate.languagePackOpen')}
+              </Button>
+            )
+          }
+        >
           <p className="break-words font-mono">{error}</p>
         </Alert>
       )}

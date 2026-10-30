@@ -263,13 +263,13 @@ export function shortcutsSet(id: string, accelerator: string): Promise<HotkeyInf
   return call<HotkeyInfo[]>('shortcuts_set', { id, accelerator })
 }
 
-export type PrivacyPane = 'microphone' | 'systemAudio' | 'speech'
+export type SystemSettingsPane = 'microphone' | 'systemAudio' | 'speech' | 'translation'
 
-export function openPrivacySettings(pane: PrivacyPane = 'systemAudio'): Promise<null> {
-  return call<null>('open_privacy_settings', { pane })
+export function openSystemSettings(pane: SystemSettingsPane = 'systemAudio'): Promise<null> {
+  return call<null>('open_system_settings', { pane })
 }
 
-export type PermissionKind = PrivacyPane
+export type PermissionKind = Exclude<SystemSettingsPane, 'translation'>
 
 export interface CmdPermissionError {
   kind: 'permission'
@@ -283,8 +283,22 @@ export function permissionOf(e: unknown): CmdPermissionError | null {
   return c.kind === 'permission' && typeof c.message === 'string' ? (c as CmdPermissionError) : null
 }
 
+export interface CmdSettingsError {
+  kind: 'settings'
+  pane: SystemSettingsPane
+  message: string
+}
+
+export function settingsOf(e: unknown): CmdSettingsError | null {
+  if (typeof e !== 'object' || e === null) return null
+  const c = e as Partial<CmdSettingsError>
+  return c.kind === 'settings' && typeof c.pane === 'string' && typeof c.message === 'string'
+    ? (c as CmdSettingsError)
+    : null
+}
+
 export function formatCmdError(e: unknown): string {
-  return permissionOf(e)?.message ?? String(e)
+  return permissionOf(e)?.message ?? settingsOf(e)?.message ?? String(e)
 }
 
 export function permissionStatus(): Promise<PermissionSnapshot> {

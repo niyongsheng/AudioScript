@@ -230,8 +230,11 @@ pub fn settings_url(pane: &str) -> Option<&'static str> {
         "systemAudio" => {
             Some("x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture")
         }
-        "speech" => {
-            Some("x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition")
+        "speech" => Some(
+            "x-apple.systempreferences:com.apple.preference.security?Privacy_SpeechRecognition",
+        ),
+        "translation" => {
+            Some("x-apple.systempreferences:com.apple.Localization-Settings.extension")
         }
         _ => None,
     }
@@ -339,6 +342,10 @@ mod tests {
         assert!(settings_url("speech")
             .unwrap()
             .contains("Privacy_SpeechRecognition"));
+        assert_eq!(
+            settings_url("translation"),
+            Some("x-apple.systempreferences:com.apple.Localization-Settings.extension")
+        );
         assert!(settings_url("nope").is_none());
     }
 

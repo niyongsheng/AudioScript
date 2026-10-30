@@ -2,6 +2,7 @@ pub mod asr;
 pub mod audio;
 pub mod commands;
 pub mod config;
+pub mod error;
 pub mod i18n;
 pub mod lifecycle;
 pub mod log;
@@ -230,7 +231,7 @@ pub fn run() {
                     ("app_info", serde_json::json!({})),
                     ("permission_status", serde_json::json!({})),
                     (
-                        "open_privacy_settings",
+                        "open_system_settings",
                         serde_json::json!({ "pane": "不存在的页" }),
                     ),
                     ("prefs_get", serde_json::json!({})),

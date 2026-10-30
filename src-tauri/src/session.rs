@@ -13,6 +13,7 @@ use crate::config::{
     effective_target_lang, AsrConfig, EngineType, MtModelTier, SessionConfig, TranslateConfig,
     TranslateEngine, ZhScript,
 };
+use crate::error::CmdError;
 use crate::i18n::{tf, tr, Key};
 use crate::models::catalog;
 use crate::paths;
@@ -154,7 +155,7 @@ fn evict_translator() {
 fn translator_for(
     roots: &paths::ModelSearchRoots,
     cfg: &TranslateConfig,
-) -> Result<Arc<Mutex<Box<dyn Translator>>>, String> {
+) -> Result<Arc<Mutex<Box<dyn Translator>>>, CmdError> {
     let key = translator_key(roots, cfg)?;
     if let Some(translator) = cached_translator(&key) {
         tracing::info!(engine = cfg.engine.as_str(), "翻译引擎缓存命中");
@@ -163,9 +164,7 @@ fn translator_for(
 
     evict_translator();
     let mut translator = create_translator(roots, cfg)?;
-    translator
-        .init(cfg)
-        .map_err(|e| tf(Key::SessionTranslateInitFailed, &[&e.to_string()]))?;
+    translator.init(cfg).map_err(translate_init_error)?;
     let translator = Arc::new(Mutex::new(translator));
     *TRANSLATOR_CACHE
         .lock()
@@ -174,6 +173,17 @@ fn translator_for(
         translator: Arc::clone(&translator),
     });
     Ok(translator)
+}
+
+fn translate_init_error(e: crate::translate::TranslateError) -> CmdError {
+    let message = tf(Key::SessionTranslateInitFailed, &[&e.to_string()]);
+    match e {
+        crate::translate::TranslateError::PlatformUnavailable(_) => CmdError::Settings {
+            pane: "translation",
+            message,
+        },
+        _ => CmdError::Failed(message),
+    }
 }
 
 fn is_han(c: char) -> bool {
@@ -505,7 +515,7 @@ pub fn start(
     cfg: SessionConfig,
     source: audio::AudioSourceKind,
     devices: audio::DeviceSelection,
-) -> Result<(), String> {
+) -> Result<(), CmdError> {
     let mut cfg = cfg;
     let prefs = crate::prefs::load(app);
     cfg.translate.mt_model_tier = prefs.mt_model_tier;
@@ -565,17 +575,17 @@ pub fn start(
             {
                 let dir = dunce::simplified(std::path::Path::new(custom)).to_path_buf();
                 if !dir.is_dir() {
-                    return Err(tf(
-                        Key::SessionCustomAsrMissing,
-                        &[&dir.display().to_string()],
-                    ));
+                    return Err(
+                        tf(Key::SessionCustomAsrMissing, &[&dir.display().to_string()]).into(),
+                    );
                 }
                 let missing = paths::missing_asr_files(&dir, asr_entry)?;
                 if !missing.is_empty() {
                     return Err(tf(
                         Key::SessionCustomAsrIncomplete,
                         &[&dir.display().to_string(), &missing.join(", ")],
-                    ));
+                    )
+                    .into());
                 }
                 tracing::info!(path = %dir.display(), "使用自定义 ASR 模型目录");
                 dir
@@ -596,7 +606,8 @@ pub fn start(
                             &resolved.path.display().to_string(),
                             &missing.join(", "),
                         ],
-                    ));
+                    )
+                    .into());
                 }
                 resolved.path
             };
@@ -612,7 +623,7 @@ pub fn start(
                         vad, asr_entry,
                     ))
                 }
-                None => return Err(tf(Key::AsrInvalidConfig, &[&asr_entry.id])),
+                None => return Err(tf(Key::AsrInvalidConfig, &[&asr_entry.id]).into()),
             };
             let engine_cfg = AsrConfig {
                 model_dir: Some(asr_dir.to_string_lossy().into_owned()),
@@ -621,7 +632,7 @@ pub fn start(
             (engine, engine_cfg)
         }
         other => {
-            return Err(tf(Key::SessionEngineNotWired, &[other.as_str()]));
+            return Err(tf(Key::SessionEngineNotWired, &[other.as_str()]).into());
         }
     };
     engine
@@ -1181,5 +1192,26 @@ mod tests {
         assert!(!language_mismatch("안녕하세요", "ko"));
         assert!(!language_mismatch("hello world", "fr"));
         assert!(!language_mismatch("bonjour tout le monde", "fr"));
+    }
+
+    #[test]
+    fn platform_unavailable_points_at_the_translation_settings_pane() {
+        let err = translate_init_error(crate::translate::TranslateError::PlatformUnavailable(
+            "en → ja 语言包未安装".into(),
+        ));
+        assert!(matches!(
+            err,
+            CmdError::Settings {
+                pane: "translation",
+                ..
+            }
+        ));
+        assert!(err.to_string().contains("语言包未安装"));
+    }
+
+    #[test]
+    fn other_translate_errors_do_not_offer_the_settings_pane() {
+        let err = translate_init_error(crate::translate::TranslateError::NotInitialized);
+        assert!(matches!(err, CmdError::Failed(_)));
     }
 }

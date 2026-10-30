@@ -1,4 +1,3 @@
-use serde::Serialize;
 use serde_json::{json, Value};
 use tauri::{AppHandle, Manager};
 use tauri_plugin_autostart::ManagerExt;
@@ -7,43 +6,9 @@ use crate::config::{
     direction_label, effective_target_lang, EndpointConfig, EndpointProfile, OverlayConfig,
     OverlayMode, Preferences, PrefsPatch, SessionConfig, TranslateEngine,
 };
+pub use crate::error::CmdError;
 use crate::i18n::{tf, tr, Key};
 use crate::{audio, monitor, overlay, permission, prefs, session, shortcut, update};
-
-#[derive(Debug, thiserror::Error)]
-pub enum CmdError {
-    #[error("{}", tf(Key::CmdUnknown, &[.0.as_str()]))]
-    Unknown(String),
-
-    #[error("{}", tf(Key::CmdBadArgs, &[.0.as_str()]))]
-    BadArgs(String),
-
-    #[error("{message}")]
-    Permission {
-        permission: &'static str,
-        message: String,
-    },
-
-    #[error("{0}")]
-    Failed(String),
-}
-
-impl Serialize for CmdError {
-    fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
-        match self {
-            Self::Permission {
-                permission,
-                message,
-            } => json!({
-                "kind": "permission",
-                "permission": permission,
-                "message": message,
-            })
-            .serialize(s),
-            other => s.serialize_str(&other.to_string()),
-        }
-    }
-}
 
 #[tauri::command]
 pub async fn dispatch(app: AppHandle, name: String, args: Value) -> Result<Value, CmdError> {
@@ -270,7 +235,7 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
             Ok(json!(permission::probe_system_audio(app)))
         }
 
-        "open_privacy_settings" => {
+        "open_system_settings" => {
             let pane = args
                 .get("pane")
                 .and_then(Value::as_str)
@@ -542,15 +507,15 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
                     }
                     Ok(json!(session::TaskStatus::Capturing))
                 }
-                Err(msg) => {
+                Err(e) => {
                     let handle = app.clone();
                     enqueue_session(move || monitor::resume(&handle));
                     match permission::certain_denial(source) {
                         Some(permission) => Err(CmdError::Permission {
                             permission,
-                            message: msg,
+                            message: e.to_string(),
                         }),
-                        None => Err(CmdError::Failed(msg)),
+                        None => Err(e),
                     }
                 }
             }

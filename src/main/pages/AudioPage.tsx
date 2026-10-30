@@ -8,7 +8,7 @@ import {
   type MonitorTarget,
   monitorStart,
   monitorStop,
-  openPrivacySettings,
+  openSystemSettings,
   permissionOf,
 } from '@/shared/ipc'
 import { TaskStatus } from '@/shared/types'
@@ -333,7 +333,7 @@ function SilenceHelp({
             size="sm"
             variant="ghost"
             onClick={() => {
-              openPrivacySettings().catch(() => {})
+              openSystemSettings().catch(() => {})
             }}
           >
             {t('audio.silenceOpenSettings')}

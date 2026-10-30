@@ -33,10 +33,12 @@ import {
   prefsGet,
   prefsSet,
   type SystemAudioProbe,
+  type SystemSettingsPane,
   sessionClear,
   sessionStart,
   sessionStatus,
   sessionStop,
+  settingsOf,
   shortcutsGet,
   Theme,
   TranslateEngine,
@@ -115,6 +117,7 @@ interface Store {
   setPermissionError: (e: CmdPermissionError | null) => void
 
   error: string | null
+  errorSettingsPane: SystemSettingsPane | null
   setError: (e: string | null) => void
   pending: boolean
 
@@ -193,7 +196,15 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [systemAudioProbe, setSystemAudioProbe] = useState<SystemAudioProbe | null>(null)
   const [permissionError, setPermissionError] = useState<CmdPermissionError | null>(null)
 
-  const [error, setError] = useState<string | null>(null)
+  const [errorState, setErrorState] = useState<{
+    message: string
+    settingsPane: SystemSettingsPane | null
+  } | null>(null)
+  const error = errorState?.message ?? null
+  const errorSettingsPane = errorState?.settingsPane ?? null
+  const setError = useCallback((message: string | null) => {
+    setErrorState(message === null ? null : { message, settingsPane: null })
+  }, [])
   const [pending, setPending] = useState(false)
   const pendingRef = useRef(false)
 
@@ -245,7 +256,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       disposed = true
       for (const fn of unlisten) fn()
     }
-  }, [])
+  }, [setError])
 
   useEffect(() => {
     prefsGet()
@@ -333,16 +344,19 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     return () => mq.removeEventListener('change', onChange)
   }, [theme, applyTheme])
 
-  const patchPrefs = useCallback(async (patch: PrefsPatch) => {
-    try {
-      const p = await prefsSet(patch)
-      if (patch.theme !== undefined) setTheme(p.theme)
-      if (patch.asrEngine !== undefined) setAsrEngine(p.asrEngine)
-      if (patch.endpoint !== undefined) setEndpoint(p.endpoint)
-    } catch (e) {
-      setError(formatCmdError(e))
-    }
-  }, [])
+  const patchPrefs = useCallback(
+    async (patch: PrefsPatch) => {
+      try {
+        const p = await prefsSet(patch)
+        if (patch.theme !== undefined) setTheme(p.theme)
+        if (patch.asrEngine !== undefined) setAsrEngine(p.asrEngine)
+        if (patch.endpoint !== undefined) setEndpoint(p.endpoint)
+      } catch (e) {
+        setError(formatCmdError(e))
+      }
+    },
+    [setError],
+  )
 
   const completeOnboarding = useCallback(async () => {
     setOnboardingDone(true)
@@ -352,7 +366,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       setError(formatCmdError(e))
     }
-  }, [])
+  }, [setError])
 
   const setAnalyticsEnabled = useCallback(
     (next: boolean) => {
@@ -441,7 +455,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setPermissionError(denied)
         void refreshPermission()
       } else {
-        setError(formatCmdError(e))
+        setErrorState({ message: formatCmdError(e), settingsPane: settingsOf(e)?.pane ?? null })
       }
       sessionStatus()
         .then((i) => setStatus(i.status))
@@ -461,6 +475,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     zhScript,
     audioSource,
     refreshPermission,
+    setError,
   ])
 
   const clearAll = useCallback(async () => {
@@ -476,7 +491,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setError(formatCmdError(e))
       }
     },
-    [overlayCfg],
+    [overlayCfg, setError],
   )
 
   const toggleOverlay = useCallback(async () => {
@@ -485,7 +500,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       setError(formatCmdError(e))
     }
-  }, [])
+  }, [setError])
 
   const refreshHotkeys = useCallback(async () => {
     try {
@@ -494,7 +509,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       setError(formatCmdError(e))
     }
-  }, [])
+  }, [setError])
 
   const changeTheme = useCallback(
     async (next: Theme) => {
@@ -638,7 +653,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     } catch (e) {
       setError(formatCmdError(e))
     }
-  }, [])
+  }, [setError])
 
   const autoCheckedRef = useRef(false)
   useEffect(() => {
@@ -699,6 +714,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       permissionError,
       setPermissionError,
       error,
+      errorSettingsPane,
       setError,
       pending,
       toggleSession,
@@ -767,6 +783,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       runSystemAudioProbe,
       permissionError,
       error,
+      errorSettingsPane,
+      setError,
       pending,
       toggleSession,
       clearAll,

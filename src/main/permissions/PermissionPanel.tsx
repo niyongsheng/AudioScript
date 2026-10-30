@@ -6,11 +6,11 @@ import {
   type MacSpeechStatus,
   MicPermission,
   macSpeechRequest,
-  openPrivacySettings,
-  type PrivacyPane,
+  openSystemSettings,
   permissionRequestMic,
   type SystemAudioProbe,
   SystemAudioVerdict,
+  type SystemSettingsPane,
 } from '@/shared/ipc'
 import { isWindows } from '@/shared/platform'
 import { TaskStatus } from '@/shared/types'
@@ -192,9 +192,9 @@ export function PermissionPanel() {
     }
   }, [refreshPermission, refreshDevices, t])
 
-  const open = useCallback(async (pane: PrivacyPane) => {
+  const open = useCallback(async (pane: SystemSettingsPane) => {
     try {
-      await openPrivacySettings(pane)
+      await openSystemSettings(pane)
     } catch (e) {
       setFailure(formatCmdError(e))
     }
