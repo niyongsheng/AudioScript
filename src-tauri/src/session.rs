@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, VecDeque};
 use std::path::PathBuf;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::mpsc::{RecvTimeoutError, Sender};
@@ -222,13 +222,46 @@ fn language_mismatch(text: &str, source_lang: &str) -> bool {
     if source_lang.starts_with("zh") {
         latin >= 3 && latin * 10 >= total * 9
     } else if source_lang.starts_with("en") {
-        cjk >= 2 && cjk * 4 >= total
+        cjk >= 2 && cjk * 4 >= total * 3
     } else if source_lang.starts_with("ja") {
         kana == 0 && (hangul > 0 || latin >= 3)
     } else if source_lang.starts_with("ko") {
         hangul == 0 && (kana > 0 || latin >= 3)
     } else {
         false
+    }
+}
+
+const MISMATCH_WINDOW: Duration = Duration::from_secs(20);
+const MISMATCH_MIN_DURATION: Duration = Duration::from_secs(10);
+const MISMATCH_MIN_SEGMENTS: usize = 3;
+
+#[derive(Default)]
+struct MismatchTracker {
+    window: VecDeque<(Instant, bool)>,
+}
+
+impl MismatchTracker {
+    fn observe(&mut self, now: Instant, mismatched: bool) -> bool {
+        self.window.push_back((now, mismatched));
+        while let Some((at, _)) = self.window.front() {
+            if now.duration_since(*at) > MISMATCH_WINDOW {
+                self.window.pop_front();
+            } else {
+                break;
+            }
+        }
+        if self.window.len() < MISMATCH_MIN_SEGMENTS {
+            return false;
+        }
+        let Some((first, _)) = self.window.front() else {
+            return false;
+        };
+        if now.duration_since(*first) < MISMATCH_MIN_DURATION {
+            return false;
+        }
+        let bad = self.window.iter().filter(|(_, m)| *m).count();
+        bad * 5 >= self.window.len() * 4
     }
 }
 
@@ -695,6 +728,7 @@ pub fn start(
     let mut level_n = 0usize;
     let mut level_emit_failed = false;
     let mut language_mismatch_reported = false;
+    let mut mismatch_tracker = MismatchTracker::default();
 
     tracing::info!("启动采集");
     let translate_source_is_zh = cfg.translate.source_lang.starts_with("zh");
@@ -811,15 +845,27 @@ pub fn start(
             let mut s = store.lock().expect("transcript store mutex poisoned");
             match s.apply(deltas) {
                 Ok(changed) => {
-                    let mut mismatch = false;
                     let mut ids = Vec::new();
                     for seg in &changed {
+                        let frozen = seg.state.is_frozen();
                         let mismatched = language_check_enabled
-                            && seg.state.is_frozen()
+                            && frozen
                             && language_mismatch(&seg.text, &translate_source_lang);
-                        mismatch |= mismatched;
+                        if frozen
+                            && language_check_enabled
+                            && mismatch_tracker.observe(Instant::now(), mismatched)
+                        {
+                            if !language_mismatch_reported {
+                                language_mismatch_reported = true;
+                                tracing::warn!(
+                                    source_lang = %translate_source_lang,
+                                    "识别文本与源语言设置持续不一致，跳过翻译"
+                                );
+                                let _ = events_for_sink.send(UiEvent::LanguageMismatch(true));
+                            }
+                        }
                         if translate_enabled
-                            && seg.state.is_frozen()
+                            && frozen
                             && seg.translation_state == TranslationState::Idle
                             && !mismatched
                         {
@@ -839,15 +885,6 @@ pub fn start(
                                 seg.text
                             );
                         }
-                    }
-
-                    if mismatch && !language_mismatch_reported {
-                        language_mismatch_reported = true;
-                        tracing::warn!(
-                            source_lang = %translate_source_lang,
-                            "识别文本与源语言设置不一致，跳过翻译"
-                        );
-                        let _ = events_for_sink.send(UiEvent::LanguageMismatch(true));
                     }
 
                     let marked = s.mark_pending_translation(&ids);
@@ -1174,7 +1211,12 @@ mod tests {
         assert!(!language_mismatch("hello world", "en"));
         assert!(language_mismatch("hello world", "zh"));
         assert!(!language_mismatch("你好，世界。", "zh"));
-        assert!(language_mismatch("OpenAI 很好", "en"));
+        assert!(
+            !language_mismatch("OpenAI 很好", "en"),
+            "中英混说里的中文片段不该被判为语言不匹配"
+        );
+        assert!(!language_mismatch("我们用 OpenAI 很好", "en"));
+        assert!(language_mismatch("这个方案不错", "en"));
         assert!(!language_mismatch("OpenAI 很好", "zh"));
         assert!(!language_mismatch(
             "The meeting with 王伟 was productive",
@@ -1192,6 +1234,46 @@ mod tests {
         assert!(!language_mismatch("안녕하세요", "ko"));
         assert!(!language_mismatch("hello world", "fr"));
         assert!(!language_mismatch("bonjour tout le monde", "fr"));
+    }
+
+    #[test]
+    fn mismatch_alert_waits_for_a_sustained_window() {
+        let t0 = Instant::now();
+        let mut tracker = MismatchTracker::default();
+        for i in 0..3 {
+            assert!(!tracker.observe(t0 + Duration::from_secs(i * 3), true));
+        }
+        assert!(tracker.observe(t0 + Duration::from_secs(12), true));
+    }
+
+    #[test]
+    fn mismatch_alert_ignores_mixed_speech() {
+        let t0 = Instant::now();
+        let mut tracker = MismatchTracker::default();
+        let samples = [true, false, true, false, true, false, true, false];
+        let mut fired = false;
+        for (i, mismatched) in samples.iter().enumerate() {
+            fired |= tracker.observe(t0 + Duration::from_secs(i as u64 * 3), *mismatched);
+        }
+        assert!(!fired, "中英混杂时不该弹语言不匹配提示");
+    }
+
+    #[test]
+    fn mismatch_alert_needs_enough_segments() {
+        let t0 = Instant::now();
+        let mut tracker = MismatchTracker::default();
+        assert!(!tracker.observe(t0, true));
+        assert!(!tracker.observe(t0 + Duration::from_secs(10), true));
+    }
+
+    #[test]
+    fn mismatch_alert_forgets_old_segments() {
+        let t0 = Instant::now();
+        let mut tracker = MismatchTracker::default();
+        let mut fired = tracker.observe(t0, true);
+        fired |= tracker.observe(t0 + Duration::from_secs(30), true);
+        fired |= tracker.observe(t0 + Duration::from_secs(60), true);
+        assert!(!fired, "窗口外的旧段落不该累积成语言不匹配");
     }
 
     #[test]

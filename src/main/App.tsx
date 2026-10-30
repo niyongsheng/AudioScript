@@ -179,6 +179,7 @@ function Alerts({ onOpenPermissions, onOpenTranslate }: AlertsProps) {
     hotkeyProblems,
     audio,
     languageMismatch,
+    setLanguageMismatch,
     status,
     permissionError,
     setPermissionError,
@@ -229,6 +230,7 @@ function Alerts({ onOpenPermissions, onOpenTranslate }: AlertsProps) {
         <Alert
           tone="warn"
           title={t('app.languageMismatch')}
+          onDismiss={() => setLanguageMismatch(false)}
           actions={
             <Button size="sm" onClick={onOpenTranslate}>
               {t('app.languageMismatchGo')}

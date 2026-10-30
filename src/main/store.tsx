@@ -79,6 +79,7 @@ interface Store {
   activeDevice: string | null
   audio: AudioStatus | null
   languageMismatch: boolean
+  setLanguageMismatch: (v: boolean) => void
 
   devices: InputDevice[]
   mixMicDevices: InputDevice[]
@@ -692,6 +693,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       activeDevice,
       audio,
       languageMismatch,
+      setLanguageMismatch,
       devices,
       mixMicDevices,
       mixSystemDevices,
