@@ -24,7 +24,8 @@ git rev-parse --abbrev-ref HEAD
 `src/main/WhatsNew.tsx` 的 `WHATS_NEW` 以**本次发布版本号**为 key。`App.tsx` 用 `whatsNewFor(info.version)` 精确匹配：key 写成旧版本，弹窗永远不会出现；升级后还会把 `audioscript.seen-version` 写成当前版本，等于永久跳过。
 
 - 每个用户可见新功能加一条 `{ icon, titleKey, bodyKey }`。`icon` 必须是 `src/ui/Icon.tsx` 里 `IconName` 的取值（文件第 39 行起）。
-- 词条 key 统一 `whatsNew.<slug>Title` / `whatsNew.<slug>Body`，**8 个 locale 全部同步**：`en / zh-CN / zh-TW / ja / ko / fr / de / es`（`src/shared/i18n/`）。
+- 词条 key 统一 `whatsNew.<slug>Title` / `whatsNew.<slug>Body`。**开发阶段只写 `zh-CN` 与 `en`**；发布前按第 2.5 步对齐其余 locale。
+- 发布时全部 13 个 locale 必须一致：`zh-CN / zh-TW / en / ja / ko / fr / de / es / pt-BR / ru / it / id / ar`（`src/shared/i18n/`）。
 - 文案口径与「模型」页、官网保持一致；中文以 `zh-CN` 为准。
 - 纯内部修复、依赖升级、无用户可见变化：可以不配，但必须显式写明原因，并在自检时传 `--no-whats-new`。
 
@@ -38,6 +39,24 @@ const WHATS_NEW: Record<string, readonly WhatsNewFeature[]> = {
   '0.3.0': FEATURES_V030,
   '0.5.1': FEATURES_V051,
 }
+```
+
+## 2.5 发布前对齐全部界面语言
+
+开发 / 调试阶段只维护 `zh-CN` 与 `en`：新增词条先写这两份，其他 locale 允许缺词条，运行时回退英文（`t()` 先找当前语言，再找 `en`，最后 `zh-CN`）。Rust 侧同理：`messages!` 只要求 `zh_cn` 与 `en`，其余字段可省略并回退英文。
+
+**发布前必须对齐**，否则非中英用户会看到中英混排：
+
+1. 以 `zh-CN.ts` 为基准，补齐每个 locale 缺失的 key；`check-release.mjs` 会列出缺哪些。
+2. 占位符 `{name}` 必须与基准一致；翻译后不要改占位符名字。
+3. Rust `i18n.rs` 的每条消息补齐 13 个字段（`zh_cn / en / zh_tw / ja / ko / fr / de / es / pt_br / ru / it / id / ar`）。
+4. `resources/<locale>.lproj/InfoPlist.strings` 覆盖所有发布语言，并在 `tauri.conf.json` 注册；葡萄牙语同时提供 `pt-BR` 与 `pt-PT`。
+5. `ar` 为 RTL：确认 `document.documentElement.dir = 'rtl'` 生效，界面与悬浮窗没有反向错位。
+
+只跑语言对齐检查（可反复执行）：
+
+```bash
+node .claude/skills/audioscript-release/scripts/check-release.mjs --locales-only
 ```
 
 ## 3. 官网 docs/index.html
@@ -81,7 +100,9 @@ node .claude/skills/audioscript-release/scripts/check-release.mjs X.Y.Z
 检查项：
 
 - `WhatsNew.tsx` 是否有 `X.Y.Z` 条目（没配且确认跳过时加 `--no-whats-new`）；
-- 8 个 locale 的 `whatsNew.*` 词条是否一一对应；
+- 13 个 locale 的全量 key 与占位符是否和 `zh-CN` / `en` 一致（开发阶段只维护这两份，发版前必须补齐）；
+- Rust `i18n.rs` 的每条消息是否含全部 13 个语言字段；
+- `resources/*.lproj/InfoPlist.strings` 是否覆盖全部发布语言；
 - `docs/index.html` 的 `softwareVersion`、`data-version`、`data-date`；
 - catalog 中可下载模型的 `url` / `sha256` / `sizeBytes`。
 
@@ -130,7 +151,8 @@ node .claude/skills/audioscript-release/scripts/check-release.mjs X.Y.Z --post
 ## 检查清单
 
 - [ ] 版本号已定，工作区干净且在 main
-- [ ] `WHATS_NEW` 以**本次版本号**为 key，8 个 locale 词条齐全
+- [ ] `WHATS_NEW` 以**本次版本号**为 key，13 个 locale 词条齐全
+- [ ] 全部 locale 已对齐（key / 占位符 / Rust i18n / lproj），`check-release.mjs` 语言检查全绿
 - [ ] `docs/index.html` 的 `softwareVersion` / `data-version` / `data-date`
 - [ ] `docs/index.html` 模型表与 catalog 对齐，中英双语都改
 - [ ] README 功能与许可、SPEC 对应章节

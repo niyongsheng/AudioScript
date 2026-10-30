@@ -4,7 +4,7 @@
 
 - 离线优先：转写与翻译全在本地完成，不依赖云端 API。
 - 前端没有测试框架；Rust 单测写在各模块的 `#[cfg(test)]` 里。
-- 用户可见文案走 i18n，新增词条必须同步所有 locale 文件；日志与测试断言保持中文。
+- 用户可见文案走 i18n。开发 / 调试阶段只维护 `zh-CN` 与 `en`，其他 locale 允许暂时缺词条并回退英文；发布前必须对齐全部 locale（含 Rust `i18n.rs` 与 `resources/*.lproj/InfoPlist.strings`），由 `check-release.mjs` 校验 key 与占位符，详见 release skill。日志与测试断言保持中文。
 - 注释只保留功能性警告和约束。
 - Rust 只格式化本次改动的文件；全仓 `cargo fmt` 会带出无关改动。
 

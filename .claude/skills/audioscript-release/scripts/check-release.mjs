@@ -5,17 +5,64 @@ import { dirname, join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '../../../..')
-const LOCALES = ['en', 'zh-CN', 'zh-TW', 'ja', 'ko', 'fr', 'de', 'es']
+const LOCALES = [
+  'zh-CN',
+  'zh-TW',
+  'en',
+  'ja',
+  'ko',
+  'fr',
+  'de',
+  'es',
+  'pt-BR',
+  'ru',
+  'it',
+  'id',
+  'ar',
+]
+const RUST_LOCALES = [
+  'zh_cn',
+  'en',
+  'zh_tw',
+  'ja',
+  'ko',
+  'fr',
+  'de',
+  'es',
+  'pt_br',
+  'ru',
+  'it',
+  'id',
+  'ar',
+]
+const LPORJ = [
+  'en',
+  'zh-Hans',
+  'zh-Hant',
+  'ja',
+  'ko',
+  'fr',
+  'de',
+  'es',
+  'pt-BR',
+  'pt-PT',
+  'ru',
+  'it',
+  'id',
+  'ar',
+]
+const BASE_LOCALE = 'zh-CN'
 
 const args = process.argv.slice(2)
 const flags = new Set(args.filter((a) => a.startsWith('--')))
 const version = (args.find((a) => !a.startsWith('--')) ?? '').replace(/^v/, '')
 const post = flags.has('--post')
 const skipWhatsNew = flags.has('--no-whats-new')
+const localesOnly = flags.has('--locales-only')
 
-if (!/^\d+\.\d+\.\d+$/.test(version)) {
+if (!localesOnly && !/^\d+\.\d+\.\d+$/.test(version)) {
   process.stderr.write(
-    '用法：node .claude/skills/audioscript-release/scripts/check-release.mjs <X.Y.Z> [--no-whats-new] [--post]\n',
+    '用法：node .claude/skills/audioscript-release/scripts/check-release.mjs <X.Y.Z> [--no-whats-new] [--post] [--locales-only]\n',
   )
   process.exit(2)
 }
@@ -50,27 +97,95 @@ function checkWhatsNew() {
   if (missing.length) fail(`WhatsNew.tsx 引用了 en.ts 不存在的词条：${missing.join(', ')}`)
 }
 
-function checkLocaleParity() {
-  const keyRe = /'(whatsNew\.[A-Za-z0-9]+)'\s*:/g
-  const sets = new Map()
-  for (const locale of LOCALES) {
-    const src = read(`src/shared/i18n/${locale}.ts`)
-    sets.set(locale, new Set([...src.matchAll(keyRe)].map((m) => m[1])))
-  }
+function readCatalog(locale) {
+  const src = read(`src/shared/i18n/${locale}.ts`)
+  const entries = new Map()
+  const re = /^\s*'([^']+)':\s*'((?:[^'\\]|\\.)*)',?/gm
+  for (const match of src.matchAll(re)) entries.set(match[1], match[2])
+  return entries
+}
 
-  const base = sets.get('en')
-  let mismatched = false
-  for (const [locale, keys] of sets) {
-    if (locale === 'en') continue
-    const missing = [...base].filter((key) => !keys.has(key))
-    const extra = [...keys].filter((key) => !base.has(key))
+function checkLocaleParity() {
+  const base = readCatalog(BASE_LOCALE)
+  const basePlaceholders = new Map(
+    [...base].map(([key, value]) => [key, new Set(value.match(/\{(\w+)\}/g) ?? [])]),
+  )
+  let bad = false
+
+  for (const locale of LOCALES) {
+    if (locale === BASE_LOCALE) continue
+    const catalog = readCatalog(locale)
+    const missing = [...base.keys()].filter((key) => !catalog.has(key))
+    const extra = [...catalog.keys()].filter((key) => !base.has(key))
     if (missing.length || extra.length) {
-      mismatched = true
-      if (missing.length) fail(`${locale}.ts 缺少词条：${missing.join(', ')}`)
-      if (extra.length) fail(`${locale}.ts 多出 en.ts 没有的词条：${extra.join(', ')}`)
+      bad = true
+      if (missing.length) {
+        fail(`${locale}.ts 缺少 ${missing.length} 个词条：${missing.slice(0, 8).join(', ')}…`)
+      }
+      if (extra.length) {
+        fail(`${locale}.ts 多出 ${extra.length} 个词条：${extra.slice(0, 8).join(', ')}…`)
+      }
+      continue
+    }
+
+    const placeholderProblems = []
+    for (const [key, value] of catalog) {
+      const expected = basePlaceholders.get(key)
+      const actual = new Set(value.match(/\{(\w+)\}/g) ?? [])
+      if (expected.size !== actual.size || [...actual].some((name) => !expected.has(name))) {
+        placeholderProblems.push(key)
+      }
+    }
+    if (placeholderProblems.length) {
+      bad = true
+      fail(`${locale}.ts 占位符不一致：${placeholderProblems.slice(0, 8).join(', ')}…`)
     }
   }
-  if (!mismatched) ok(`8 个 locale 的 whatsNew.* 词条一致（${base.size} 条）`)
+
+  if (!bad) ok(`${LOCALES.length} 个 locale 的 ${base.size} 条词条与占位符一致`)
+}
+
+function checkRustLocales() {
+  const src = read('src-tauri/src/i18n.rs')
+  const start = src.indexOf('messages! {')
+  const block = src.slice(start)
+  const re = /^    ([A-Z][A-Za-z0-9]*) \{\n(.*?)^    \},?/gms
+  let bad = false
+  let count = 0
+
+  for (const match of block.matchAll(re)) {
+    count += 1
+    const fields = new Set([...match[2].matchAll(/^\s*(\w+):/gm)].map((m) => m[1]))
+    const missing = RUST_LOCALES.filter((field) => !fields.has(field))
+    if (missing.length) {
+      bad = true
+      fail(`i18n.rs ${match[1]} 缺少字段：${missing.join(', ')}`)
+    }
+  }
+
+  if (!bad) ok(`Rust i18n ${count} 条消息均含 ${RUST_LOCALES.length} 个语言字段`)
+}
+
+function checkLproj() {
+  const conf = JSON.parse(read('src-tauri/tauri.conf.json'))
+  const resources = conf.bundle.resources
+  let bad = false
+
+  for (const locale of LPORJ) {
+    const resource = `resources/${locale}.lproj`
+    if (!resources[resource]) {
+      bad = true
+      fail(`tauri.conf.json 未注册 ${resource}`)
+    }
+    try {
+      read(`src-tauri/${resource}/InfoPlist.strings`)
+    } catch {
+      bad = true
+      fail(`缺少 src-tauri/${resource}/InfoPlist.strings`)
+    }
+  }
+
+  if (!bad) ok(`${LPORJ.length} 个 macOS 权限文案 lproj 齐全`)
 }
 
 function checkSite() {
@@ -156,11 +271,19 @@ function checkPost() {
   else ok('发布后工作区干净')
 }
 
-checkWhatsNew()
-checkLocaleParity()
-checkSite()
-checkCatalog()
-if (post) checkPost()
+if (localesOnly) {
+  checkLocaleParity()
+  checkRustLocales()
+  checkLproj()
+} else {
+  checkWhatsNew()
+  checkLocaleParity()
+  checkRustLocales()
+  checkLproj()
+  checkSite()
+  checkCatalog()
+  if (post) checkPost()
+}
 
 for (const message of warnings) process.stdout.write(`⚠ ${message}\n`)
 for (const message of problems) process.stdout.write(`✗ ${message}\n`)
