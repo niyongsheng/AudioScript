@@ -231,8 +231,9 @@ interface OverlayConfig {
   fontColor: string
   bgColor: string
   maxLines: number
-  glow: boolean                  // 默认 false：2px 彩色描边
+  glow: boolean                  // 默认 false：彩色描边
   glowSpeed: number              // 0 ~ 100，默认 0（静止）
+  glowWidth: number              // 1 ~ 8，默认 2（px）
 }
 ```
 

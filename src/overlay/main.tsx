@@ -21,6 +21,7 @@ const DEFAULT_CONFIG: OverlayConfig = {
   maxLines: 6,
   glow: false,
   glowSpeed: 0,
+  glowWidth: 2,
 }
 
 void initLocale()
@@ -54,6 +55,7 @@ function OverlayApp() {
         bgColor={config.bgColor}
         glow={config.glow}
         glowSpeed={config.glowSpeed}
+        glowWidth={config.glowWidth}
         streaming={capturing}
       />
       {config.mode === OverlayMode.Edit && <EditChrome />}

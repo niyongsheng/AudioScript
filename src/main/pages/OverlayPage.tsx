@@ -4,10 +4,18 @@ import { hotkeyLabel } from '@/shared/hotkeys'
 import { useI18n } from '@/shared/i18n'
 import { formatCmdError, type OverlayConfig, overlaySetMode, shortcutsSet } from '@/shared/ipc'
 import { isMacOS } from '@/shared/platform'
-import { MAX_FONT_SIZE, MAX_GLOW_SPEED, MAX_OVERLAY_LINES, MIN_FONT_SIZE, OverlayMode } from '@/shared/types'
+import {
+  MAX_FONT_SIZE,
+  MAX_GLOW_SPEED,
+  MAX_GLOW_WIDTH,
+  MAX_OVERLAY_LINES,
+  MIN_FONT_SIZE,
+  MIN_GLOW_WIDTH,
+  OverlayMode,
+} from '@/shared/types'
 import { Button } from '@/ui/Button'
 import { Page } from '@/ui/Page'
-import { Select } from '@/ui/Select'
+import { Segmented } from '@/ui/Segmented'
 import { SettingsGroup, SettingsRow } from '@/ui/Settings'
 import { ShortcutRecorder } from '@/ui/ShortcutRecorder'
 import { Slider } from '@/ui/Slider'
@@ -44,7 +52,7 @@ export function OverlayPage() {
           icon="overlay"
           title={overlayVisible ? t('overlay.hideOverlay') : t('overlay.showOverlay')}
           control={
-            <Button onClick={() => void toggleOverlay()}>
+            <Button icon={overlayVisible ? 'eyeOff' : 'eye'} onClick={() => void toggleOverlay()}>
               {overlayVisible ? t('overlay.hide') : t('overlay.show')}
             </Button>
           }
@@ -58,12 +66,12 @@ export function OverlayPage() {
               : t('overlay.modeEditDescription')
           }
           control={
-            <Select
+            <Segmented
               label={t('overlay.mode')}
               value={overlayCfg.mode}
               options={[
-                { value: OverlayMode.Locked, label: t('overlay.modeLocked') },
-                { value: OverlayMode.Edit, label: t('overlay.modeEdit') },
+                { value: OverlayMode.Locked, label: t('overlay.modeLocked'), icon: 'lock' },
+                { value: OverlayMode.Edit, label: t('overlay.modeEdit'), icon: 'unlock' },
               ]}
               onChange={(v) => void overlaySetMode(v)}
             />
@@ -174,6 +182,25 @@ export function OverlayPage() {
               checked={overlayCfg.glow}
               onChange={(v) => void updateOverlay({ glow: v })}
             />
+          }
+        />
+        <SettingsRow
+          icon="border"
+          title={t('overlay.glowWidth')}
+          unavailableReason={overlayCfg.glow ? undefined : t('overlay.glowSpeedNeedsGlow')}
+          control={
+            <div className="w-56">
+              <Slider
+                label={t('overlay.glowWidth')}
+                value={draft.glowWidth}
+                min={MIN_GLOW_WIDTH}
+                max={MAX_GLOW_WIDTH}
+                disabled={!overlayCfg.glow}
+                format={(v) => `${v}px`}
+                onChange={(v) => setDraft((d) => (d ? { ...d, glowWidth: v } : d))}
+                onCommit={(v) => void updateOverlay({ glowWidth: v })}
+              />
+            </div>
           }
         />
         <SettingsRow

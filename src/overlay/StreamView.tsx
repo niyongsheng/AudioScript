@@ -23,10 +23,21 @@ interface Props {
   bgColor: string
   glow: boolean
   glowSpeed: number
+  glowWidth: number
   streaming: boolean
 }
 
-export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, glow, glowSpeed, streaming }: Props) {
+export function StreamView({
+  segments,
+  fontSize,
+  fontColor,
+  opacity,
+  bgColor,
+  glow,
+  glowSpeed,
+  glowWidth,
+  streaming,
+}: Props) {
   const { t } = useI18n()
   const scrollRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -88,7 +99,7 @@ export function StreamView({ segments, fontSize, fontColor, opacity, bgColor, gl
         </div>
       </div>
 
-      {glow && <FlowingBorder streaming={streaming} speed={glowSpeed} />}
+      {glow && <FlowingBorder streaming={streaming} speed={glowSpeed} width={glowWidth} />}
     </div>
   )
 }

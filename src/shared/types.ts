@@ -150,6 +150,7 @@ export interface OverlayConfig {
 	maxLines: number;
 	glow: boolean;
 	glowSpeed: number;
+	glowWidth: number;
 }
 
 export interface PermissionSnapshot {
@@ -338,6 +339,8 @@ export const MIN_FONT_SIZE: number = 10;
 export const MAX_FONT_SIZE: number = 48;
 export const MAX_OVERLAY_LINES: number = 20;
 export const MAX_GLOW_SPEED: number = 100;
+export const MIN_GLOW_WIDTH: number = 1;
+export const MAX_GLOW_WIDTH: number = 8;
 export const MIN_TRAILING_SILENCE_MS: number = 200;
 export const MAX_TRAILING_SILENCE_MS: number = 2000;
 export const MIN_MAX_UTTERANCE_MS: number = 2000;

@@ -1,11 +1,8 @@
-import { type CSSProperties, useEffect, useRef } from 'react'
+import { type CSSProperties, useEffect, useMemo, useRef } from 'react'
 import { GLOW_RING_PALETTE } from '@/shared/glow'
 import { MAX_GLOW_SPEED } from '@/shared/types'
 
 const MAX_FLOW_DEG_PER_SEC = 120
-const BORDER_WIDTH = 2
-const HALO_WIDTH = 3
-const HALO_BLUR = 4
 
 const MASK_IMAGE = 'linear-gradient(#000 0 0), linear-gradient(#000 0 0)'
 
@@ -27,10 +24,9 @@ function ringStyle(thickness: number, blur: number): CSSProperties {
   }
 }
 
-const HALO_STYLE = ringStyle(HALO_WIDTH, HALO_BLUR)
-const RING_STYLE = ringStyle(BORDER_WIDTH, 0)
-
-export function FlowingBorder({ streaming, speed }: { streaming: boolean; speed: number }) {
+export function FlowingBorder({ streaming, speed, width }: { streaming: boolean; speed: number; width: number }) {
+  const haloStyle = useMemo(() => ringStyle(width + 1, width + 2), [width])
+  const ringStyleValue = useMemo(() => ringStyle(width, 0), [width])
   const frame = useRef<HTMLDivElement>(null)
   const angle = useRef(0)
   const animating = streaming && speed > 0
@@ -57,8 +53,8 @@ export function FlowingBorder({ streaming, speed }: { streaming: boolean; speed:
 
   return (
     <div ref={frame} aria-hidden="true" className="pointer-events-none absolute inset-0 rounded-[var(--radius-panel)]">
-      <div style={HALO_STYLE} className={lit ? 'opacity-90' : 'opacity-40'} />
-      <div style={RING_STYLE} className={lit ? 'opacity-100' : 'opacity-55'} />
+      <div style={haloStyle} className={lit ? 'opacity-90' : 'opacity-40'} />
+      <div style={ringStyleValue} className={lit ? 'opacity-100' : 'opacity-55'} />
     </div>
   )
 }

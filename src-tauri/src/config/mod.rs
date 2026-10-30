@@ -209,6 +209,7 @@ pub struct OverlayConfig {
     pub max_lines: u16,
     pub glow: bool,
     pub glow_speed: u8,
+    pub glow_width: u8,
 }
 
 #[typeshare]
@@ -254,6 +255,7 @@ impl Default for OverlayConfig {
             max_lines: 6,
             glow: false,
             glow_speed: 0,
+            glow_width: 2,
         }
     }
 }
@@ -266,6 +268,10 @@ pub const MAX_FONT_SIZE: u8 = 48;
 pub const MAX_OVERLAY_LINES: u16 = 20;
 #[typeshare]
 pub const MAX_GLOW_SPEED: u8 = 100;
+#[typeshare]
+pub const MIN_GLOW_WIDTH: u8 = 1;
+#[typeshare]
+pub const MAX_GLOW_WIDTH: u8 = 8;
 
 #[typeshare]
 pub const MIN_TRAILING_SILENCE_MS: u32 = 200;
@@ -448,6 +454,7 @@ impl OverlayConfig {
         self.font_size = self.font_size.clamp(MIN_FONT_SIZE, MAX_FONT_SIZE);
         self.max_lines = self.max_lines.clamp(1, MAX_OVERLAY_LINES);
         self.glow_speed = self.glow_speed.min(MAX_GLOW_SPEED);
+        self.glow_width = self.glow_width.clamp(MIN_GLOW_WIDTH, MAX_GLOW_WIDTH);
         self.font_color = normalize_color(&self.font_color, &d.font_color);
         self.bg_color = normalize_color(&self.bg_color, &d.bg_color);
 
@@ -1444,6 +1451,7 @@ mod tests {
         assert_eq!(c.mode, OverlayMode::Edit, "出箱即可拖动 / 缩放");
         assert!(!c.glow, "彩色边框默认关");
         assert_eq!(c.glow_speed, 0, "流光速度默认 0：静止");
+        assert_eq!(c.glow_width, 2, "边框宽度默认 2px");
     }
 
     #[test]
@@ -1454,6 +1462,7 @@ mod tests {
         .expect("旧版偏好文件缺少 glowSpeed 时不能整份回退默认值");
         assert!(c.glow);
         assert_eq!(c.glow_speed, 0);
+        assert_eq!(c.glow_width, 2, "旧版偏好文件缺少 glowWidth 时用默认宽度");
     }
 
     #[test]
@@ -1463,6 +1472,7 @@ mod tests {
             font_size: 200,
             max_lines: 9999,
             glow_speed: 250,
+            glow_width: 250,
             ..Default::default()
         }
         .sanitized();
@@ -1471,6 +1481,7 @@ mod tests {
         assert_eq!(c.font_size, MAX_FONT_SIZE);
         assert_eq!(c.max_lines, MAX_OVERLAY_LINES);
         assert_eq!(c.glow_speed, MAX_GLOW_SPEED);
+        assert_eq!(c.glow_width, MAX_GLOW_WIDTH);
     }
 
     #[test]
@@ -1478,11 +1489,13 @@ mod tests {
         let c = OverlayConfig {
             max_lines: 0,
             font_size: 0,
+            glow_width: 0,
             ..Default::default()
         }
         .sanitized();
         assert_eq!(c.max_lines, 1);
         assert_eq!(c.font_size, MIN_FONT_SIZE);
+        assert_eq!(c.glow_width, MIN_GLOW_WIDTH);
     }
 
     #[test]
