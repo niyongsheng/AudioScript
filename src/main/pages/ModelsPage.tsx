@@ -358,11 +358,19 @@ function ModelRow({
               <Icon name="check" size={15} strokeWidth={2.25} />
             </span>
           )}
-          {languageBadge && <StatusBadge tone="info">{languageBadge}</StatusBadge>}
-          {model.kind === ModelKind.Asr && (
-            <StatusBadge tone="purple">{t(model.streaming ? 'models.streaming' : 'models.nonStreaming')}</StatusBadge>
+          {languageBadge && (
+            <StatusBadge size="sm" tone="info">
+              {languageBadge}
+            </StatusBadge>
           )}
-          <StatusBadge tone={badge.tone}>{t(badge.key)}</StatusBadge>
+          {model.kind === ModelKind.Asr && (
+            <StatusBadge size="sm" tone="purple">
+              {t(model.streaming ? 'models.streaming' : 'models.nonStreaming')}
+            </StatusBadge>
+          )}
+          <StatusBadge size="sm" tone={badge.tone}>
+            {t(badge.key)}
+          </StatusBadge>
         </span>
       }
       description={
