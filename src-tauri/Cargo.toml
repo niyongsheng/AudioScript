@@ -116,11 +116,15 @@ objc2-foundation = "0.3"
 block2 = "0.6"
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
-# ct2rs README 给 Windows 与 Linux(non-ARM) 的推荐 BLAS 都是 mkl。
-# ⚠️ 这条路径尚未在真机验证——CI 只跑 cargo check，见 .github/workflows/build.yml 的 check-* job。
+# mkl 只在 GenuineIntel CPU 上启用（CTranslate2 的 cpu_is_genuine_intel 检查）。
+# 其余 CPU（AMD 等）少了 mkl 就一个 GEMM 后端都没有：LMT 硬编码的 int8_float32 在
+# 加载时直接报「Requested int8_float32 compute type…」，fp32 引擎也会在推理时
+# 报「No SGEMM backend on CPU」。ruy 是 ct2rs 默认特性里的跨厂商 int8/fp32 回退，
+# 不能省。
 ct2rs = { version = "0.10", default-features = false, features = [
     "tokenizers",
     "mkl",
+    "ruy",
 ] }
 
 [target.'cfg(unix)'.dependencies]
