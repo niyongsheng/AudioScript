@@ -1,6 +1,6 @@
 import type { Messages } from './zh-CN'
 
-export const ja: Messages = {
+export const ja: Partial<Messages> = {
   'common.cancel': 'キャンセル',
   'common.close': '閉じる',
   'common.retry': '再試行',
@@ -51,6 +51,11 @@ export const ja: Messages = {
   'language.fr': 'Français',
   'language.de': 'Deutsch',
   'language.es': 'Español',
+  'language.ptBR': 'Português (Brasil)',
+  'language.ru': 'Русский',
+  'language.it': 'Italiano',
+  'language.id': 'Bahasa Indonesia',
+  'language.ar': 'العربية',
 
   'app.windowTitle': 'AudioScript',
   'app.updateAvailable': '新しいバージョン v{version} があります',

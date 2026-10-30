@@ -1,0 +1,3 @@
+"NSMicrophoneUsageDescription" = "O AudioScript precisa de acesso ao microfone para transcrever fala em tempo real. O áudio é processado localmente por modelos offline e nunca é enviado para nenhum servidor.";
+"NSAudioCaptureUsageDescription" = "O AudioScript grava o áudio do sistema para transformar vídeos ou podcasts em legendas em direto. O áudio é processado localmente por modelos offline e nunca é enviado para nenhum servidor.";
+"NSSpeechRecognitionUsageDescription" = "O AudioScript precisa de reconhecimento de fala para transcrever áudio com a fala do sistema macOS. O reconhecimento ocorre na framework de fala do sistema; esta aplicação nunca envia o seu áudio.";

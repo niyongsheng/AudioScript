@@ -76,7 +76,8 @@ function EditChrome() {
   const resize = (e: React.MouseEvent) => {
     if (e.button !== 0) return
     e.preventDefault()
-    win.startResizeDragging('SouthEast').catch((err) => console.error('缩放悬浮窗失败', err))
+    const direction = document.documentElement.dir === 'rtl' ? 'SouthWest' : 'SouthEast'
+    win.startResizeDragging(direction).catch((err) => console.error('缩放悬浮窗失败', err))
   }
 
   return (
@@ -96,9 +97,9 @@ function EditChrome() {
         type="button"
         aria-label={t('overlayWindow.resize')}
         onMouseDown={resize}
-        className="absolute right-0 bottom-0 z-10 size-5 cursor-nwse-resize border-0 bg-transparent p-0"
+        className="absolute end-0 bottom-0 z-10 size-5 cursor-nwse-resize border-0 bg-transparent p-0"
       >
-        <span className="absolute right-1 bottom-1 h-2.5 w-2.5 border-[var(--color-accent)] border-r-2 border-b-2 opacity-70" />
+        <span className="absolute end-1 bottom-1 h-2.5 w-2.5 border-[var(--color-accent)] border-e-2 border-b-2 opacity-70" />
       </button>
     </>
   )

@@ -1,10 +1,15 @@
 import { useSyncExternalStore } from 'react'
+import { ar } from './ar'
 import { de } from './de'
 import { en } from './en'
 import { es } from './es'
 import { fr } from './fr'
+import { id as idLocale } from './id'
+import { it } from './it'
 import { ja } from './ja'
 import { ko } from './ko'
+import { ptBR } from './pt-BR'
+import { ru } from './ru'
 import { type Messages, zhCN } from './zh-CN'
 import { zhTW } from './zh-TW'
 
@@ -17,6 +22,11 @@ const CATALOGS = {
   fr,
   de,
   es,
+  'pt-BR': ptBR,
+  ru,
+  it,
+  id: idLocale,
+  ar,
 }
 
 export type Locale = keyof typeof CATALOGS
@@ -38,6 +48,7 @@ const listeners = new Set<() => void>()
 function applyDocumentLang() {
   if (typeof document === 'undefined') return
   document.documentElement.lang = current
+  document.documentElement.dir = current === 'ar' ? 'rtl' : 'ltr'
   document.title = t('app.windowTitle')
 }
 
@@ -62,7 +73,7 @@ export function subscribe(listener: () => void): () => void {
 }
 
 export function t(key: MessageKey, vars?: Vars): string {
-  const template = CATALOGS[current][key] ?? zhCN[key] ?? key
+  const template = CATALOGS[current][key] ?? en[key] ?? zhCN[key] ?? key
   if (!vars) return template
   return template.replace(/\{(\w+)\}/g, (match, name: string) => (name in vars ? String(vars[name]) : match))
 }

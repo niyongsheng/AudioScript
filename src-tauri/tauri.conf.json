@@ -73,7 +73,17 @@
       "resources/en.lproj": "en.lproj",
       "resources/zh-Hans.lproj": "zh-Hans.lproj",
       "resources/zh-Hant.lproj": "zh-Hant.lproj",
-      "resources/ja.lproj": "ja.lproj"
+      "resources/ja.lproj": "ja.lproj",
+      "resources/ko.lproj": "ko.lproj",
+      "resources/fr.lproj": "fr.lproj",
+      "resources/de.lproj": "de.lproj",
+      "resources/es.lproj": "es.lproj",
+      "resources/pt-BR.lproj": "pt-BR.lproj",
+      "resources/pt-PT.lproj": "pt-PT.lproj",
+      "resources/ru.lproj": "ru.lproj",
+      "resources/it.lproj": "it.lproj",
+      "resources/id.lproj": "id.lproj",
+      "resources/ar.lproj": "ar.lproj"
     }
   }
 }

@@ -38,7 +38,7 @@ export function Sidebar<Id extends string>({ items, current, onNavigate, brand, 
                 onClick={() => onNavigate(item.id)}
                 aria-current={active ? 'page' : undefined}
                 className={cn(
-                  'flex w-full items-center gap-2.5 rounded-[var(--radius-ctl)] px-2.5 py-1.5 text-left text-[0.9375rem] transition',
+                  'flex w-full items-center gap-2.5 rounded-[var(--radius-ctl)] px-2.5 py-1.5 text-start text-[0.9375rem] transition',
                   active
                     ? 'bg-[var(--color-accent)] font-semibold text-[var(--color-accent-ink)]'
                     : 'font-medium text-[var(--color-ink-1)] hover:bg-[var(--color-surface-2)]',

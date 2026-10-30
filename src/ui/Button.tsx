@@ -47,7 +47,7 @@ export function Button({
         />
       )}
       {children}
-      {pending && <span className="ml-0.5 animate-pulse">…</span>}
+      {pending && <span className="ms-0.5 animate-pulse">…</span>}
     </button>
   )
 }

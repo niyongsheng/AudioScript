@@ -158,10 +158,11 @@ const BilingualSegment = memo(function BilingualSegment({ seg, active }: { seg: 
 
   return (
     <div
-      className={`py-[0.2em] ${seg.state === SegmentState.Edited ? 'border-[var(--color-accent)] border-l-2 pl-2' : ''}`}
+      className={`py-[0.2em] ${seg.state === SegmentState.Edited ? 'border-[var(--color-accent)] border-s-2 ps-2' : ''}`}
     >
       <p
         className="m-0"
+        dir="auto"
         style={{
           fontSize: `${SOURCE_SCALE}em`,
           opacity: isPartial ? PARTIAL_OPACITY : SOURCE_OPACITY,
@@ -171,7 +172,11 @@ const BilingualSegment = memo(function BilingualSegment({ seg, active }: { seg: 
         {isPartial && active && <Caret />}
       </p>
 
-      {seg.translationState === TranslationState.Done && seg.translation && <p className="m-0">{seg.translation}</p>}
+      {seg.translationState === TranslationState.Done && seg.translation && (
+        <p className="m-0" dir="auto">
+          {seg.translation}
+        </p>
+      )}
       {seg.translationState === TranslationState.Failed && (
         <p className="m-0 opacity-40" style={{ fontSize: `${SOURCE_SCALE}em` }}>
           <span className="italic">{t('overlayWindow.translationFailed')}</span>
@@ -183,7 +188,7 @@ const BilingualSegment = memo(function BilingualSegment({ seg, active }: { seg: 
 
 function Caret() {
   return (
-    <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[0.15em] animate-pulse bg-current align-baseline" />
+    <span className="ms-0.5 inline-block h-[1em] w-[2px] translate-y-[0.15em] animate-pulse bg-current align-baseline" />
   )
 }
 

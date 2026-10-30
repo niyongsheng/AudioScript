@@ -39,11 +39,11 @@ export function SegmentList({ segments }: Props) {
 const SegmentItem = memo(function SegmentItem({ seg }: { seg: TranscriptSegment }) {
   const { t } = useI18n()
   return (
-    <li className={cn(seg.state === SegmentState.Edited && 'border-[var(--color-accent)] border-l-2 pl-3')}>
+    <li className={cn(seg.state === SegmentState.Edited && 'border-[var(--color-accent)] border-s-2 ps-3')}>
       <p className="m-0 text-[0.78em] leading-relaxed" style={{ color: 'var(--color-segment-partial)' }}>
         {seg.text}
         {seg.state === SegmentState.Partial && (
-          <span className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[0.15em] animate-pulse bg-current align-baseline" />
+          <span className="ms-0.5 inline-block h-[1em] w-[2px] translate-y-[0.15em] animate-pulse bg-current align-baseline" />
         )}
       </p>
 

@@ -49,7 +49,7 @@ export function TranscribePage() {
         <Button icon="download" size="sm" disabled={!canExport} onClick={() => void handleExport()}>
           {t('common.export')}
         </Button>
-        <span className="ml-auto font-mono text-[var(--color-ink-2)] text-[0.7rem]">
+        <span className="ms-auto font-mono text-[var(--color-ink-2)] text-[0.7rem]">
           {t('common.segmentCount', { count: segments.length })}
         </span>
       </div>

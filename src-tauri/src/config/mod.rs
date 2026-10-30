@@ -408,6 +408,16 @@ pub enum Language {
     De,
     #[serde(rename = "es")]
     Es,
+    #[serde(rename = "pt-BR")]
+    PtBr,
+    #[serde(rename = "ru")]
+    Ru,
+    #[serde(rename = "it")]
+    It,
+    #[serde(rename = "id")]
+    Id,
+    #[serde(rename = "ar")]
+    Ar,
 }
 
 #[typeshare]

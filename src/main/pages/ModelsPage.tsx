@@ -291,7 +291,7 @@ export function ModelsPage() {
       <p className="px-1 text-[var(--color-ink-2)] text-[0.7rem] leading-relaxed">
         {connected ? (
           <>
-            <Icon name="wifiOff" size={12} className="mr-1 inline-block align-[-0.125em]" />
+            <Icon name="wifiOff" size={12} className="me-1 inline-block align-[-0.125em]" />
             <InlineModelPackLink
               text={t('models.needsNetwork')}
               label={t('models.needsNetworkLink')}
@@ -302,7 +302,7 @@ export function ModelsPage() {
           t('models.noStorage')
         )}
         {connected && (
-          <button type="button" className="ml-1 underline underline-offset-2" onClick={openModelsDir}>
+          <button type="button" className="ms-1 underline underline-offset-2" onClick={openModelsDir}>
             {t('models.openDir')}
           </button>
         )}

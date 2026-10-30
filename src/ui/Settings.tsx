@@ -44,16 +44,16 @@ export function SettingsRow({ title, icon, description, control, onClick, unavai
   const content = (
     <>
       {icon && <Icon name={icon} size={17} className="mt-0.5 shrink-0 text-[var(--color-ink-1)]" />}
-      <div className={cn('min-w-0 flex-1', !icon && 'pl-0')}>
+      <div className={cn('min-w-0 flex-1', !icon && 'ps-0')}>
         <div className="text-[var(--color-ink-0)] text-sm">{title}</div>
         {(description || unavailableReason) && (
           <div className="mt-0.5 text-[var(--color-ink-2)] text-xs leading-relaxed">
             {description}
-            {unavailableReason && <span className="ml-1 italic">{unavailableReason}</span>}
+            {unavailableReason && <span className="ms-1 italic">{unavailableReason}</span>}
           </div>
         )}
       </div>
-      {control && <div className="shrink-0 pl-3">{control}</div>}
+      {control && <div className="shrink-0 ps-3">{control}</div>}
     </>
   )
 
@@ -66,7 +66,7 @@ export function SettingsRow({ title, icon, description, control, onClick, unavai
       type="button"
       onClick={onClick}
       disabled={!!unavailableReason}
-      className={cn(base, 'w-full text-left transition', !unavailableReason && 'hover:bg-[var(--color-surface-2)]')}
+      className={cn(base, 'w-full text-start transition', !unavailableReason && 'hover:bg-[var(--color-surface-2)]')}
     >
       {content}
     </button>

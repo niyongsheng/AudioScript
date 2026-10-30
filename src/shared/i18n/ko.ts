@@ -1,6 +1,6 @@
 import type { Messages } from './zh-CN'
 
-export const ko: Messages = {
+export const ko: Partial<Messages> = {
   'common.cancel': '취소',
   'common.close': '닫기',
   'common.retry': '다시 시도',
@@ -51,6 +51,11 @@ export const ko: Messages = {
   'language.fr': 'Français',
   'language.de': 'Deutsch',
   'language.es': 'Español',
+  'language.ptBR': 'Português (Brasil)',
+  'language.ru': 'Русский',
+  'language.it': 'Italiano',
+  'language.id': 'Bahasa Indonesia',
+  'language.ar': 'العربية',
 
   'app.windowTitle': 'AudioScript',
   'app.updateAvailable': '새 버전 v{version}이(가) 있습니다',

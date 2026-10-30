@@ -51,6 +51,11 @@ export const en: Messages = {
   'language.fr': 'Français',
   'language.de': 'Deutsch',
   'language.es': 'Español',
+  'language.ptBR': 'Português (Brasil)',
+  'language.ru': 'Русский',
+  'language.it': 'Italiano',
+  'language.id': 'Bahasa Indonesia',
+  'language.ar': 'العربية',
 
   'app.windowTitle': 'AudioScript',
   'app.updateAvailable': 'Version v{version} is available',

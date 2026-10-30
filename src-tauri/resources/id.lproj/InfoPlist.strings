@@ -1,0 +1,3 @@
+"NSMicrophoneUsageDescription" = "AudioScript memerlukan akses mikrofon untuk mentranskripsi ucapan secara real-time. Audio diproses secara lokal oleh model offline dan tidak pernah diunggah ke server mana pun.";
+"NSAudioCaptureUsageDescription" = "AudioScript merekam audio sistem untuk mengubah video atau podcast menjadi subtitel langsung. Audio diproses secara lokal oleh model offline dan tidak pernah diunggah ke server mana pun.";
+"NSSpeechRecognitionUsageDescription" = "AudioScript memerlukan pengenalan ucapan untuk mentranskripsi audio dengan ucapan sistem macOS. Pengenalan berjalan di framework ucapan sistem; aplikasi ini tidak pernah mengunggah audio Anda.";

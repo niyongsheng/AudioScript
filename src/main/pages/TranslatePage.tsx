@@ -371,7 +371,7 @@ export function TranslatePage() {
                 onChange={changeSource}
                 disabled={directionDisabled}
               />
-              <Icon name="arrowRight" size={14} className="shrink-0 text-[var(--color-ink-2)]" />
+              <Icon name="arrowRight" size={14} className="shrink-0 text-[var(--color-ink-2)] rtl:rotate-180" />
               <Select
                 variant="rich"
                 label={t('translate.targetLanguage')}

@@ -155,7 +155,7 @@ export function AboutPage() {
           icon="external"
           title={t('about.website')}
           onClick={() => void openSite()}
-          control={<Icon name="chevron" size={16} className="mt-0.5 text-[var(--color-ink-2)]" />}
+          control={<Icon name="chevron" size={16} className="mt-0.5 text-[var(--color-ink-2)] rtl:rotate-180" />}
         />
       </SettingsGroup>
 
@@ -179,7 +179,7 @@ export function AboutPage() {
             </span>
           }
           onClick={() => void openRepo()}
-          control={<Icon name="chevron" size={16} className="mt-0.5 text-[var(--color-ink-2)]" />}
+          control={<Icon name="chevron" size={16} className="mt-0.5 text-[var(--color-ink-2)] rtl:rotate-180" />}
         />
       </SettingsGroup>
 

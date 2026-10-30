@@ -1,0 +1,3 @@
+"NSMicrophoneUsageDescription" = "AudioScript는 실시간 음성 전사를 위해 마이크 접근이 필요합니다. 오디오는 오프라인 모델로 이 Mac에서 처리되며 어떤 서버로도 전송되지 않습니다.";
+"NSAudioCaptureUsageDescription" = "AudioScript는 재생 중인 동영상이나 팟캐스트를 실시간 자막으로 만들기 위해 시스템 오디오를 녹음합니다. 오디오는 오프라인 모델로 이 Mac에서 처리되며 어떤 서버로도 전송되지 않습니다.";
+"NSSpeechRecognitionUsageDescription" = "AudioScript는 macOS 시스템 음성으로 오디오를 전사하기 위해 음성 인식을 사용합니다. 인식은 시스템 음성 프레임워크에서 실행되며, 이 앱은 오디오를 업로드하지 않습니다.";

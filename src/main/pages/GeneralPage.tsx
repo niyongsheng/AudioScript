@@ -58,6 +58,11 @@ export function GeneralPage({ focusPermissions, onFocusPermissionsHandled }: Pro
     { value: Language.Fr, label: t('language.fr') },
     { value: Language.De, label: t('language.de') },
     { value: Language.Es, label: t('language.es') },
+    { value: Language.PtBr, label: t('language.ptBR') },
+    { value: Language.Ru, label: t('language.ru') },
+    { value: Language.It, label: t('language.it') },
+    { value: Language.Id, label: t('language.id') },
+    { value: Language.Ar, label: t('language.ar') },
   ]
 
   useEffect(() => {

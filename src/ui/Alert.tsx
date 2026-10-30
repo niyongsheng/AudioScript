@@ -22,7 +22,7 @@ export function Alert({ tone, title, children, actions, onDismiss, className }: 
     <div
       role={tone === 'error' ? 'alert' : 'status'}
       className={cn(
-        'flex items-start gap-2.5 rounded-[var(--radius-panel)] border-l-[3px] px-3 py-2.5',
+        'flex items-start gap-2.5 rounded-[var(--radius-panel)] border-s-[3px] px-3 py-2.5',
         style.wrap,
         className,
       )}
@@ -41,7 +41,7 @@ export function Alert({ tone, title, children, actions, onDismiss, className }: 
           onClick={onDismiss}
           aria-label={t('common.close')}
           className={cn(
-            '-mr-1 -mt-1 flex size-5 shrink-0 items-center justify-center rounded opacity-60 transition hover:opacity-100',
+            '-me-1 -mt-1 flex size-5 shrink-0 items-center justify-center rounded opacity-60 transition hover:opacity-100',
             style.iconColor,
           )}
         >
@@ -54,21 +54,21 @@ export function Alert({ tone, title, children, actions, onDismiss, className }: 
 
 const TONE: Record<Tone, { wrap: string; icon: IconName; iconColor: string; title: string; body: string }> = {
   error: {
-    wrap: 'border-l-[var(--color-danger)] bg-[var(--color-danger-bg)]',
+    wrap: 'border-s-[var(--color-danger)] bg-[var(--color-danger-bg)]',
     icon: 'error',
     iconColor: 'text-[var(--color-danger-ink)]',
     title: 'text-[var(--color-danger-ink)]',
     body: 'text-[var(--color-danger-ink)]',
   },
   warn: {
-    wrap: 'border-l-[var(--color-warn)] bg-[var(--color-warn-bg)]',
+    wrap: 'border-s-[var(--color-warn)] bg-[var(--color-warn-bg)]',
     icon: 'alert',
     iconColor: 'text-[var(--color-warn-ink)]',
     title: 'text-[var(--color-warn-ink)]',
     body: 'text-[var(--color-warn-ink)]',
   },
   info: {
-    wrap: 'border-l-[var(--color-accent)] bg-[var(--color-surface-1)]',
+    wrap: 'border-s-[var(--color-accent)] bg-[var(--color-surface-1)]',
     icon: 'info',
     iconColor: 'text-[var(--color-accent)]',
     title: 'text-[var(--color-ink-0)]',

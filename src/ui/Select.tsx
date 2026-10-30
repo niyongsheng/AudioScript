@@ -223,14 +223,14 @@ export function Select<T extends string>({
         }}
         className={cn(
           'flex items-center rounded-[var(--radius-ctl)] border border-[var(--color-border-subtle)]',
-          'bg-[var(--color-surface-1)] px-2 text-left text-[var(--color-ink-0)] text-xs transition',
+          'bg-[var(--color-surface-1)] px-2 text-start text-[var(--color-ink-0)] text-xs transition',
           variant === 'rich' ? 'min-w-[8.5rem] gap-2 py-1' : 'min-w-[5.5rem] gap-1.5 py-1.5',
           'disabled:cursor-not-allowed disabled:opacity-40',
           open && 'border-[var(--color-accent)]',
           className,
         )}
       >
-        <span className={cn('min-w-0 flex-1', variant === 'compact' && 'truncate text-left')}>
+        <span className={cn('min-w-0 flex-1', variant === 'compact' && 'truncate text-start')}>
           {variant === 'rich' ? (
             <>
               <span className="block truncate">{selected?.label ?? value}</span>

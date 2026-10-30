@@ -25,7 +25,7 @@ export function Switch({ checked, onChange, disabled, label }: Props) {
       <span
         className={cn(
           'inline-block size-5 rounded-full bg-white shadow-[var(--shadow-ctl)] transition-transform',
-          checked ? 'translate-x-[1.125rem]' : 'translate-x-0.5',
+          checked ? 'translate-x-[1.125rem] rtl:-translate-x-[1.125rem]' : 'translate-x-0.5 rtl:-translate-x-0.5',
         )}
       />
     </button>

@@ -1,6 +1,6 @@
 import type { Messages } from './zh-CN'
 
-export const zhTW: Messages = {
+export const zhTW: Partial<Messages> = {
   'common.cancel': '取消',
   'common.close': '關閉',
   'common.retry': '重試',
@@ -51,6 +51,11 @@ export const zhTW: Messages = {
   'language.fr': 'Français',
   'language.de': 'Deutsch',
   'language.es': 'Español',
+  'language.ptBR': 'Português (Brasil)',
+  'language.ru': 'Русский',
+  'language.it': 'Italiano',
+  'language.id': 'Bahasa Indonesia',
+  'language.ar': 'العربية',
 
   'app.windowTitle': 'AudioScript 聲稿',
   'app.updateAvailable': '發現新版本 v{version}',

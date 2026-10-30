@@ -1,6 +1,6 @@
 import type { Messages } from './zh-CN'
 
-export const es: Messages = {
+export const es: Partial<Messages> = {
   'common.cancel': 'Cancelar',
   'common.close': 'Cerrar',
   'common.retry': 'Reintentar',
@@ -51,6 +51,11 @@ export const es: Messages = {
   'language.fr': 'Français',
   'language.de': 'Deutsch',
   'language.es': 'Español',
+  'language.ptBR': 'Português (Brasil)',
+  'language.ru': 'Русский',
+  'language.it': 'Italiano',
+  'language.id': 'Bahasa Indonesia',
+  'language.ar': 'العربية',
 
   'app.windowTitle': 'AudioScript',
   'app.updateAvailable': 'La versión v{version} está disponible',

@@ -53,7 +53,7 @@ export function UpdateToast({ hidden }: Props) {
   }
 
   return (
-    <div className="fixed right-5 bottom-5 z-[60] w-80 max-w-[calc(100vw-2.5rem)]">
+    <div className="fixed end-5 bottom-5 z-[60] w-80 max-w-[calc(100vw-2.5rem)]">
       <Alert
         tone={updatePhase === 'error' ? 'error' : 'info'}
         className="shadow-[0_12px_40px_rgb(0_0_0/0.35)]"

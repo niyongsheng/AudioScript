@@ -187,6 +187,11 @@ export enum Language {
 	Fr = "fr",
 	De = "de",
 	Es = "es",
+	PtBr = "pt-BR",
+	Ru = "ru",
+	It = "it",
+	Id = "id",
+	Ar = "ar",
 }
 
 export interface WindowPos {

@@ -1,0 +1,3 @@
+"NSMicrophoneUsageDescription" = "AudioScript richiede l’accesso al microfono per trascrivere il parlato in tempo reale. L’audio viene elaborato localmente da modelli offline e non viene mai inviato a nessun server.";
+"NSAudioCaptureUsageDescription" = "AudioScript registra l’audio di sistema per trasformare video o podcast in sottotitoli live. L’audio viene elaborato localmente da modelli offline e non viene mai inviato a nessun server.";
+"NSSpeechRecognitionUsageDescription" = "AudioScript richiede il riconoscimento vocale per trascrivere l’audio con la voce di sistema di macOS. Il riconoscimento avviene nel framework vocale di sistema; questa app non invia mai il tuo audio.";
