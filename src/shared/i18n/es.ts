@@ -79,6 +79,15 @@ export const es: Messages = {
     'Con macOS 26+, traduzca sin conexión con paquetes de idioma del sistema y a más idiomas.',
   'whatsNew.glowTitle': 'Borde fluido de la superposición',
   'whatsNew.glowBody': 'Los colores fluyen por el borde durante la transcripción, con velocidad ajustable.',
+  'whatsNew.xAsrTitle': 'X-ASR para chino e inglés mezclados',
+  'whatsNew.xAsrBody':
+    'Nuevo modelo en flujo que conserva la puntuación y las mayúsculas cuando se mezclan chino e inglés.',
+  'whatsNew.nemotronTitle': 'Reconocimiento multilingüe Nemotron',
+  'whatsNew.nemotronBody': 'Reconocimiento en flujo para 40 idiomas, pensado para vídeos y reuniones multilingües.',
+  'whatsNew.lmtTitle': 'Traducción multilingüe LMT-60',
+  'whatsNew.lmtBody': 'Traduce entre 60 idiomas bajo Apache-2.0, con versiones rápida y de alta precisión.',
+  'whatsNew.glowWidthTitle': 'Grosor del borde ajustable',
+  'whatsNew.glowWidthBody': 'Ajusta el borde animado de la superposición de 1 a 8 píxeles.',
   'whatsNew.viewNotes': 'Ver notas de la versión completas',
   'whatsNew.continue': 'Continuar',
 

@@ -80,6 +80,15 @@ export const fr: Messages = {
   'whatsNew.glowTitle': 'Bordure fluide de la superposition',
   'whatsNew.glowBody':
     'Les couleurs défilent le long de la bordure pendant la transcription, avec une vitesse réglable.',
+  'whatsNew.xAsrTitle': 'X-ASR pour le chinois-anglais mixte',
+  'whatsNew.xAsrBody':
+    'Nouveau modèle en flux qui conserve la ponctuation et les majuscules lorsque le chinois et l’anglais se mélangent.',
+  'whatsNew.nemotronTitle': 'Reconnaissance multilingue Nemotron',
+  'whatsNew.nemotronBody': 'Reconnaissance en flux pour 40 langues, pensée pour les vidéos et réunions multilingues.',
+  'whatsNew.lmtTitle': 'Traduction multilingue LMT-60',
+  'whatsNew.lmtBody': 'Traduisez entre 60 langues sous Apache-2.0, avec des versions rapide et haute précision.',
+  'whatsNew.glowWidthTitle': 'Épaisseur de bordure réglable',
+  'whatsNew.glowWidthBody': 'Réglez la bordure animée de la superposition de 1 à 8 pixels.',
   'whatsNew.viewNotes': 'Voir les notes de version complètes',
   'whatsNew.continue': 'Continuer',
 

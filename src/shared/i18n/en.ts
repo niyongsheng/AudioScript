@@ -83,6 +83,15 @@ export const en: Messages = {
   'whatsNew.macTranslateBody': 'On macOS 26+, translate offline with system language packs and more target languages.',
   'whatsNew.glowTitle': 'Flowing overlay border',
   'whatsNew.glowBody': 'Colors flow along the border while transcribing, with adjustable speed.',
+  'whatsNew.xAsrTitle': 'X-ASR for mixed Chinese and English',
+  'whatsNew.xAsrBody':
+    'New streaming model that keeps punctuation and casing when Chinese and English mix in one sentence.',
+  'whatsNew.nemotronTitle': 'Nemotron multilingual recognition',
+  'whatsNew.nemotronBody': 'Streaming recognition for 40 languages, built for multilingual videos and meetings.',
+  'whatsNew.lmtTitle': 'LMT-60 multilingual translation',
+  'whatsNew.lmtBody': 'Translate across 60 languages under Apache-2.0, with fast and high-accuracy tiers.',
+  'whatsNew.glowWidthTitle': 'Adjustable border width',
+  'whatsNew.glowWidthBody': 'Set the flowing overlay border from 1 to 8 pixels.',
   'whatsNew.viewNotes': 'View full release notes',
   'whatsNew.continue': 'Continue',
 

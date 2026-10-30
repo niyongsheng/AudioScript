@@ -79,6 +79,15 @@ export const de: Messages = {
   'whatsNew.glowTitle': 'Fließender Overlay-Rahmen',
   'whatsNew.glowBody':
     'Während der Transkription fließen Farben entlang des Rahmens, mit einstellbarer Geschwindigkeit.',
+  'whatsNew.xAsrTitle': 'X-ASR für gemischtes Chinesisch und Englisch',
+  'whatsNew.xAsrBody':
+    'Neues Streaming-Modell, das Satzzeichen und Groß-/Kleinschreibung bei gemischtem Chinesisch und Englisch erhält.',
+  'whatsNew.nemotronTitle': 'Mehrsprachige Erkennung mit Nemotron',
+  'whatsNew.nemotronBody': 'Streaming-Erkennung für 40 Sprachen, gedacht für mehrsprachige Videos und Meetings.',
+  'whatsNew.lmtTitle': 'Mehrsprachige Übersetzung mit LMT-60',
+  'whatsNew.lmtBody': 'Übersetzen zwischen 60 Sprachen unter Apache-2.0, mit schneller und hochgenauer Variante.',
+  'whatsNew.glowWidthTitle': 'Einstellbare Rahmenbreite',
+  'whatsNew.glowWidthBody': 'Stellen Sie den fließenden Overlay-Rahmen auf 1 bis 8 Pixel ein.',
   'whatsNew.viewNotes': 'Vollständige Versionshinweise ansehen',
   'whatsNew.continue': 'Weiter',
 

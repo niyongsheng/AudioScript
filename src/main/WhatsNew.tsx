@@ -31,8 +31,32 @@ const FEATURES_V030: readonly WhatsNewFeature[] = [
   },
 ]
 
+const FEATURES_V050: readonly WhatsNewFeature[] = [
+  {
+    icon: 'waveform',
+    titleKey: 'whatsNew.xAsrTitle',
+    bodyKey: 'whatsNew.xAsrBody',
+  },
+  {
+    icon: 'speaker',
+    titleKey: 'whatsNew.nemotronTitle',
+    bodyKey: 'whatsNew.nemotronBody',
+  },
+  {
+    icon: 'translate',
+    titleKey: 'whatsNew.lmtTitle',
+    bodyKey: 'whatsNew.lmtBody',
+  },
+  {
+    icon: 'border',
+    titleKey: 'whatsNew.glowWidthTitle',
+    bodyKey: 'whatsNew.glowWidthBody',
+  },
+]
+
 const WHATS_NEW: Record<string, readonly WhatsNewFeature[]> = {
   '0.3.0': FEATURES_V030,
+  '0.5.0': FEATURES_V050,
 }
 
 export function whatsNewFor(version: string): readonly WhatsNewFeature[] | undefined {
