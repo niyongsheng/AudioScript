@@ -136,7 +136,7 @@ export const fr: Messages = {
   'permissions.systemAudio': 'Enregistrement audio du système',
   'permissions.speech': 'Reconnaissance vocale',
   'permissions.speechDescGranted':
-    'Autorisé. Vous pouvez choisir la parole système macOS comme moteur de reconnaissance sur la page Traduction.',
+    'Autorisé. Vous pouvez choisir MacNativeSpeech comme moteur de reconnaissance sur la page Traduction.',
   'permissions.speechDescNotDetermined':
     'Pas encore autorisé ; macOS demandera l’autorisation au démarrage de la transcription, ou demandez-la maintenant.',
   'permissions.speechDescDenied':
@@ -190,7 +190,7 @@ export const fr: Messages = {
     'Les modèles et les réglages de segmentation ne peuvent pas être modifiés pendant la transcription.',
   'translate.engineGroup': 'Traduction automatique',
   'translate.engine': 'Moteur de traduction',
-  'translate.engineDescription': 'Fonctionne localement ; l’audio et le texte ne quittent jamais cette machine.',
+  'translate.engineDescription': 'Les modèles locaux effectuent la traduction, entièrement hors ligne.',
   'translate.engineLocal': 'OPUS-MT',
   'translate.engineMac': 'MacTranslation',
   'translate.engineMacSubtitle': 'Multilingue · Packs de langue système',
@@ -198,25 +198,19 @@ export const fr: Messages = {
   'translate.engineOffSubtitle': 'Transcription uniquement',
   'translate.engineMock': 'Moteur factice de développement',
   'translate.engineMockSubtitle': 'Débogage uniquement',
+  'translate.languagePackOpen': 'Ouvrir Langue et région',
   'translate.direction': 'Sens de traduction',
   'translate.directionSubtitleLocal': 'Anglais ↔ chinois uniquement',
   'translate.directionSubtitleMultilingual': 'Traduction multilingue',
   'translate.directionSubtitleMac': 'Les cibles suivent les packs de langue système',
   'translate.directionSubtitleOff': 'La traduction est désactivée',
   'translate.asrEngineTitle': 'Moteur de reconnaissance vocale',
-  'translate.asrEngineDescription':
-    'Les modèles locaux fonctionnent entièrement hors ligne ; la parole système macOS utilise les ressources linguistiques gérées par le système.',
+  'translate.asrEngineDescription': 'Les modèles locaux effectuent la reconnaissance vocale, entièrement hors ligne.',
   'translate.asrEngineLocal': 'Modèle local',
-  'translate.asrEngineMac': 'Parole système macOS',
+  'translate.asrEngineMac': 'MacNativeSpeech',
   'translate.asrEngineMacSubtitle': 'Flux continu · macOS 26+ · Ressources linguistiques système',
-  'translate.asrEngineBuiltinDescription':
-    'Reconnaissance en flux bilingue, fournie avec l’application et prête à l’emploi.',
-  'translate.asrEngineHighDescription':
-    'Modèle en flux bilingue plus grand : plus précis, mais plus gourmand en mémoire et en CPU.',
-  'translate.asrEngineQwen3Description':
-    'Reconnaissance hors ligne multilingue 0.6B ; émet le texte en fin de phrase et consomme plus de téléchargement et de mémoire.',
   'translate.asrEngineMacDescription':
-    'Utilise la parole système macOS ; les ressources linguistiques et la segmentation sont gérées par le système.',
+    'Utilise MacNativeSpeech ; les ressources linguistiques et la segmentation sont gérées par le système.',
   'translate.sourceLanguage': 'Langue source',
   'translate.targetLanguage': 'Langue cible',
   'translate.langEnglish': 'Anglais',
@@ -307,11 +301,15 @@ export const fr: Messages = {
   'general.logsExported': 'Journaux exportés vers {path}',
 
   'models.title': 'Modèles',
-  'models.modelAsrBuiltinTitle': 'Zipformer petit modèle',
+  'models.modelAsrBuiltinTitle': 'Zipformer léger',
   'models.modelAsrHighTitle': 'Zipformer haute précision',
+  'models.modelAsrXAsrTitle': 'X-ASR léger',
+  'models.modelAsrNemotronTitle': 'Nemotron 3.5 général',
   'models.modelAsrQwen3Title': 'Qwen3-ASR haute précision',
   'models.modelMtBaseTitle': 'OPUS-MT de base',
-  'models.modelMtMultilingualTitle': 'NLLB-200 multilingue',
+  'models.modelMtMultilingualTitle': 'NLLB-200 amélioré',
+  'models.modelMtLmtFastTitle': 'LMT-60 rapide',
+  'models.modelMtLmtHighTitle': 'LMT-60 haute précision',
   'models.loadFailed': 'Échec du chargement de la liste des modèles',
   'models.refreshFailed': 'Échec de l’actualisation de la liste des modèles',
   'models.brokenSelectedTitle': 'Les fichiers du modèle sélectionné « {title} » sont manquants',
@@ -323,15 +321,13 @@ export const fr: Messages = {
   'models.downloadFailedFallback': 'Échec du téléchargement',
   'models.asrGroup': 'Reconnaissance vocale',
   'models.mtGroup': 'Traduction automatique',
-  'models.needsNetwork': 'Le téléchargement des modèles optionnels nécessite un accès réseau.',
-  'models.switchHint': 'Changez de modèle dans la page Traduction.',
+  'models.needsNetwork': 'Si le réseau est lent, vous pouvez installer et utiliser le pack de modèles hors ligne.',
+  'models.needsNetworkLink': 'pack de modèles hors ligne',
   'models.noStorage':
     'Impossible de localiser le dossier de stockage des modèles ; les modèles optionnels sont indisponibles.',
   'models.openDir': 'Ouvrir le dossier des modèles',
   'models.storageGroup': 'Stockage',
   'models.storageLocation': 'Emplacement des modèles',
-  'models.storageHint':
-    'Les nouveaux téléchargements sont enregistrés ici. Changer d’emplacement ne supprime pas les modèles déjà téléchargés ailleurs.',
   'models.storageChange': 'Modifier',
   'models.storageReset': 'Emplacement par défaut',
   'models.storagePickTitle': 'Choisir un dossier pour les modèles téléchargés',

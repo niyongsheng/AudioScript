@@ -4,9 +4,13 @@ import type { ModelStatus } from './types'
 const TITLE_KEYS: Record<string, MessageKey> = {
   'asr-builtin': 'models.modelAsrBuiltinTitle',
   'asr-high-accuracy': 'models.modelAsrHighTitle',
+  'asr-x-asr': 'models.modelAsrXAsrTitle',
+  'asr-nemotron': 'models.modelAsrNemotronTitle',
   'asr-qwen3': 'models.modelAsrQwen3Title',
   'mt-base': 'models.modelMtBaseTitle',
   'mt-multilingual': 'models.modelMtMultilingualTitle',
+  'mt-lmt-fast': 'models.modelMtLmtFastTitle',
+  'mt-lmt-high': 'models.modelMtLmtHighTitle',
 }
 
 const LANGUAGE_KEYS: Record<string, MessageKey> = {

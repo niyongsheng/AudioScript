@@ -206,12 +206,16 @@ export interface WindowGeometry {
 export enum AsrModelTier {
 	Builtin = "builtin",
 	HighAccuracy = "high-accuracy",
+	XAsr = "x-asr",
+	Nemotron = "nemotron",
 	Qwen3 = "qwen3",
 }
 
 export enum MtModelTier {
 	Base = "base",
 	Multilingual = "multilingual",
+	LmtFast = "lmt-fast",
+	LmtHigh = "lmt-high",
 }
 
 export interface Preferences {

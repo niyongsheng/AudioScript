@@ -2,11 +2,13 @@ use std::path::{Path, PathBuf};
 
 use ct2rs::tokenizers::hf::Tokenizer as HfTokenizer;
 
-use super::{script, TranslateCaps, TranslateError, Translator};
-use crate::config::{TranslateConfig, ZhScript};
+use super::{
+    apply_zh_script, load_hf_tokenizer, mt_threads, warm_text, TranslateCaps, TranslateError,
+    Translator, TOKENIZER,
+};
+use crate::config::{base_lang, TranslateConfig, ZhScript};
 use crate::i18n::{tr, Key};
 
-const TOKENIZER: &str = "tokenizer.json";
 const EOS: &str = "</s>";
 const REQUIRED_FILES: [&str; 4] = [
     "model.bin",
@@ -14,7 +16,6 @@ const REQUIRED_FILES: [&str; 4] = [
     "config.json",
     TOKENIZER,
 ];
-const NUM_THREADS: usize = 2;
 const MAX_DECODING_LENGTH: usize = 512;
 
 pub struct NllbTranslator {
@@ -31,11 +32,10 @@ struct NllbTokenizer {
 
 impl NllbTokenizer {
     fn load(dir: &Path, source_code: &'static str) -> Result<Self, TranslateError> {
-        let mut inner = HfTokenizer::from_file(dir.join(TOKENIZER)).map_err(|e| {
-            TranslateError::ModelLoad(format!("{}/{TOKENIZER}：{e}", dir.display()))
-        })?;
-        inner.disable_spacial_token();
-        Ok(Self { inner, source_code })
+        Ok(Self {
+            inner: load_hf_tokenizer(dir)?,
+            source_code,
+        })
     }
 }
 
@@ -53,7 +53,7 @@ impl ct2rs::Tokenizer for NllbTokenizer {
 }
 
 fn nllb_code(lang: &str, zh_script: ZhScript) -> Option<&'static str> {
-    let base = lang.split('-').next().unwrap_or(lang);
+    let base = base_lang(lang);
     Some(match base {
         "zh" => match zh_script {
             ZhScript::Simplified => "zho_Hans",
@@ -92,15 +92,6 @@ fn nllb_code(lang: &str, zh_script: ZhScript) -> Option<&'static str> {
     })
 }
 
-fn warm_text(source_lang: &str) -> &'static str {
-    match source_lang.split('-').next().unwrap_or(source_lang) {
-        "zh" => "你好",
-        "ja" => "こんにちは",
-        "ko" => "안녕하세요",
-        _ => "hello",
-    }
-}
-
 impl NllbTranslator {
     pub fn new(model_root: PathBuf) -> Self {
         Self {
@@ -112,13 +103,12 @@ impl NllbTranslator {
     }
 
     fn output_for_script(&self, text: &str) -> String {
-        if !self.target_code.starts_with("zho_") {
-            return text.to_string();
-        }
-        match self.zh_script {
-            ZhScript::Simplified => script::to_simplified(text),
-            ZhScript::Traditional => script::to_traditional(text),
-        }
+        apply_zh_script(
+            text,
+            self.target_code
+                .starts_with("zho_")
+                .then_some(self.zh_script),
+        )
     }
 
     fn check_model_dir(dir: &Path) -> Result<(), TranslateError> {
@@ -155,7 +145,7 @@ impl Translator for NllbTranslator {
         Self::check_model_dir(&dir)?;
 
         let config = ct2rs::Config {
-            num_threads_per_replica: NUM_THREADS,
+            num_threads_per_replica: mt_threads(),
             ..Default::default()
         };
 

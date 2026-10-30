@@ -126,6 +126,10 @@ pub fn inspect(app: &AppHandle) -> ModelsList {
         }
     }
 
+    for models in [&mut asr, &mut mt] {
+        models.sort_by_key(|m| (!m.bundled, m.installed_bytes));
+    }
+
     let job = app
         .try_state::<ModelState>()
         .and_then(|state| state.snapshot());

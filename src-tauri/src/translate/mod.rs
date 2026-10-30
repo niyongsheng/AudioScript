@@ -1,3 +1,4 @@
+pub mod lmt;
 pub mod local_nmt;
 #[cfg(target_os = "macos")]
 pub mod mac_translation;
@@ -8,7 +9,9 @@ pub mod script;
 
 use std::path::Path;
 
-use crate::config::TranslateConfig;
+use ct2rs::tokenizers::hf::Tokenizer as HfTokenizer;
+
+use crate::config::{base_lang, TranslateConfig, ZhScript};
 use crate::i18n::{tf, tr, Key};
 
 #[derive(Debug, thiserror::Error)]
@@ -44,6 +47,32 @@ const REPEAT_RATIO: f32 = 0.6;
 const REPEAT_FLOOR: usize = 4;
 
 const TRAILING_RUN: usize = 4;
+
+pub(crate) const TOKENIZER: &str = "tokenizer.json";
+
+pub(crate) fn load_hf_tokenizer(dir: &Path) -> Result<HfTokenizer, TranslateError> {
+    let mut tokenizer = HfTokenizer::from_file(dir.join(TOKENIZER))
+        .map_err(|e| TranslateError::ModelLoad(format!("{}/{}：{e}", dir.display(), TOKENIZER)))?;
+    tokenizer.disable_spacial_token();
+    Ok(tokenizer)
+}
+
+pub(crate) fn warm_text(source_lang: &str) -> &'static str {
+    match base_lang(source_lang) {
+        "zh" => "你好",
+        "ja" => "こんにちは",
+        "ko" => "안녕하세요",
+        _ => "hello",
+    }
+}
+
+pub(crate) fn apply_zh_script(text: &str, zh_script: Option<ZhScript>) -> String {
+    match zh_script {
+        Some(ZhScript::Simplified) => script::to_simplified(text),
+        Some(ZhScript::Traditional) => script::to_traditional(text),
+        None => text.to_string(),
+    }
+}
 
 pub fn check_model_dir(dir: &Path, files: &[&str]) -> Result<(), TranslateError> {
     let remedy = tr(Key::TranslateRemedyFetchMt);
@@ -133,6 +162,20 @@ impl TranslateCaps {
         offline: true,
         typical_latency_ms: 500,
     };
+
+    pub const LOCAL_LMT_FAST: Self = Self::LOCAL_MULTILINGUAL;
+
+    pub const LOCAL_LMT_HIGH: Self = Self {
+        incremental: false,
+        offline: true,
+        typical_latency_ms: 1500,
+    };
+}
+
+pub(crate) fn mt_threads() -> usize {
+    std::thread::available_parallelism()
+        .map(|n| (n.get() / 2).clamp(2, 4))
+        .unwrap_or(2)
 }
 
 pub trait Translator: Send {
@@ -148,6 +191,12 @@ pub trait Translator: Send {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn mt_threads_stays_within_bounds() {
+        let n = mt_threads();
+        assert!((2..=4).contains(&n), "MT 线程数越界：{n}");
+    }
 
     #[test]
     fn catches_unk_from_wrong_direction() {

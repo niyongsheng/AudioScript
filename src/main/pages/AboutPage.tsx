@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useStore } from '@/main/store'
 import { useI18n } from '@/shared/i18n'
 import { formatCmdError, type ModelsList, modelsList, openRepo, openSponsor, openUrl } from '@/shared/ipc'
+import { SITE_URL } from '@/shared/links'
 import { modelTitle } from '@/shared/models'
 import { ModelKind, TaskStatus } from '@/shared/types'
 import { Button } from '@/ui/Button'
@@ -9,8 +10,6 @@ import { Icon } from '@/ui/Icon'
 import { Page } from '@/ui/Page'
 import { ProgressBar } from '@/ui/ProgressBar'
 import { SettingsGroup, SettingsRow } from '@/ui/Settings'
-
-const SITE_URL = 'https://audioscript.looplooptech.com/'
 
 function afdianBadge(label: string): string {
   return `https://img.shields.io/badge/${encodeURIComponent(label)}-Afdian-946ce6?style=for-the-badge&logo=github&logoColor=white`

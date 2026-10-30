@@ -388,7 +388,10 @@ pub fn missing_mt_files(root: &Path, entry: &CatalogEntry) -> Result<Vec<String>
         .as_ref()
         .ok_or_else(|| tf(Key::PathCatalogMt, &[&entry.id]))?;
 
-    if entry.mt_format() == Some(catalog::MtFormat::Nllb) {
+    if matches!(
+        entry.mt_format(),
+        Some(catalog::MtFormat::Nllb | catalog::MtFormat::Lmt)
+    ) {
         let missing = req
             .files
             .iter()

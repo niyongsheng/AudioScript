@@ -269,19 +269,24 @@ pub trait AsrEngine: Send {
 
 | 引擎 | 体积 | 分发方式 |
 |---|---|---|
-| `local-streaming` 小模型 | 58 MB | **内置**，首次启动零网络、零配置 |
-| `local-streaming` 高精度 | 190 MB | 可选下载（带进度与校验） |
+| `local-streaming` 轻量版 | 58 MB | **内置**，首次启动零网络、零配置 |
+| `x-asr` | 162 MB | 可选下载（中英流式，带标点，480ms 分块） |
+| `local-streaming` 高精度版 | 190 MB | 可选下载（带进度与校验） |
+| `nemotron` | 651 MB | 可选下载（40 语言流式，带标点） |
 | `qwen3` | 972 MB | 可选下载（离线，句末出字） |
 | `mac-native` | 无 | macOS 26+ 系统语音资产 |
 | `local-whisper` / `remote-api` | — | V0.2 |
 
 约束：
 
-- **int8 只在 encoder / joiner 上用，decoder MUST 保持 fp32**——解码器量化对准确率的伤害不成比例。
+- **int8 只在 encoder / joiner 上用，decoder MUST 保持 fp32**——解码器量化对准确率的伤害不成比例。例外：Nemotron 官方归档只提供 int8 decoder，MUST 按归档使用；不得把该例外推广到其他模型。
+- **X-ASR 仍是 en/zh 双语流式**：zipformer2 transducer，480ms 分块，自带标点与大小写；MUST 保持 decoder fp32，MUST NOT 因标点输出而改变 `SegmentBuilder` 的 partial/final 语义。
+- **Nemotron 必须按流设置语言**：由 catalog 的 `required.asr.streamLanguage` 声明，`asr/streaming.rs` 据此调用 `OnlineStream::set_option("language", <base>)` 传入源语言；中文与中英混说质量显著低于 X-ASR，MUST NOT 把它作为 zh-en 默认档。
 - **Qwen3-ASR 是离线模型**：用 Silero VAD 切句，只输出 final，MUST NOT 声称提供逐字 partial；识别跑在启动时预创建的离线线程上，MUST NOT 阻塞音频采集线程。
-- **下载后 MUST 剪裁**（`scripts/fetch-model.mjs`）：官方包里的 fp32 权重、chunk-size 变体、`test_wavs/` 全用不到，而 `bundle.resources` 是整目录复制。剪裁规则与 `asr/streaming.rs` 的 `Precision` 耦合，改一处必须同步改另一处。
+- **下载后 MUST 剪裁**（运行时 `models/extract.rs`，维护者脚本 `scripts/fetch-model.mjs`）：官方包里的 fp32 权重、chunk-size 变体、`test_wavs/` 全用不到，而 `bundle.resources` 是整目录复制。剪裁方案只有 `sherpa-asr-mixed-int8`（encoder/joiner int8、decoder fp32）与 `sherpa-asr-all-int8`（三者均 int8，仅 Nemotron 使用）；剪裁规则在 `models/extract.rs`，`asr/streaming.rs` 按 catalog 的 `required.asr.encoder/decoder/joiner` 选权重，两处 MUST 与 catalog 声明一致。
 - **模型文件 MUST NOT 提交进 git**；`src-tauri/assets/models/` 目录本身 MUST 进仓库（`.gitkeep`），否则 `bundle.resources` 在 `cargo check` 阶段就失败。
 - 内置模型 MUST 覆盖中英双语实时转写；模型切换 MUST NOT 要求重启应用；自定义模型路径 MUST 支持。
+- **X-ASR / Nemotron 正式启用前 MUST 做 10 分钟真实音频 A/B**：记录 WER/CER、首 partial 位置、峰值内存与 CPU；自报指标不能替代真实业务音频。
 - 可选模型下载位置 MUST 可在「模型」页更改（`modelsDir`）；下载、磁盘检查、删除与清理 MUST 跟随该目录，查找 MUST 先自定义目录、后默认应用数据目录，切换后旧目录中的模型仍可用。`AUDIOSCRIPT_MODEL_DIR` 只覆盖查找顺序，不改变下载位置。
 - 构建依赖外部下载步骤：CI MUST 加缓存，且首次跑通前 MUST NOT 写进发布流程。
 
@@ -330,17 +335,21 @@ pub trait Translator: Send {
 |---|---|---|
 | `opus-mt-{en-zh,zh-en}` 转 CT2 **int8** | 每方向 82 MB | en→zh Apache-2.0；zh→en CC-BY-4.0（**MUST 署名**） |
 | 可选 `nllb-200-distilled-600M` 转 CT2 **int8** | 下载 558 MB / 安装 616 MB | **CC-BY-NC-4.0**，仅限非商业用途，**MUST 在模型页展示** |
+| 可选 `NiuTrans/LMT-60-0.6B` 转 CT2 **int8** | 下载 513 MB / 安装 585 MB | **Apache-2.0** |
+| 可选 `NiuTrans/LMT-60-1.7B` 转 CT2 **int8** | 下载 1.43 GB / 安装 1.62 GB | **Apache-2.0** |
 
 约束：
 
 - **NLLB 的语言 token 是硬约束**：`encode` MUST 前置 NLLB 语言码（`zho_Hans` / `zho_Hant` / `yue_Hant` / `eng_Latn` …）、追加 `</s>`；解码 MUST 走 `translate_batch_with_target_prefix`。
+- **LMT 的 chat 模板是硬约束**：prompt MUST 为 `Translate the following text from {source} into {target}:` + `{source}: {text}` + `{target}:`，并包在 `<|im_start|>user … <|im_end|>\n<|im_start|>assistant\n` 里；解码 MUST 用 `ct2rs::Generator` 并关闭 `include_prompt_in_result`。
 - **MUST 用官方 `tokenizer.json`**（`HfTokenizer` 关闭后处理特殊 token），MUST NOT 自建 sentencepiece 词表。
-- 只有 `Qwen3-ASR + mt-multilingual` 组合放开非 en/zh 的源语言；Zipformer / OPUS-MT 仍限 en/zh。
-- 模型可选下载，MUST NOT 打进安装包；运行时按 `mtModelTier` 选择 `base` 或 `multilingual`。
+- 只有 `Qwen3-ASR` / `Nemotron` 配合 `mt-multilingual` / `lmt-fast` / `lmt-high`（或系统翻译）才放开非 en/zh 的源语言；X-ASR / Zipformer / OPUS-MT 仍限 en/zh。可选源语言 MUST 取所选 ASR 与 MT 模型 `languages` 的交集，`Preferences::sanitized` 与启动校验 MUST 与 catalog 声明一致。
+- LMT 官方只覆盖 En↔X 与 Zh↔X 的 234 个方向；非中英方向为 best effort，不保证质量；`mk` 不在训练语言内，MUST NOT 在 LMT 档展示该语言。
+- 模型可选下载，MUST NOT 打进安装包；运行时按 `mtModelTier` 选择 `base` / `multilingual` / `lmt-fast` / `lmt-high`。
 
 **macOS 26+ 系统翻译**（`mac-translation`）走 `Translation.framework`，默认 `.lowLatency`；仅 macOS 26+ 展示该选项，语言包由系统设置管理，应用 MUST NOT 尝试静默下载。目标语言 MUST 从运行时 `LanguageAvailability.supportedLanguages` 读取，MUST NOT 写死列表。
 
-**简繁方向**：内置 OPUS-MT 只覆盖简体 ↔ 英语，繁体靠 OpenCC 规则补齐；NLLB 直接用 `zho_Hans` / `zho_Hant`。两条路径 MUST 统一走 `translate::script`，原文与译文 MUST 使用同一种用字。
+**简繁方向**：内置 OPUS-MT 只覆盖简体 ↔ 英语，繁体靠 OpenCC 规则补齐；NLLB 直接用 `zho_Hans` / `zho_Hant`；LMT 用 `Chinese` prompt 输出简体，再走规则转换。三条路径 MUST 统一走 `translate::script`，原文与译文 MUST 使用同一种用字。
 
 三条实现硬规则（违反都会导致**静默的**无限重复输出，而非报错）：
 

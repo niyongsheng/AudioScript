@@ -12,19 +12,25 @@ import {
   CpuChipIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
+  EyeIcon,
+  EyeSlashIcon,
   FolderOpenIcon,
   HeartIcon,
   InformationCircleIcon,
   LanguageIcon,
+  LockClosedIcon,
+  LockOpenIcon,
   MicrophoneIcon,
   PaintBrushIcon,
   PlayIcon,
   ShieldCheckIcon,
+  SignalSlashIcon,
   SparklesIcon,
   SpeakerWaveIcon,
   Square2StackIcon,
   StopIcon,
   SwatchIcon,
+  TrashIcon,
   WindowIcon,
   XMarkIcon,
 } from '@heroicons/react/24/outline'
@@ -53,11 +59,17 @@ export type IconName =
   | 'swatch'
   | 'border'
   | 'shield'
+  | 'wifiOff'
+  | 'eye'
+  | 'eyeOff'
+  | 'lock'
+  | 'unlock'
   | 'sparkle'
   | 'flow'
   | 'github'
   | 'heart'
   | 'download'
+  | 'trash'
   | 'arrowRight'
   | 'chevron'
   | 'chevronDown'
@@ -113,11 +125,17 @@ const ICONS: Record<IconName, IconComponent> = {
   swatch: SwatchIcon,
   border: Square2StackIcon,
   shield: ShieldCheckIcon,
+  wifiOff: SignalSlashIcon,
+  eye: EyeIcon,
+  eyeOff: EyeSlashIcon,
+  lock: LockClosedIcon,
+  unlock: LockOpenIcon,
   sparkle: SparklesIcon,
   flow: ArrowPathRoundedSquareIcon,
   github: GitHubGlyph,
   heart: HeartIcon,
   download: ArrowDownTrayIcon,
+  trash: TrashIcon,
   arrowRight: ArrowRightIcon,
   chevron: ChevronRightIcon,
   chevronDown: ChevronDownIcon,

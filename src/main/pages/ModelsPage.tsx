@@ -15,7 +15,9 @@ import {
   modelDownload,
   modelOpenDir,
   modelRemove,
+  openUrl,
 } from '@/shared/ipc'
+import { MODEL_DOWNLOAD_URL } from '@/shared/links'
 import { formatBytes, modelLanguageLabel, modelStatusBadge, modelTitle } from '@/shared/models'
 import { ModelKind, TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
@@ -34,6 +36,29 @@ const PHASE_KEYS: Record<ModelPhase, MessageKey> = {
   [ModelPhase.Done]: 'models.phaseDone',
   [ModelPhase.Cancelled]: 'models.phaseCancelled',
   [ModelPhase.Failed]: 'models.phaseFailed',
+}
+
+function InlineModelPackLink({ text, label, onOpen }: { text: string; label: string; onOpen: () => void }) {
+  const at = text.indexOf(label)
+  const link = (
+    <button type="button" className="text-[var(--color-accent)] underline underline-offset-2" onClick={onOpen}>
+      {label}
+    </button>
+  )
+  if (at < 0) {
+    return (
+      <>
+        {text} {link}
+      </>
+    )
+  }
+  return (
+    <>
+      {text.slice(0, at)}
+      {link}
+      {text.slice(at + label.length)}
+    </>
+  )
 }
 
 export function ModelsPage() {
@@ -241,7 +266,6 @@ export function ModelsPage() {
               ) : (
                 t('models.noStorage')
               )}
-              <span className="mt-0.5 block">{t('models.storageHint')}</span>
             </span>
           }
           control={
@@ -265,8 +289,18 @@ export function ModelsPage() {
       </SettingsGroup>
 
       <p className="px-1 text-[var(--color-ink-2)] text-[0.7rem] leading-relaxed">
-        {connected ? t('models.needsNetwork') : t('models.noStorage')}
-        <span className="ml-1">{t('models.switchHint')}</span>
+        {connected ? (
+          <>
+            <Icon name="wifiOff" size={12} className="mr-1 inline-block align-[-0.125em]" />
+            <InlineModelPackLink
+              text={t('models.needsNetwork')}
+              label={t('models.needsNetworkLink')}
+              onOpen={() => void openUrl(MODEL_DOWNLOAD_URL).catch((e) => setError(formatCmdError(e)))}
+            />
+          </>
+        ) : (
+          t('models.noStorage')
+        )}
         {connected && (
           <button type="button" className="ml-1 underline underline-offset-2" onClick={openModelsDir}>
             {t('models.openDir')}
@@ -338,9 +372,6 @@ function ModelRow({
           {!model.bundled && model.installed && !model.complete && t('models.incomplete')}
           {model.bundled && !model.complete && t('models.bundledMissing')}
           {!model.bundled && !model.downloadable && t('models.notPublished')}
-          {!model.bundled && model.installed && model.path && (
-            <span className="mt-0.5 block break-all font-mono text-[0.65rem] opacity-80">{model.path}</span>
-          )}
         </span>
       }
       control={
@@ -378,7 +409,7 @@ function ModelRow({
               {canDelete &&
                 (confirmRemove ? (
                   <>
-                    <Button size="sm" variant="danger" onClick={onRemove} disabled={busy}>
+                    <Button size="sm" variant="danger" icon="trash" onClick={onRemove} disabled={busy}>
                       {t('common.confirmDelete')}
                     </Button>
                     <Button size="sm" variant="ghost" onClick={onCancelRemove}>
@@ -386,7 +417,7 @@ function ModelRow({
                     </Button>
                   </>
                 ) : (
-                  <Button size="sm" variant="danger" onClick={onRemove} disabled={busy}>
+                  <Button size="sm" variant="danger" icon="trash" onClick={onRemove} disabled={busy}>
                     {t('common.delete')}
                   </Button>
                 ))}

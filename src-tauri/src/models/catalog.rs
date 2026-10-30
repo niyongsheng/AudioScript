@@ -4,7 +4,7 @@ use std::sync::OnceLock;
 use serde::Deserialize;
 
 use super::ModelKind;
-use crate::config::{AsrModelTier, MtModelTier};
+use crate::config::{base_lang, AsrModelTier, MtModelTier};
 use crate::i18n::{tr, Key};
 
 #[derive(Debug, Deserialize)]
@@ -85,6 +85,8 @@ pub struct AsrRequired {
     #[serde(default)]
     pub tokenizer_dir: Option<String>,
     #[serde(default)]
+    pub stream_language: bool,
+    #[serde(default)]
     pub files: Vec<String>,
 }
 
@@ -94,6 +96,7 @@ pub enum MtFormat {
     #[default]
     Marian,
     Nllb,
+    Lmt,
 }
 
 #[derive(Debug, Deserialize)]
@@ -190,13 +193,22 @@ impl CatalogEntry {
         self.asr_format().map(|f| f == AsrFormat::Transducer)
     }
 
+    pub fn supports_language(&self, lang: &str) -> bool {
+        let base = base_lang(lang);
+        self.languages.iter().any(|language| language == base)
+    }
+
     pub fn localized_title(&self) -> &str {
         let key = match self.id.as_str() {
             "asr-builtin" => Some(Key::ModelAsrBuiltinTitle),
             "asr-high-accuracy" => Some(Key::ModelAsrHighTitle),
+            "asr-x-asr" => Some(Key::ModelAsrXAsrTitle),
+            "asr-nemotron" => Some(Key::ModelAsrNemotronTitle),
             "asr-qwen3" => Some(Key::ModelAsrQwen3Title),
             "mt-base" => Some(Key::ModelMtBaseTitle),
             "mt-multilingual" => Some(Key::ModelMtMultilingualTitle),
+            "mt-lmt-fast" => Some(Key::ModelMtLmtFastTitle),
+            "mt-lmt-high" => Some(Key::ModelMtLmtHighTitle),
             _ => None,
         };
         match key {
@@ -272,6 +284,15 @@ pub fn validate(c: &Catalog) -> Result<(), String> {
                     if asr.encoder.is_none() || asr.decoder.is_none() || asr.joiner.is_none() {
                         return Err(format!("模型 {} 缺少 encoder/decoder/joiner", m.id));
                     }
+                    for (role, value) in [
+                        ("encoder", &asr.encoder),
+                        ("decoder", &asr.decoder),
+                        ("joiner", &asr.joiner),
+                    ] {
+                        if !matches!(value.as_deref(), Some("int8" | "fp32")) {
+                            return Err(format!("模型 {} 的 {role} 精度必须是 int8 或 fp32", m.id));
+                        }
+                    }
                 }
                 AsrFormat::Qwen3Asr => {
                     if asr.conv_frontend.is_none()
@@ -300,12 +321,29 @@ pub fn validate(c: &Catalog) -> Result<(), String> {
                     m.id
                 ));
             }
+            if mt.format == MtFormat::Lmt {
+                for required in [
+                    "model.bin",
+                    "tokenizer.json",
+                    "config.json",
+                    "vocabulary.json",
+                ] {
+                    if !mt.files.iter().any(|f| f == required) {
+                        return Err(format!("模型 {} 的 LMT 条目必须声明 {required}", m.id));
+                    }
+                }
+            }
         }
         if m.multilingual && m.languages.is_empty() {
             return Err(format!("多语言模型 {} 必须声明 languages", m.id));
         }
         if let Some(code) = m.languages.iter().find(|code| !is_language_code(code)) {
             return Err(format!("模型 {} 的语言代码无效：{code}", m.id));
+        }
+        if let Some(profile) = &m.prune_profile {
+            if crate::models::extract::PruneProfile::parse(profile).is_none() {
+                return Err(format!("模型 {} 的剪裁方案未知：{profile}", m.id));
+            }
         }
         if let Some(archive) = &m.archive {
             if !archive.url.starts_with("https://") {
@@ -327,6 +365,8 @@ pub fn validate(c: &Catalog) -> Result<(), String> {
     for (kind, tier) in [
         (ModelKind::Asr, "builtin"),
         (ModelKind::Asr, "high-accuracy"),
+        (ModelKind::Asr, "x-asr"),
+        (ModelKind::Asr, "nemotron"),
         (ModelKind::Asr, "qwen3"),
         (ModelKind::Mt, "base"),
         (ModelKind::Mt, "multilingual"),
@@ -364,26 +404,47 @@ mod tests {
             asr_entry(AsrModelTier::HighAccuracy).id,
             "asr-high-accuracy"
         );
+        assert_eq!(asr_entry(AsrModelTier::XAsr).id, "asr-x-asr");
+        assert_eq!(asr_entry(AsrModelTier::Nemotron).id, "asr-nemotron");
         assert_eq!(asr_entry(AsrModelTier::Qwen3).id, "asr-qwen3");
         assert_eq!(mt_entry(MtModelTier::Base).id, "mt-base");
         assert_eq!(mt_entry(MtModelTier::Multilingual).id, "mt-multilingual");
+        assert_eq!(mt_entry(MtModelTier::LmtFast).id, "mt-lmt-fast");
+        assert_eq!(mt_entry(MtModelTier::LmtHigh).id, "mt-lmt-high");
     }
 
     #[test]
     fn asr_entries_report_streaming() {
         assert_eq!(entry("asr-builtin").unwrap().streaming(), Some(true));
         assert_eq!(entry("asr-high-accuracy").unwrap().streaming(), Some(true));
+        assert_eq!(entry("asr-x-asr").unwrap().streaming(), Some(true));
+        assert_eq!(entry("asr-nemotron").unwrap().streaming(), Some(true));
         assert_eq!(entry("asr-qwen3").unwrap().streaming(), Some(false));
         assert_eq!(mt_entry(MtModelTier::Base).streaming(), None);
         assert_eq!(mt_entry(MtModelTier::Multilingual).streaming(), None);
+        assert_eq!(mt_entry(MtModelTier::LmtFast).streaming(), None);
+        assert_eq!(mt_entry(MtModelTier::LmtHigh).streaming(), None);
+    }
+
+    #[test]
+    fn nemotron_uses_the_all_int8_prune_profile() {
+        let entry = entry("asr-nemotron").unwrap();
+        assert_eq!(entry.prune_profile.as_deref(), Some("sherpa-asr-all-int8"));
+        let asr = entry.required.asr.as_ref().unwrap();
+        assert_eq!(asr.decoder.as_deref(), Some("int8"));
+        assert!(
+            asr.stream_language,
+            "Nemotron 必须在 catalog 声明按流设置语言"
+        );
     }
 
     #[test]
     fn bilingual_entries_declare_languages() {
-        for id in ["asr-builtin", "asr-high-accuracy", "mt-base"] {
+        for id in ["asr-builtin", "asr-high-accuracy", "asr-x-asr", "mt-base"] {
             let entry = entry(id).unwrap();
             assert_eq!(entry.languages, ["zh", "en"], "{id} 缺少中英语言声明");
         }
+        assert!(entry("asr-nemotron").unwrap().multilingual);
     }
 
     #[test]

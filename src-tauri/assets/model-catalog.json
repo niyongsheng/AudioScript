@@ -5,7 +5,7 @@
       "id": "asr-builtin",
       "kind": "asr",
       "tier": "builtin",
-      "title": "Zipformer 小模型",
+      "title": "Zipformer 轻量版",
       "description": "中英双语流式识别，随应用分发，开箱即用。",
       "bundled": true,
       "downloadable": false,
@@ -34,10 +34,51 @@
       "sourceUrl": "https://github.com/k2-fsa/sherpa-onnx"
     },
     {
+      "id": "asr-x-asr",
+      "kind": "asr",
+      "tier": "x-asr",
+      "title": "X-ASR 轻量版",
+      "description": "中英混说流式识别，带标点与大小写，480ms 分块。",
+      "bundled": false,
+      "downloadable": true,
+      "languages": ["zh", "en"],
+      "install": {
+        "dir": "asr-x-asr",
+        "archiveRoot": "sherpa-onnx-x-asr-480ms-streaming-zipformer-transducer-zh-en-punct-int8-2026-06-05"
+      },
+      "required": {
+        "asr": {
+          "encoder": "int8",
+          "decoder": "fp32",
+          "joiner": "int8",
+          "files": ["tokens.txt"]
+        }
+      },
+      "archive": {
+        "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-x-asr-480ms-streaming-zipformer-transducer-zh-en-punct-int8-2026-06-05.tar.bz2",
+        "format": "tar-bz2",
+        "sha256": "fa5f63d618e5a01526e275a358bb7772e403f84808a4769fba52cffd8160bf74",
+        "sizeBytes": 133895136,
+        "maxExtractedBytes": 200000000
+      },
+      "pruneProfile": "sherpa-asr-mixed-int8",
+      "sizes": { "installedBytes": 169347218 },
+      "licenses": [
+        {
+          "component": "X-ASR-zh-en (sherpa-onnx int8 export)",
+          "license": "Apache-2.0",
+          "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+          "requiresAttribution": false,
+          "attribution": "GilgameshWind / X-ASR"
+        }
+      ],
+      "sourceUrl": "https://huggingface.co/GilgameshWind/X-ASR-zh-en"
+    },
+    {
       "id": "asr-high-accuracy",
       "kind": "asr",
       "tier": "high-accuracy",
-      "title": "Zipformer 高精度",
+      "title": "Zipformer 高精度版",
       "description": "更大的双语流式模型，识别更准，占用更多内存与 CPU。",
       "bundled": false,
       "downloadable": true,
@@ -75,10 +116,57 @@
       "sourceUrl": "https://github.com/k2-fsa/sherpa-onnx"
     },
     {
+      "id": "asr-nemotron",
+      "kind": "asr",
+      "tier": "nemotron",
+      "title": "Nemotron 3.5 通用版",
+      "description": "40 语言流式识别（32 种开箱可用），带标点；中英混说请用 X-ASR。",
+      "bundled": false,
+      "downloadable": true,
+      "multilingual": true,
+      "languages": [
+        "en", "es", "fr", "it", "pt", "nl", "de", "tr", "ru", "ar",
+        "hi", "ja", "ko", "vi", "uk", "pl", "sv", "cs", "nb", "da",
+        "bg", "fi", "hr", "sk", "zh", "hu", "ro", "et"
+      ],
+      "install": {
+        "dir": "asr-nemotron",
+        "archiveRoot": "sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11"
+      },
+      "required": {
+        "asr": {
+          "encoder": "int8",
+          "decoder": "int8",
+          "joiner": "int8",
+          "streamLanguage": true,
+          "files": ["tokens.txt"]
+        }
+      },
+      "archive": {
+        "url": "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemotron-3.5-asr-streaming-0.6b-560ms-int8-2026-06-11.tar.bz2",
+        "format": "tar-bz2",
+        "sha256": "c6bf5e0df765f9d5b43bc9e0536d4b4b3e7d40bdf5ecf13e45f134c51c05ae3a",
+        "sizeBytes": 475271763,
+        "maxExtractedBytes": 800000000
+      },
+      "pruneProfile": "sherpa-asr-all-int8",
+      "sizes": { "installedBytes": 682215356 },
+      "licenses": [
+        {
+          "component": "NVIDIA Nemotron-3.5-ASR-Streaming-0.6B (ONNX export by k2-fsa/sherpa-onnx)",
+          "license": "OpenMDW-1.1",
+          "licenseUrl": "https://openmdw.ai/license/1-1/",
+          "requiresAttribution": true,
+          "attribution": "NVIDIA Nemotron"
+        }
+      ],
+      "sourceUrl": "https://huggingface.co/nvidia/nemotron-3.5-asr-streaming-0.6b"
+    },
+    {
       "id": "asr-qwen3",
       "kind": "asr",
       "tier": "qwen3",
-      "title": "Qwen3-ASR 高精度",
+      "title": "Qwen3-ASR 高精度版",
       "description": "0.6B 多语言离线识别，句末出字；下载与内存占用较大。",
       "bundled": false,
       "downloadable": true,
@@ -218,6 +306,106 @@
         }
       ],
       "sourceUrl": "https://huggingface.co/facebook/nllb-200-distilled-600M"
+    },
+    {
+      "id": "mt-lmt-fast",
+      "kind": "mt",
+      "tier": "lmt-fast",
+      "title": "LMT-60 快速版",
+      "description": "60 种语言互译，中英优先；体积小、延迟低，需单独下载。",
+      "bundled": false,
+      "downloadable": true,
+      "multilingual": true,
+      "languages": [
+        "zh", "en", "yue", "ar", "de", "fr", "es", "pt", "id", "it",
+        "ko", "ru", "th", "vi", "ja", "tr", "hi", "ms", "nl", "sv",
+        "da", "fi", "pl", "cs", "fil", "fa", "el", "hu", "ro"
+      ],
+      "install": {
+        "dir": "mt-lmt-fast",
+        "archiveRoot": "lmt-60-0.6B-ct2-int8"
+      },
+      "required": {
+        "mt": {
+          "format": "lmt",
+          "files": ["model.bin", "tokenizer.json", "config.json", "vocabulary.json"]
+        }
+      },
+      "archive": {
+        "url": "https://github.com/niyongsheng/AudioScript/releases/download/models-v1/lmt-60-0.6B-ct2-int8.tar.gz",
+        "format": "tar-gz",
+        "sha256": "a95fb9a70de21e74f21c5adcd3370859ebbdbafd1b9bdf98bcf079c58b051276",
+        "sizeBytes": 538221053,
+        "maxExtractedBytes": 674768130
+      },
+      "sizes": { "installedBytes": 613425573 },
+      "licenses": [
+        {
+          "component": "NiuTrans/LMT-60-0.6B (CTranslate2 int8)",
+          "license": "Apache-2.0",
+          "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+          "requiresAttribution": false,
+          "attribution": "NiuTrans LMT"
+        },
+        {
+          "component": "CTranslate2 conversion",
+          "license": "MIT",
+          "licenseUrl": "https://github.com/OpenNMT/CTranslate2/blob/master/LICENSE",
+          "requiresAttribution": false,
+          "attribution": "OpenNMT / CTranslate2"
+        }
+      ],
+      "sourceUrl": "https://huggingface.co/NiuTrans/LMT-60-0.6B"
+    },
+    {
+      "id": "mt-lmt-high",
+      "kind": "mt",
+      "tier": "lmt-high",
+      "title": "LMT-60 高精度",
+      "description": "60 种语言互译，中英优先；质量更高但体积和延迟更大，需单独下载。",
+      "bundled": false,
+      "downloadable": true,
+      "multilingual": true,
+      "languages": [
+        "zh", "en", "yue", "ar", "de", "fr", "es", "pt", "id", "it",
+        "ko", "ru", "th", "vi", "ja", "tr", "hi", "ms", "nl", "sv",
+        "da", "fi", "pl", "cs", "fil", "fa", "el", "hu", "ro"
+      ],
+      "install": {
+        "dir": "mt-lmt-high",
+        "archiveRoot": "lmt-60-1.7B-ct2-int8"
+      },
+      "required": {
+        "mt": {
+          "format": "lmt",
+          "files": ["model.bin", "tokenizer.json", "config.json", "vocabulary.json"]
+        }
+      },
+      "archive": {
+        "url": "https://github.com/niyongsheng/AudioScript/releases/download/models-v1/lmt-60-1.7B-ct2-int8.tar.gz",
+        "format": "tar-gz",
+        "sha256": "bddfe3807867a8d4d7ccc0b049459110b5489c03437fc9bb9e0588e023b39458",
+        "sizeBytes": 1535201703,
+        "maxExtractedBytes": 1912819151
+      },
+      "sizes": { "installedBytes": 1738926501 },
+      "licenses": [
+        {
+          "component": "NiuTrans/LMT-60-1.7B (CTranslate2 int8)",
+          "license": "Apache-2.0",
+          "licenseUrl": "https://www.apache.org/licenses/LICENSE-2.0",
+          "requiresAttribution": false,
+          "attribution": "NiuTrans LMT"
+        },
+        {
+          "component": "CTranslate2 conversion",
+          "license": "MIT",
+          "licenseUrl": "https://github.com/OpenNMT/CTranslate2/blob/master/LICENSE",
+          "requiresAttribution": false,
+          "attribution": "OpenNMT / CTranslate2"
+        }
+      ],
+      "sourceUrl": "https://huggingface.co/NiuTrans/LMT-60-1.7B"
     }
   ]
 }

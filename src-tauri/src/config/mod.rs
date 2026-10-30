@@ -1,6 +1,8 @@
 use serde::{Deserialize, Serialize};
 use typeshare::typeshare;
 
+use crate::models::catalog;
+
 #[typeshare]
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 #[serde(rename_all = "kebab-case")]
@@ -290,6 +292,8 @@ pub enum AsrModelTier {
     #[default]
     Builtin,
     HighAccuracy,
+    XAsr,
+    Nemotron,
     Qwen3,
 }
 
@@ -298,6 +302,8 @@ impl AsrModelTier {
         match self {
             Self::Builtin => "builtin",
             Self::HighAccuracy => "high-accuracy",
+            Self::XAsr => "x-asr",
+            Self::Nemotron => "nemotron",
             Self::Qwen3 => "qwen3",
         }
     }
@@ -306,6 +312,8 @@ impl AsrModelTier {
         match s {
             "builtin" => Some(Self::Builtin),
             "high-accuracy" => Some(Self::HighAccuracy),
+            "x-asr" => Some(Self::XAsr),
+            "nemotron" => Some(Self::Nemotron),
             "qwen3" => Some(Self::Qwen3),
             _ => None,
         }
@@ -319,6 +327,8 @@ pub enum MtModelTier {
     #[default]
     Base,
     Multilingual,
+    LmtFast,
+    LmtHigh,
 }
 
 impl MtModelTier {
@@ -326,6 +336,8 @@ impl MtModelTier {
         match self {
             Self::Base => "base",
             Self::Multilingual => "multilingual",
+            Self::LmtFast => "lmt-fast",
+            Self::LmtHigh => "lmt-high",
         }
     }
 
@@ -333,6 +345,8 @@ impl MtModelTier {
         match s {
             "base" => Some(Self::Base),
             "multilingual" => Some(Self::Multilingual),
+            "lmt-fast" => Some(Self::LmtFast),
+            "lmt-high" => Some(Self::LmtHigh),
             _ => None,
         }
     }
@@ -723,9 +737,8 @@ pub fn is_supported_source_lang(lang: &str) -> bool {
     matches!(lang, "en" | "zh")
 }
 
-fn multilingual_pair_allowed(engine: TranslateEngine, mt_tier: MtModelTier) -> bool {
-    engine == TranslateEngine::MacTranslation
-        || (engine == TranslateEngine::LocalNmt && mt_tier == MtModelTier::Multilingual)
+fn asr_supports_source(asr_engine: EngineType, asr_tier: AsrModelTier, lang: &str) -> bool {
+    asr_engine == EngineType::MacNative || catalog::asr_entry(asr_tier).supports_language(lang)
 }
 
 pub fn source_lang_allowed(
@@ -735,14 +748,14 @@ pub fn source_lang_allowed(
     mt_tier: MtModelTier,
     lang: &str,
 ) -> bool {
-    if lang == "auto" {
+    if lang == "auto" || !asr_supports_source(asr_engine, asr_tier, lang) {
         return false;
     }
-    let multilingual_asr = asr_engine == EngineType::MacNative || asr_tier == AsrModelTier::Qwen3;
-    if multilingual_asr && multilingual_pair_allowed(engine, mt_tier) {
-        return is_language_tag(lang);
+    match engine {
+        TranslateEngine::MacTranslation => is_language_tag(lang),
+        TranslateEngine::LocalNmt => catalog::mt_entry(mt_tier).supports_language(lang),
+        _ => is_supported_source_lang(lang),
     }
-    is_supported_source_lang(lang)
 }
 
 pub fn is_language_tag(value: &str) -> bool {
@@ -752,7 +765,7 @@ pub fn is_language_tag(value: &str) -> bool {
         })
 }
 
-fn base_lang(lang: &str) -> &str {
+pub(crate) fn base_lang(lang: &str) -> &str {
     lang.split('-').next().unwrap_or(lang)
 }
 
@@ -766,12 +779,12 @@ pub fn effective_target_lang<'a>(
     source_lang: &str,
     target_lang: &'a str,
 ) -> &'a str {
-    let multilingual = multilingual_pair_allowed(engine, mt_tier);
-    let supported = if multilingual {
-        is_language_tag(target_lang) && base_lang(target_lang) != base_lang(source_lang)
-    } else {
-        matches!(target_lang, "en" | "zh") && target_lang != source_lang
-    };
+    let supported = base_lang(target_lang) != base_lang(source_lang)
+        && match engine {
+            TranslateEngine::MacTranslation => is_language_tag(target_lang),
+            TranslateEngine::LocalNmt => catalog::mt_entry(mt_tier).supports_language(target_lang),
+            _ => matches!(target_lang, "en" | "zh"),
+        };
     if supported {
         target_lang
     } else {
@@ -901,7 +914,32 @@ mod tests {
     }
 
     #[test]
-    fn sanitize_keeps_multilingual_source_only_for_qwen3_mac() {
+    fn asr_tier_strings_roundtrip() {
+        for tier in [
+            AsrModelTier::Builtin,
+            AsrModelTier::HighAccuracy,
+            AsrModelTier::XAsr,
+            AsrModelTier::Nemotron,
+            AsrModelTier::Qwen3,
+        ] {
+            assert_eq!(AsrModelTier::parse(tier.as_str()), Some(tier));
+        }
+    }
+
+    #[test]
+    fn mt_tier_strings_roundtrip() {
+        for tier in [
+            MtModelTier::Base,
+            MtModelTier::Multilingual,
+            MtModelTier::LmtFast,
+            MtModelTier::LmtHigh,
+        ] {
+            assert_eq!(MtModelTier::parse(tier.as_str()), Some(tier));
+        }
+    }
+
+    #[test]
+    fn sanitize_keeps_multilingual_source_only_for_multilingual_asr() {
         let kept = Preferences {
             translate_engine: TranslateEngine::MacTranslation,
             asr_model_tier: AsrModelTier::Qwen3,
@@ -912,6 +950,16 @@ mod tests {
         .sanitized();
         assert_eq!(kept.source_lang, "ja");
 
+        let nemotron = Preferences {
+            translate_engine: TranslateEngine::MacTranslation,
+            asr_model_tier: AsrModelTier::Nemotron,
+            source_lang: "ja".into(),
+            target_lang: "zh".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(nemotron.source_lang, "ja");
+
         let streaming = Preferences {
             translate_engine: TranslateEngine::MacTranslation,
             source_lang: "ja".into(),
@@ -920,6 +968,16 @@ mod tests {
         }
         .sanitized();
         assert_eq!(streaming.source_lang, "en");
+
+        let x_asr = Preferences {
+            translate_engine: TranslateEngine::MacTranslation,
+            asr_model_tier: AsrModelTier::XAsr,
+            source_lang: "ja".into(),
+            target_lang: "zh".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(x_asr.source_lang, "en");
 
         let local = Preferences {
             translate_engine: TranslateEngine::LocalNmt,
@@ -941,6 +999,17 @@ mod tests {
         }
         .sanitized();
         assert_eq!(multilingual.source_lang, "ja");
+
+        let nemotron = Preferences {
+            translate_engine: TranslateEngine::LocalNmt,
+            asr_model_tier: AsrModelTier::Nemotron,
+            mt_model_tier: MtModelTier::Multilingual,
+            source_lang: "ja".into(),
+            target_lang: "zh".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(nemotron.source_lang, "ja");
     }
 
     #[test]
@@ -973,6 +1042,34 @@ mod tests {
             MtModelTier::Multilingual,
             "ja"
         ));
+        assert!(source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::Qwen3,
+            MtModelTier::LmtFast,
+            "ja"
+        ));
+        assert!(source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::Qwen3,
+            MtModelTier::LmtHigh,
+            "ja"
+        ));
+        assert!(source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::Nemotron,
+            MtModelTier::Multilingual,
+            "ja"
+        ));
+        assert!(!source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::XAsr,
+            MtModelTier::Multilingual,
+            "ja"
+        ));
         assert!(!source_lang_allowed(
             TranslateEngine::LocalNmt,
             EngineType::LocalStreaming,
@@ -1000,6 +1097,45 @@ mod tests {
             AsrModelTier::Builtin,
             MtModelTier::Base,
             "ja"
+        ));
+    }
+
+    #[test]
+    fn source_lang_allowed_uses_the_language_intersection() {
+        assert!(source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::Qwen3,
+            MtModelTier::LmtFast,
+            "th"
+        ));
+        assert!(!source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::Qwen3,
+            MtModelTier::LmtFast,
+            "mk"
+        ));
+        assert!(!source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::Nemotron,
+            MtModelTier::LmtFast,
+            "et"
+        ));
+        assert!(!source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::Nemotron,
+            MtModelTier::Multilingual,
+            "uk"
+        ));
+        assert!(source_lang_allowed(
+            TranslateEngine::LocalNmt,
+            EngineType::LocalStreaming,
+            AsrModelTier::Qwen3,
+            MtModelTier::LmtFast,
+            "zh-TW"
         ));
     }
 
@@ -1122,6 +1258,37 @@ mod tests {
         }
         .sanitized();
         assert_eq!(multilingual.target_lang, "ja");
+
+        assert_eq!(
+            effective_target_lang(TranslateEngine::LocalNmt, MtModelTier::LmtFast, "en", "th"),
+            "th"
+        );
+        assert_eq!(
+            effective_target_lang(TranslateEngine::LocalNmt, MtModelTier::LmtFast, "en", "uk"),
+            "zh"
+        );
+
+        let lmt_source = Preferences {
+            translate_engine: TranslateEngine::LocalNmt,
+            asr_model_tier: AsrModelTier::Qwen3,
+            mt_model_tier: MtModelTier::LmtFast,
+            source_lang: "mk".into(),
+            target_lang: "zh".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(lmt_source.source_lang, "en", "LMT 不支持的语言必须回退");
+
+        let lmt_target = Preferences {
+            translate_engine: TranslateEngine::LocalNmt,
+            asr_model_tier: AsrModelTier::Qwen3,
+            mt_model_tier: MtModelTier::LmtFast,
+            source_lang: "en".into(),
+            target_lang: "uk".into(),
+            ..Default::default()
+        }
+        .sanitized();
+        assert_eq!(lmt_target.target_lang, "zh", "LMT 不支持的译文语言必须回退");
     }
 
     #[test]

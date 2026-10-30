@@ -22,6 +22,9 @@
     "fetch:model:high": "node scripts/fetch-model.mjs --model high --print-catalog",
     "fetch:mt": "node scripts/fetch-mt-model.mjs",
     "fetch:mt:multi": "node scripts/fetch-mt-model.mjs --multilingual",
+    "fetch:mt:lmt": "node scripts/fetch-mt-model.mjs --lmt-fast",
+    "fetch:mt:lmt:high": "node scripts/fetch-mt-model.mjs --lmt-high",
+    "fetch:mt:lmt:all": "node scripts/fetch-mt-model.mjs --lmt-fast --lmt-high",
     "verify:models": "node scripts/verify-model-catalog.mjs",
     "prepare": "node scripts/fetch-model.mjs",
     "tauri": "tauri"

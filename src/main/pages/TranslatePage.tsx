@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { useStore } from '@/main/store'
 import { useModels } from '@/main/useModels'
 import { type MessageKey, useI18n } from '@/shared/i18n'
@@ -50,12 +50,6 @@ type TranslateFn = (key: MessageKey, vars?: Record<string, string | number>) => 
 function statusPart(model: ModelStatus, t: TranslateFn): string {
   if (model.complete) return t('models.installedSize', { size: formatBytes(model.installedBytes) })
   return t(modelStatusBadge(model).key)
-}
-
-const ASR_DESCRIPTION_KEYS: Record<string, MessageKey> = {
-  'asr-builtin': 'translate.asrEngineBuiltinDescription',
-  'asr-high-accuracy': 'translate.asrEngineHighDescription',
-  'asr-qwen3': 'translate.asrEngineQwen3Description',
 }
 
 function modelSubtitle(model: ModelStatus, t: TranslateFn): string {
@@ -119,14 +113,23 @@ export function TranslatePage() {
     () => multilingualChoices(selectedMtModel?.languages ?? [], displayName),
     [selectedMtModel, displayName],
   )
+  const asrLanguages = useMemo(() => {
+    if (asrEngine === EngineType.MacNative || !selectedAsrModel?.multilingual) return null
+    return new Set(selectedAsrModel.languages)
+  }, [asrEngine, selectedAsrModel])
+  const withinAsr = useCallback(
+    (languages: readonly LanguageChoice[]) =>
+      asrLanguages ? languages.filter((language) => asrLanguages.has(language.backend)) : languages,
+    [asrLanguages],
+  )
   const multilingualAsr = selectedAsrModel?.multilingual === true
   const multilingualMt = selectedMtModel?.multilingual === true
   const targetCatalog = targetLanguagesFor(translateEngine, appleChoices, multilingualMt ? multilingualCatalog : [])
   const sourceCatalog = sourceLanguagesFor(
     translateEngine,
     multilingualAsr || asrEngine === EngineType.MacNative,
-    appleChoices,
-    multilingualMt ? multilingualCatalog : [],
+    withinAsr(appleChoices),
+    multilingualMt ? withinAsr(multilingualCatalog) : [],
   )
 
   const localModelOptions = (list: ModelStatus[], subtitle: (model: ModelStatus) => string) =>
@@ -148,10 +151,7 @@ export function TranslatePage() {
     : []
 
   const asrOptions = models
-    ? [
-        ...localModelOptions(models.asr, (model) => `${t('translate.asrEngineLocal')} · ${modelSubtitle(model, t)}`),
-        ...macAsrOption,
-      ]
+    ? [...localModelOptions(models.asr, (model) => modelSubtitle(model, t)), ...macAsrOption]
     : [
         {
           value: EngineType.LocalStreaming,
@@ -247,11 +247,7 @@ export function TranslatePage() {
   const macNative = asrEngine === EngineType.MacNative
   const asrValue = macNative ? EngineType.MacNative : selectedAsr ? `local:${selectedAsr}` : EngineType.LocalStreaming
   const segmentationDisabled = capturing || macNative || selectedAsrModel?.streaming === false
-  const asrDescription = macNative
-    ? t('translate.asrEngineMacDescription')
-    : selectedAsrModel
-      ? t(ASR_DESCRIPTION_KEYS[selectedAsrModel.id] ?? 'translate.asrEngineDescription')
-      : t('translate.asrEngineDescription')
+  const asrDescription = macNative ? t('translate.asrEngineMacDescription') : t('translate.asrEngineDescription')
 
   async function changeModel(id: string): Promise<boolean> {
     try {
@@ -313,8 +309,8 @@ export function TranslatePage() {
     const nextSources = sourceLanguagesFor(
       engine,
       multilingualAsr || asrEngine === EngineType.MacNative,
-      appleChoices,
-      multilingual,
+      withinAsr(appleChoices),
+      withinAsr(multilingual),
     )
     const source =
       languageById(languageIdFor(sourceLang, zhScript, nextSources), nextSources) ??

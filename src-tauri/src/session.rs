@@ -54,6 +54,9 @@ fn create_translator(
                 Some(catalog::MtFormat::Nllb) => {
                     Box::new(crate::translate::nllb::NllbTranslator::new(resolved.path))
                 }
+                Some(catalog::MtFormat::Lmt) => Box::new(
+                    crate::translate::lmt::LmtTranslator::new(resolved.path, cfg.mt_model_tier),
+                ),
                 None => return Err(tf(Key::TranslateEngineNotWired, &[&entry.id])),
             }
         }
@@ -600,7 +603,7 @@ pub fn start(
 
             let engine: Box<dyn AsrEngine> = match asr_entry.asr_format() {
                 Some(catalog::AsrFormat::Transducer) => {
-                    Box::new(crate::asr::streaming::StreamingAdapter::new())
+                    Box::new(crate::asr::streaming::StreamingAdapter::new(asr_entry))
                 }
                 Some(catalog::AsrFormat::Qwen3Asr) => {
                     let vad = paths::vad_model_path(&roots)

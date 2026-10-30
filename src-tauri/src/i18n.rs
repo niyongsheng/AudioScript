@@ -535,31 +535,51 @@ messages! {
         es: "El modelo «{0}» no está instalado o está incompleto. Descárguelo primero."
     },
     ModelAsrBuiltinTitle {
-        zh_cn: "Zipformer 小模型",
-        zh_tw: "Zipformer 小模型",
-        en: "Zipformer small model",
-        ja: "Zipformer 小型モデル",
-        ko: "Zipformer 소형 모델",
-        fr: "Zipformer petit modèle",
-        de: "Zipformer kleines Modell",
-        es: "Zipformer modelo pequeño"
+        zh_cn: "Zipformer 轻量版",
+        zh_tw: "Zipformer 輕量版",
+        en: "Zipformer lightweight",
+        ja: "Zipformer 軽量版",
+        ko: "Zipformer 경량 버전",
+        fr: "Zipformer léger",
+        de: "Zipformer kompakt",
+        es: "Zipformer ligero"
     },
     ModelAsrHighTitle {
-        zh_cn: "Zipformer 高精度",
-        zh_tw: "Zipformer 高精度",
+        zh_cn: "Zipformer 高精度版",
+        zh_tw: "Zipformer 高精度版",
         en: "Zipformer high accuracy",
-        ja: "Zipformer 高精度",
-        ko: "Zipformer 고정밀",
+        ja: "Zipformer 高精度版",
+        ko: "Zipformer 고정밀 버전",
         fr: "Zipformer haute précision",
         de: "Zipformer hohe Genauigkeit",
         es: "Zipformer alta precisión"
     },
+    ModelAsrXAsrTitle {
+        zh_cn: "X-ASR 轻量版",
+        zh_tw: "X-ASR 輕量版",
+        en: "X-ASR lightweight",
+        ja: "X-ASR 軽量版",
+        ko: "X-ASR 경량 버전",
+        fr: "X-ASR léger",
+        de: "X-ASR kompakt",
+        es: "X-ASR ligero"
+    },
+    ModelAsrNemotronTitle {
+        zh_cn: "Nemotron 3.5 通用版",
+        zh_tw: "Nemotron 3.5 通用版",
+        en: "Nemotron 3.5 general",
+        ja: "Nemotron 3.5 汎用版",
+        ko: "Nemotron 3.5 범용 버전",
+        fr: "Nemotron 3.5 général",
+        de: "Nemotron 3.5 universell",
+        es: "Nemotron 3.5 general"
+    },
     ModelAsrQwen3Title {
-        zh_cn: "Qwen3-ASR 高精度",
-        zh_tw: "Qwen3-ASR 高精度",
+        zh_cn: "Qwen3-ASR 高精度版",
+        zh_tw: "Qwen3-ASR 高精度版",
         en: "Qwen3-ASR high accuracy",
-        ja: "Qwen3-ASR 高精度",
-        ko: "Qwen3-ASR 고정밀",
+        ja: "Qwen3-ASR 高精度版",
+        ko: "Qwen3-ASR 고정밀 버전",
         fr: "Qwen3-ASR haute précision",
         de: "Qwen3-ASR hohe Genauigkeit",
         es: "Qwen3-ASR alta precisión"
@@ -583,6 +603,26 @@ messages! {
         fr: "NLLB-200 multilingue",
         de: "NLLB-200 mehrsprachig",
         es: "NLLB-200 multilingüe"
+    },
+    ModelMtLmtFastTitle {
+        zh_cn: "LMT-60 快速版",
+        zh_tw: "LMT-60 快速版",
+        en: "LMT-60 fast",
+        ja: "LMT-60 高速",
+        ko: "LMT-60 고속",
+        fr: "LMT-60 rapide",
+        de: "LMT-60 schnell",
+        es: "LMT-60 rápida"
+    },
+    ModelMtLmtHighTitle {
+        zh_cn: "LMT-60 高精度",
+        zh_tw: "LMT-60 高精度",
+        en: "LMT-60 high accuracy",
+        ja: "LMT-60 高精度",
+        ko: "LMT-60 고정밀",
+        fr: "LMT-60 haute précision",
+        de: "LMT-60 hohe Genauigkeit",
+        es: "LMT-60 alta precisión"
     },
     CmdUnknownAsrTier {
         zh_cn: "未知 ASR 档位：{0}",

@@ -18,14 +18,19 @@ const TOK_CACHE = join(ROOT, '.cache', 'mt')
 
 const force = process.argv.includes('--force')
 const multilingual = process.argv.includes('--multilingual')
+const lmtFast = process.argv.includes('--lmt-fast')
+const lmtHigh = process.argv.includes('--lmt-high')
 
 const MT_DIR = join(ROOT, 'src-tauri', 'assets', 'models', 'mt')
 const NLLB_HF = 'facebook/nllb-200-distilled-600M'
 const NLLB_DIR_NAME = 'nllb-200-distilled-600M-ct2-int8'
 const NLLB_ROOT = join(ROOT, '.cache', 'mt-nllb')
-const NLLB_OUT = join(NLLB_ROOT, NLLB_DIR_NAME)
-const NLLB_ARCHIVE = join(ROOT, '.cache', `${NLLB_DIR_NAME}.tar.gz`)
 const NLLB_URL = `https://github.com/niyongsheng/AudioScript/releases/download/models-v1/${NLLB_DIR_NAME}.tar.gz`
+
+const LMT_SOURCES = {
+  fast: { hf: 'NiuTrans/LMT-60-0.6B', dirName: 'lmt-60-0.6B-ct2-int8' },
+  high: { hf: 'NiuTrans/LMT-60-1.7B', dirName: 'lmt-60-1.7B-ct2-int8' },
+}
 
 const PAIRS = [
   {
@@ -176,51 +181,51 @@ async function sha256File(path) {
   return hash.digest('hex')
 }
 
-async function convertMultilingual() {
-  const required = ['model.bin', 'shared_vocabulary.json', 'config.json', 'tokenizer.json']
+async function convertAndPackage({ hf, root, dirName, url, label, required, copyFiles }) {
+  const out = join(root, dirName)
+  const archive = join(ROOT, '.cache', `${dirName}.tar.gz`)
   const complete = (dir) => hasFiles(dir, required)
 
-  if (force || !(await complete(NLLB_OUT))) {
+  if (force || !(await complete(out))) {
     await ensureVenv()
-    await mkdir(NLLB_ROOT, { recursive: true })
-    await rm(NLLB_OUT, { recursive: true, force: true })
-    process.stdout.write(`⬇️  转换 ${NLLB_HF}（下载 fp32 权重 + 转 int8，首次较久）…\n`)
+    await mkdir(root, { recursive: true })
+    await rm(out, { recursive: true, force: true })
+    process.stdout.write(`⬇️  转换 ${hf}（下载 fp32 权重 + 转 int8，首次较久）…\n`)
     run(join(VENV_BIN, IS_WIN ? 'ct2-transformers-converter.exe' : 'ct2-transformers-converter'), [
       '--model',
-      NLLB_HF,
+      hf,
       '--output_dir',
-      NLLB_OUT,
+      out,
       '--quantization',
       'int8',
       '--copy_files',
-      'tokenizer.json',
-      'special_tokens_map.json',
+      ...copyFiles,
       '--force',
     ])
-    if (!(await complete(NLLB_OUT))) {
-      throw new Error(`转换后仍缺文件：${NLLB_OUT}`)
+    if (!(await complete(out))) {
+      throw new Error(`转换后仍缺文件：${out}`)
     }
   }
 
-  const installed = await dirSize(NLLB_OUT)
-  process.stdout.write(`📦 打包 ${NLLB_ARCHIVE}\n`)
-  run('tar', ['-C', NLLB_ROOT, '-czf', NLLB_ARCHIVE, NLLB_DIR_NAME])
-  const archiveSize = (await stat(NLLB_ARCHIVE)).size
-  const sha = await sha256File(NLLB_ARCHIVE)
+  const installed = await dirSize(out)
+  process.stdout.write(`📦 打包 ${archive}\n`)
+  run('tar', ['-C', root, '-czf', archive, dirName])
+  const archiveSize = (await stat(archive)).size
+  const sha = await sha256File(archive)
 
-  process.stdout.write(`\n✅ NLLB 完成（安装后 ${(installed / 1024 / 1024).toFixed(0)} MB）\n`)
+  process.stdout.write(`\n✅ ${label} 完成（安装后 ${(installed / 1024 / 1024).toFixed(0)} MB）\n`)
   process.stdout.write(
     [
       '',
       '上传到 GitHub Release：',
-      `  gh release create models-v1 ${NLLB_ARCHIVE} --title "Models v1" --notes "可选模型资源"`,
-      `  # release 已存在时：gh release upload models-v1 ${NLLB_ARCHIVE}`,
+      `  gh release upload models-v1 ${archive}`,
+      `  # release 不存在时：gh release create models-v1 ${archive} --title "Models v1" --notes "可选模型资源"`,
       '',
       'catalog 字段：',
       JSON.stringify(
         {
           archive: {
-            url: NLLB_URL,
+            url,
             format: 'tar-gz',
             sha256: sha,
             sizeBytes: archiveSize,
@@ -236,7 +241,46 @@ async function convertMultilingual() {
   )
 }
 
+async function convertMultilingual() {
+  await convertAndPackage({
+    hf: NLLB_HF,
+    root: NLLB_ROOT,
+    dirName: NLLB_DIR_NAME,
+    url: NLLB_URL,
+    label: 'NLLB',
+    required: ['model.bin', 'shared_vocabulary.json', 'config.json', 'tokenizer.json'],
+    copyFiles: ['tokenizer.json', 'special_tokens_map.json'],
+  })
+}
+
+async function convertLmt(kind) {
+  const spec = LMT_SOURCES[kind]
+  await convertAndPackage({
+    hf: spec.hf,
+    root: join(ROOT, '.cache', `mt-${spec.dirName}`),
+    dirName: spec.dirName,
+    url: `https://github.com/niyongsheng/AudioScript/releases/download/models-v1/${spec.dirName}.tar.gz`,
+    label: `LMT-${kind}`,
+    required: ['model.bin', 'tokenizer.json', 'config.json', 'vocabulary.json'],
+    copyFiles: [
+      'tokenizer.json',
+      'tokenizer_config.json',
+      'chat_template.jinja',
+      'generation_config.json',
+      'special_tokens_map.json',
+      'added_tokens.json',
+    ],
+  })
+}
+
 async function main() {
+  if (lmtFast || lmtHigh) {
+    process.stdout.write('多语言机器翻译模型（NiuTrans LMT-60 + CTranslate2 int8）\n\n')
+    if (lmtFast) await convertLmt('fast')
+    if (lmtHigh) await convertLmt('high')
+    return
+  }
+
   if (multilingual) {
     process.stdout.write('多语言机器翻译模型（NLLB-200 + CTranslate2 int8）\n\n')
     await convertMultilingual()
