@@ -8,7 +8,7 @@
 
 <h1>AudioScript</h1>
 
-<p>Listen to your system audio and turn foreign podcasts, videos, and meetings into live bilingual subtitles — source text plus translation, recognized and translated entirely on your machine. Chinese and English are built in; optional LMT-60 (Apache-2.0) and NLLB-200 models add multilingual translation, and macOS 26+ can also use system translation.</p>
+<p>Listen to your system audio and turn foreign podcasts, videos, and meetings into live bilingual subtitles: source text plus translation. Recognition and translation run entirely on your machine, with 29+ languages supported. On macOS 26+, system translation is also available.</p>
 
 <p>
   <a href="https://audioscript.looplooptech.com/">Website</a> ·
@@ -32,11 +32,11 @@ https://github.com/user-attachments/assets/b1f88a82-b3fe-4721-8736-af6a9e4d828e
 ## Features
 
 - **Capture**: system audio / microphone / both mixed.
-- **Recognition**: Zipformer streaming bilingual recognition (bundled lightweight model / optional high-accuracy), X-ASR for Chinese–English code-switching, Nemotron 3.5 for multilingual streaming, plus Qwen3-ASR. On macOS 26+, system speech recognition (SpeechAnalyzer) is also available.
-- **Translation**: bundled Opus-MT (en ↔ zh); optional LMT-60 fast (0.6B) and high-accuracy (1.7B) for 60-language translation (Apache-2.0); optional NLLB-200 for 30-language translation (non-commercial use only); macOS 26+ can optionally translate with the installed system language packs.
-- **Overlay**: bilingual source and translation, with adjustable font size, opacity, line count, and a colorful flowing border with adjustable speed and width.
-- **Interface**: 简体中文 / 繁體中文 / English / 日本語 / 한국어 / Français / Deutsch / Español.
 - **Background**: tray-resident, closing the window does not quit, single instance, launch at login.
+- **Recognition**: bundled Zipformer streaming bilingual recognition; optional X-ASR, Nemotron 3.5, and Qwen3-ASR.
+- **Translation**: bundled Opus-MT en ↔ zh; optional LMT-60 and NLLB-200.
+- **Overlay**: bilingual source and translation; adjustable font size, opacity, line count, and a colorful flowing border.
+- **Internationalization**: zh-CN / zh-TW / en / ja / ko / fr / de / es / pt-BR / ru / it / id / ar.
 
 ## Privacy
 
@@ -47,7 +47,7 @@ https://github.com/user-attachments/assets/b1f88a82-b3fe-4721-8736-af6a9e4d828e
 
 ```bash
 pnpm install          # deps + ASR model and Silero VAD (≈ 59 MB)
-pnpm fetch:mt         # fetch MT models
+pnpm fetch:mt         # fetch models
 pnpm tauri dev        # dev mode
 pnpm tauri build      # package
 ```
