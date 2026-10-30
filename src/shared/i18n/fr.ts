@@ -332,7 +332,7 @@ export const fr: Messages = {
   'models.storageLocation': 'Emplacement des modèles',
   'models.storageHint':
     'Les nouveaux téléchargements sont enregistrés ici. Changer d’emplacement ne supprime pas les modèles déjà téléchargés ailleurs.',
-  'models.storageChange': 'Modifier…',
+  'models.storageChange': 'Modifier',
   'models.storageReset': 'Emplacement par défaut',
   'models.storagePickTitle': 'Choisir un dossier pour les modèles téléchargés',
   'models.storageResetTitle': 'Revenir à l’emplacement par défaut ?',

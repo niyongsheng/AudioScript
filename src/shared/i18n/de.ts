@@ -328,7 +328,7 @@ export const de: Messages = {
   'models.storageLocation': 'Modellspeicherort',
   'models.storageHint':
     'Neue Downloads werden hier gespeichert. Ein Wechsel des Ordners löscht bereits heruntergeladene Modelle anderswo nicht.',
-  'models.storageChange': 'Ändern…',
+  'models.storageChange': 'Ändern',
   'models.storageReset': 'Standardort verwenden',
   'models.storagePickTitle': 'Ordner für heruntergeladene Modelle wählen',
   'models.storageResetTitle': 'Standard-Speicherort wiederherstellen?',

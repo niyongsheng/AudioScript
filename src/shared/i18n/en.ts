@@ -318,7 +318,7 @@ export const en: Messages = {
   'models.storageLocation': 'Model storage location',
   'models.storageHint':
     'New downloads are saved here. Switching folders does not delete models already downloaded elsewhere.',
-  'models.storageChange': 'Change…',
+  'models.storageChange': 'Change',
   'models.storageReset': 'Use default',
   'models.storagePickTitle': 'Choose a folder for downloaded models',
   'models.storageResetTitle': 'Restore the default storage location?',

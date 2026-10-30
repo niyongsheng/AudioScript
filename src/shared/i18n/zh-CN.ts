@@ -299,7 +299,7 @@ export const zhCN = {
   'models.storageGroup': '存储',
   'models.storageLocation': '模型存储位置',
   'models.storageHint': '新下载的模型保存在这里；切换位置不会删除其他目录中已下载的模型。',
-  'models.storageChange': '更改…',
+  'models.storageChange': '更改',
   'models.storageReset': '恢复默认',
   'models.storagePickTitle': '选择模型下载文件夹',
   'models.storageResetTitle': '恢复默认存储位置？',

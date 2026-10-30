@@ -322,7 +322,7 @@ export const ja: Messages = {
   'models.storageLocation': 'モデルの保存先',
   'models.storageHint':
     '新しくダウンロードしたモデルはここに保存されます。保存先を切り替えても、他のフォルダーにあるモデルは削除されません。',
-  'models.storageChange': '変更…',
+  'models.storageChange': '変更',
   'models.storageReset': 'デフォルトに戻す',
   'models.storagePickTitle': 'モデルのダウンロード先フォルダーを選択',
   'models.storageResetTitle': '保存先をデフォルトに戻しますか？',

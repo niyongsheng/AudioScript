@@ -301,7 +301,7 @@ export const zhTW: Messages = {
   'models.storageGroup': '儲存',
   'models.storageLocation': '模型儲存位置',
   'models.storageHint': '新下載的模型會保存在這裡；切換位置不會刪除其他目錄中已下載的模型。',
-  'models.storageChange': '變更…',
+  'models.storageChange': '變更',
   'models.storageReset': '恢復預設',
   'models.storagePickTitle': '選擇模型下載資料夾',
   'models.storageResetTitle': '恢復預設儲存位置？',

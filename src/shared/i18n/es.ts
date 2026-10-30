@@ -330,7 +330,7 @@ export const es: Messages = {
   'models.storageLocation': 'Ubicación de los modelos',
   'models.storageHint':
     'Las descargas nuevas se guardan aquí. Cambiar la ubicación no elimina los modelos ya descargados en otras carpetas.',
-  'models.storageChange': 'Cambiar…',
+  'models.storageChange': 'Cambiar',
   'models.storageReset': 'Usar la predeterminada',
   'models.storagePickTitle': 'Elegir una carpeta para los modelos descargados',
   'models.storageResetTitle': '¿Restaurar la ubicación de almacenamiento predeterminada?',

@@ -313,7 +313,7 @@ export const ko: Messages = {
   'models.storageGroup': '저장 공간',
   'models.storageLocation': '모델 저장 위치',
   'models.storageHint': '새로 다운로드한 모델은 여기에 저장됩니다. 위치를 바꿔도 다른 폴더의 모델은 삭제되지 않습니다.',
-  'models.storageChange': '변경…',
+  'models.storageChange': '변경',
   'models.storageReset': '기본값으로 복원',
   'models.storagePickTitle': '모델 다운로드 폴더 선택',
   'models.storageResetTitle': '기본 저장 위치로 복원할까요?',

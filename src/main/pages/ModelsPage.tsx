@@ -236,7 +236,11 @@ export function ModelsPage() {
           title={t('models.storageLocation')}
           description={
             <span>
-              {list.userRoot ? <span className="break-all font-mono">{list.userRoot}</span> : t('models.noStorage')}
+              {list.userRoot ? (
+                <span className="break-all font-mono text-[0.65rem]">{list.userRoot}</span>
+              ) : (
+                t('models.noStorage')
+              )}
               <span className="mt-0.5 block">{t('models.storageHint')}</span>
             </span>
           }
