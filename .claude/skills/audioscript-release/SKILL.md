@@ -63,8 +63,9 @@ node .claude/skills/audioscript-release/scripts/check-release.mjs --locales-only
 
 静态值不会自动改（页面运行时才从 GitHub API 覆盖），必须手写同步：
 
-- JSON-LD `"softwareVersion"`（约 2066 行）。
-- 下载区静态兜底：`<span data-version>vX.Y.Z</span>` 与 `<span data-date data-iso="YYYY-MM-DD">`（约 2667 行）。
+- JSON-LD `"softwareVersion"`（`grep -n '"softwareVersion"' docs/index.html`）。
+- 下载区静态兜底：`<span data-version>vX.Y.Z</span>` 与 `<time data-date data-iso="YYYY-MM-DD">`（`grep -n 'data-version' docs/index.html`）。
+- `docs/llms.txt` 的「最新版本」与日期行。
 - 模型表 `#models`：模型名、流式方式、语言数、下载/安装体积、许可、适用场景。与 `src-tauri/assets/model-catalog.json` 对齐（`title`、`languages.length`、`archive.sizeBytes` + `sizes.installedBytes`、`licenses`）。
 - 语言数、FAQ、能力描述里的数字（如「可选 29 种语言」「Nemotron 覆盖 28 种」）。
 - 中英两套 `<span class="zh">` / `<span class="en">` 必须同时改，漏一个会出现中英混排。
@@ -154,6 +155,7 @@ node .claude/skills/audioscript-release/scripts/check-release.mjs X.Y.Z --post
 - [ ] `WHATS_NEW` 以**本次版本号**为 key，13 个 locale 词条齐全
 - [ ] 全部 locale 已对齐（key / 占位符 / Rust i18n / lproj），`check-release.mjs` 语言检查全绿
 - [ ] `docs/index.html` 的 `softwareVersion` / `data-version` / `data-date`
+- [ ] `docs/llms.txt` 的最新版本与日期
 - [ ] `docs/index.html` 模型表与 catalog 对齐，中英双语都改
 - [ ] README 功能与许可、SPEC 对应章节
 - [ ] 模型 URL 200、sha256 / sizeBytes 与归档一致

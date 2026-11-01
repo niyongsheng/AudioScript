@@ -209,6 +209,19 @@ function checkSite() {
   if (!iso) fail('docs/index.html 缺少 data-date data-iso')
   else if (!/^\d{4}-\d{2}-\d{2}$/.test(iso)) fail(`docs/index.html 的 data-date 不是 ISO 日期：${iso}`)
   else ok(`官网发布日期 = ${iso}`)
+
+  const llms = read('docs/llms.txt')
+  const llmsVersion = llms.match(/- 最新版本：v?([0-9.]+)/)?.[1]
+  if (llmsVersion !== version) {
+    fail(`docs/llms.txt 的最新版本是 ${llmsVersion ?? '缺失'}，应为 ${version}`)
+  } else {
+    ok(`llms.txt 最新版本 = ${version}`)
+  }
+  if (iso && !llms.includes(`（${iso}）`)) {
+    fail(`docs/llms.txt 的发布日期不是 ${iso}`)
+  } else if (iso) {
+    ok(`llms.txt 发布日期 = ${iso}`)
+  }
 }
 
 function checkCatalog() {
