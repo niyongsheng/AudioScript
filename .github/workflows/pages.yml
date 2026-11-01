@@ -31,11 +31,15 @@ jobs:
         run: |
           set -euo pipefail
           test -f docs/index.html
+          test -f docs/og.png
+          test -f docs/robots.txt
+          test -f docs/sitemap.xml
+          test -f docs/llms.txt
 
       - name: Stage site
         run: |
           mkdir -p _site
-          cp docs/index.html _site/index.html
+          cp docs/index.html docs/og.png docs/robots.txt docs/sitemap.xml docs/llms.txt _site/
 
       - name: Configure Pages
         uses: actions/configure-pages@v6

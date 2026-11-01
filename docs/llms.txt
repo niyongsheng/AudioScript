@@ -1,0 +1,83 @@
+# AudioScript 声稿
+
+> AudioScript（中文名「声稿」）是一款免费、MIT 开源的离线优先桌面应用：监听电脑正在播放的声音，把外语播客、视频与会议实时转成原文与译文的双语悬浮字幕。识别与翻译全部在本机完成，音频与文本不上传。
+
+AudioScript is a free, MIT-licensed, offline-first desktop app that listens to system audio and shows live bilingual subtitles (source text plus translation) for podcasts, videos, and meetings. Speech recognition and translation run locally; no audio or text is uploaded.
+
+- 官网：[audioscript.looplooptech.com](https://audioscript.looplooptech.com/)
+- 源码：[niyongsheng/AudioScript](https://github.com/niyongsheng/AudioScript)
+- 最新版本：0.5.1（2026-10-30）
+- 下载：[GitHub Releases](https://github.com/niyongsheng/AudioScript/releases/latest)
+- 许可：MIT（应用本体）；可选模型许可见下表
+- 技术栈：Tauri 2 + Rust，sherpa-onnx 做语音识别，CTranslate2 做翻译
+
+## 平台
+
+- macOS 14.2 及以上，仅 Apple Silicon（不提供 Intel Mac 版本）
+- Windows 10 及以上，x64
+- Ubuntu 24，x64（二等支持）
+- macOS 26 及以上可额外使用系统语音识别与系统翻译，语言包由系统管理
+
+## 功能
+
+- 系统声音直接采集：macOS 使用 Core Audio Process Tap，Windows 使用 WASAPI loopback，不需要 BlackHole 等虚拟声卡
+- 流式识别：partial 实时刷新，句末定稿；X-ASR 与 Nemotron 带标点，Qwen3 按句输出
+- 双语悬浮字幕：原文在上、译文在下；可调字号、背景不透明度、显示行数与流光边框
+- 悬浮窗始终置顶，锁定时鼠标完全穿透、不抢焦点；macOS 上可盖住其他应用的全屏窗口
+- 托盘常驻、登录时启动；定稿段落带时间戳导出 Markdown，原文与译文成对保留
+- 支持系统声音、麦克风或两者混合输入
+
+## 模型
+
+语音识别（ASR）：
+
+| 模型 | 方式 | 语言 | 下载 / 安装 | 许可 | 说明 |
+| --- | --- | --- | --- | --- | --- |
+| Zipformer 轻量版（内置） | 流式 | 中英 | 58 MB | Apache-2.0 | 日常看视频、听播客，占用最低 |
+| Zipformer 高精度版 | 流式 | 中英 | 488 MB / 190 MB | Apache-2.0 | 准确率更高，更吃 CPU 与内存 |
+| X-ASR 轻量版 | 流式 + 标点 | 中英混说 | 128 MB / 162 MB | Apache-2.0 | 中英混说的直播与会议 |
+| Nemotron 3.5 通用版 | 流式 + 标点 | 28（模型 40） | 453 MB / 651 MB | OpenMDW-1.1 | 多语言视频与会议 |
+| Qwen3-ASR 高精度版 | 句末 | 30 | 838 MB / 972 MB | Apache-2.0 | 多语言长音频与事后整理 |
+
+机器翻译（MT）：
+
+| 模型 | 方式 | 语言 | 下载 / 安装 | 许可 | 说明 |
+| --- | --- | --- | --- | --- | --- |
+| OPUS-MT 基础版（内置） | 逐句 | 英 ↔ 中 | 164 MB | Apache-2.0 / CC-BY-4.0 | 日常英中互译，延迟最低 |
+| LMT-60 快速版 | 逐句 | 29（模型 60） | 513 MB / 585 MB | Apache-2.0 | 实时字幕与多语言直播 |
+| LMT-60 高精度版 | 逐句 | 29（模型 60） | 1.43 GB / 1.62 GB | Apache-2.0 | 离线精翻、质量优先 |
+| NLLB-200 多语言 | 逐句 | 30（模型 200） | 558 MB / 616 MB | CC-BY-NC-4.0 | 覆盖全部 30 种识别语言；仅限非商业用途 |
+
+- 内置模型随安装包分发，首次启动无需联网
+- 多语言模型为可选下载；GitHub 下载失败时可在爱发电获取离线模型包
+
+## 隐私
+
+- 识别与翻译都在本机完成，音频与文本不上传
+- 只有模型下载与更新检查需要联网
+- 应用内的 Aptabase 匿名统计不含音频与文本，可在「通用 → 隐私」关闭
+
+## 安装与常见问题
+
+- 安装包内含识别与翻译模型，第一次打开不用联网，也不用注册账号
+- macOS 提示「应用已损坏」是 Gatekeeper 拦截未签名构建，不是文件损坏。把应用拖入「应用程序」后执行：`xattr -dr com.apple.quarantine /Applications/AudioScript.app`
+- Linux 悬浮窗不置顶：Wayland 不支持普通窗口置顶。GNOME 等 Wayland 桌面启动时设置 `GDK_BACKEND=x11`（走 XWayland）；X11 桌面默认正常
+- 首次开始需要加载模型，默认模型实测约 1.25–2.2 秒后进入流式输出
+- 默认 OPUS-MT 单句翻译实测 70–77 ms（release 构建、Apple silicon、beam=1）
+- 免费吗：免费且 MIT 开源；NLLB-200 模型仅限非商业用途
+- 国内镜像：[百度网盘](https://pan.baidu.com/s/1AXV4D49_ZS0Gux35WraMww?pwd=16bk)，提取码 16bk
+
+## 页面导航
+
+- 功能：[audioscript.looplooptech.com/#features](https://audioscript.looplooptech.com/#features)
+- 用法：[audioscript.looplooptech.com/#how](https://audioscript.looplooptech.com/#how)
+- 悬浮窗：[audioscript.looplooptech.com/#overlay](https://audioscript.looplooptech.com/#overlay)
+- 隐私与模型：[audioscript.looplooptech.com/#models](https://audioscript.looplooptech.com/#models)
+- 下载：[audioscript.looplooptech.com/#download](https://audioscript.looplooptech.com/#download)
+- 常见问题：[audioscript.looplooptech.com/#faq](https://audioscript.looplooptech.com/#faq)
+
+## 更多文档
+
+- 产品规范：[docs/SPEC.md](https://github.com/niyongsheng/AudioScript/blob/main/docs/SPEC.md)
+- 设计说明：[docs/design.md](https://github.com/niyongsheng/AudioScript/blob/main/docs/design.md)
+- 发布记录：[GitHub Releases](https://github.com/niyongsheng/AudioScript/releases)
