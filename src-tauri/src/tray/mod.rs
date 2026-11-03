@@ -169,6 +169,9 @@ fn tray_icon(app: &AppHandle) -> tauri::Result<tauri::image::Image<'static>> {
 
 fn start_session(app: &AppHandle) {
     let p = crate::prefs::load(app);
+    let audio_source = p.audio_source.clone();
+    let translate_engine = p.translate_engine.as_str();
+    let asr_engine = p.asr_engine.as_str();
     let args = serde_json::json!({
         "device": p.device_id,
         "source": p.audio_source,
@@ -186,7 +189,29 @@ fn start_session(app: &AppHandle) {
     tauri::async_runtime::spawn(async move {
         match crate::commands::route_async(&app, "session_start", &args).await {
             Ok(_) => tracing::info!("托盘：已开始转写"),
-            Err(e) => tracing::error!("托盘开始转写失败：{e}"),
+            Err(e) => {
+                tracing::error!("托盘开始转写失败：{e}");
+                let (error_kind, permission_kind, settings_pane) = match &e {
+                    crate::error::CmdError::Permission { permission, .. } => {
+                        ("permission", *permission, "none")
+                    }
+                    crate::error::CmdError::Settings { pane, .. } => ("settings", "none", *pane),
+                    _ => ("failed", "none", "none"),
+                };
+                crate::telemetry::track(
+                    &app,
+                    "session_start_failed",
+                    Some(serde_json::json!({
+                        "origin": "tray",
+                        "audio_source": audio_source,
+                        "translate_engine": translate_engine,
+                        "asr_engine": asr_engine,
+                        "error_kind": error_kind,
+                        "permission_kind": permission_kind,
+                        "settings_pane": settings_pane,
+                    })),
+                );
+            }
         }
     });
 }
@@ -196,7 +221,7 @@ fn on_menu_event(app: &AppHandle, event: tauri::menu::MenuEvent) {
         id::SHOW_MAIN => lifecycle::show_main(app),
         id::TOGGLE_SESSION => {
             if app.state::<SessionState>().status() == TaskStatus::Capturing {
-                match crate::session::stop(app) {
+                match crate::session::stop_with_reason(app, "tray") {
                     Ok(()) => tracing::info!("托盘：已请求停止转写"),
                     Err(e) => tracing::error!("托盘停止转写失败：{e}"),
                 }

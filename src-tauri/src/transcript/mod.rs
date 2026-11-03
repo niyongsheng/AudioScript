@@ -60,6 +60,10 @@ impl TranscriptSegment {
     pub fn has_translation(&self) -> bool {
         self.translation_state == TranslationState::Done && self.translation.is_some()
     }
+
+    pub fn has_text(&self) -> bool {
+        !self.text.trim().is_empty()
+    }
 }
 
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]

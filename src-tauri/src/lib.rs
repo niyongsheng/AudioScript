@@ -87,6 +87,7 @@ fn spawn_main_thread_watchdog(app: &AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    telemetry::mark_start();
     let mut builder = tauri::Builder::default();
 
     builder = builder.plugin(tauri_plugin_single_instance::init(|app, _argv, _cwd| {
@@ -168,6 +169,9 @@ pub fn run() {
                 "app_started",
                 Some(serde_json::json!({
                     "asr_model_tier": saved_prefs.asr_model_tier.as_str(),
+                    "asr_engine": saved_prefs.asr_engine.as_str(),
+                    "mt_model_tier": saved_prefs.mt_model_tier.as_str(),
+                    "audio_source": saved_prefs.audio_source.as_str(),
                     "translate_engine": saved_prefs.translate_engine.as_str(),
                     "source_lang": saved_prefs.source_lang,
                     "target_lang": saved_prefs.target_lang,
@@ -327,8 +331,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             tauri::RunEvent::Reopen { .. } => lifecycle::show_main(app),
             tauri::RunEvent::Exit => {
-                telemetry::track(app, "app_exited", None);
-                telemetry::flush(app);
+                telemetry::report_exit(app, "os");
             }
             _ => {}
         });

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { track } from '@/shared/analytics'
 import { useI18n } from '@/shared/i18n'
 import { TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
@@ -46,8 +47,12 @@ export function UpdateToast({ hidden }: Props) {
     return t('app.updateAvailable', { version })
   })()
 
-  const close = () => setDismissedVersion(version)
+  const close = () => {
+    track('update_prompt', { action: 'dismiss' })
+    setDismissedVersion(version)
+  }
   const ignore = () => {
+    track('update_prompt', { action: 'ignore' })
     localStorage.setItem(IGNORED_UPDATE_KEY, version)
     setIgnoredVersion(version)
   }

@@ -81,12 +81,104 @@ pub enum ModelError {
     #[error("{}", tr(Key::ModelCancelled))]
     Cancelled,
 
+    #[error("{}", tf(Key::ModelThreadStartFailed, &[.0.as_str()]))]
+    ThreadStartFailed(String),
+
+    #[error("{}", tf(Key::ModelNoDownloadInfo, &[.0.as_str()]))]
+    MissingDownloadInfo(String),
+
+    #[error("{}", tf(Key::ModelNoChecksumInfo, &[.0.as_str()]))]
+    MissingChecksumInfo(String),
+
     #[error("{0}")]
     Internal(String),
+}
+
+impl ModelError {
+    pub fn telemetry_code(&self) -> &'static str {
+        match self {
+            Self::UnknownModel(_) => "unknown_model",
+            Self::NotDownloadable(_) => "not_downloadable",
+            Self::AlreadyInstalled(_) => "already_installed",
+            Self::Bundled => "bundled",
+            Self::Selected => "selected",
+            Self::InUse => "in_use",
+            Self::JobInProgress => "job_in_progress",
+            Self::Network(_) => "network",
+            Self::Http(_) => "http",
+            Self::Checksum { .. } => "checksum",
+            Self::UnsafeArchive(_) => "unsafe_archive",
+            Self::Extract(_) => "extract",
+            Self::DiskSpace { .. } => "disk_space",
+            Self::Incomplete(_) => "incomplete",
+            Self::Io(_) => "io",
+            Self::Cancelled => "cancelled",
+            Self::ThreadStartFailed(_) => "thread_start_failed",
+            Self::MissingDownloadInfo(_) => "no_download_info",
+            Self::MissingChecksumInfo(_) => "no_checksum_info",
+            Self::Internal(_) => "internal",
+        }
+    }
+
+    pub fn http_status(&self) -> u16 {
+        match self {
+            Self::Http(code) => *code,
+            _ => 0,
+        }
+    }
 }
 
 impl From<std::io::Error> for ModelError {
     fn from(e: std::io::Error) -> Self {
         Self::Io(e.to_string())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn telemetry_codes_are_stable() {
+        assert_eq!(
+            ModelError::UnknownModel("m".into()).telemetry_code(),
+            "unknown_model"
+        );
+        assert_eq!(
+            ModelError::NotDownloadable("m".into()).telemetry_code(),
+            "not_downloadable"
+        );
+        assert_eq!(ModelError::Http(404).telemetry_code(), "http");
+        assert_eq!(ModelError::Http(404).http_status(), 404);
+        assert_eq!(
+            ModelError::Checksum {
+                expected: "a".into(),
+                actual: "b".into()
+            }
+            .telemetry_code(),
+            "checksum"
+        );
+        assert_eq!(
+            ModelError::DiskSpace {
+                need: 1,
+                available: 0
+            }
+            .telemetry_code(),
+            "disk_space"
+        );
+        assert_eq!(ModelError::Cancelled.telemetry_code(), "cancelled");
+        assert_eq!(
+            ModelError::ThreadStartFailed("x".into()).telemetry_code(),
+            "thread_start_failed"
+        );
+        assert_eq!(
+            ModelError::MissingDownloadInfo("x".into()).telemetry_code(),
+            "no_download_info"
+        );
+        assert_eq!(
+            ModelError::MissingChecksumInfo("x".into()).telemetry_code(),
+            "no_checksum_info"
+        );
+        assert_eq!(ModelError::Network("x".into()).http_status(), 0);
     }
 }

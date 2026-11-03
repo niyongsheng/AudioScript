@@ -26,8 +26,8 @@ export function WelcomeGate() {
           <PermissionPanel />
 
           <div className="flex items-center justify-between gap-3">
-            <Button onClick={() => void completeOnboarding()}>{t('welcome.later')}</Button>
-            <Button variant="cta" onClick={() => void completeOnboarding()}>
+            <Button onClick={() => void completeOnboarding('later')}>{t('welcome.later')}</Button>
+            <Button variant="cta" onClick={() => void completeOnboarding('start')}>
               {t('welcome.start')}
             </Button>
           </div>

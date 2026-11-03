@@ -1,5 +1,6 @@
 import { useCallback, useState } from 'react'
 import { useStore } from '@/main/store'
+import { track } from '@/shared/analytics'
 import { type MessageKey, useI18n } from '@/shared/i18n'
 import {
   formatCmdError,
@@ -153,8 +154,11 @@ export function PermissionPanel() {
     setNote(null)
     setFailure(null)
     try {
-      setSpeechStatus(await macSpeechRequest())
+      const next = await macSpeechRequest()
+      setSpeechStatus(next)
+      track('permission_result', { kind: 'speech', result: speechState(next) })
     } catch (e) {
+      track('permission_result', { kind: 'speech', result: 'error' })
       setFailure(formatCmdError(e))
     } finally {
       setSpeechBusy(false)
@@ -166,8 +170,10 @@ export function PermissionPanel() {
     setNote(null)
     setFailure(null)
     try {
-      await runSystemAudioProbe()
+      const probe = await runSystemAudioProbe()
+      track('permission_result', { kind: 'system_audio', result: probe.verdict })
     } catch (e) {
+      track('permission_result', { kind: 'system_audio', result: 'error' })
       setFailure(formatCmdError(e))
     } finally {
       setProbing(false)
@@ -180,12 +186,18 @@ export function PermissionPanel() {
     setFailure(null)
     try {
       const result = await permissionRequestMic()
+      track('permission_result', {
+        kind: 'microphone',
+        result: result.state,
+        timed_out: result.timedOut ? 1 : 0,
+      })
       if (result.timedOut) {
         setNote(t('permissions.micTimeout'))
       }
       await refreshPermission()
       if (result.state === MicPermission.Granted) await refreshDevices()
     } catch (e) {
+      track('permission_result', { kind: 'microphone', result: 'error' })
       setFailure(formatCmdError(e))
     } finally {
       setRequesting(false)
@@ -194,6 +206,7 @@ export function PermissionPanel() {
 
   const open = useCallback(async (pane: SystemSettingsPane) => {
     try {
+      track('permission_settings_opened', { pane })
       await openSystemSettings(pane)
     } catch (e) {
       setFailure(formatCmdError(e))

@@ -102,7 +102,7 @@ interface Store {
   restartApp: () => Promise<void>
 
   onboardingDone: boolean
-  completeOnboarding: () => Promise<void>
+  completeOnboarding: (from: 'start' | 'later') => Promise<void>
 
   analyticsEnabled: boolean
   setAnalyticsEnabled: (v: boolean) => void
@@ -359,15 +359,18 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     [setError],
   )
 
-  const completeOnboarding = useCallback(async () => {
-    setOnboardingDone(true)
-    try {
-      await prefsSet({ onboardingDone: true })
-      track('onboarding_completed')
-    } catch (e) {
-      setError(formatCmdError(e))
-    }
-  }, [setError])
+  const completeOnboarding = useCallback(
+    async (from: 'start' | 'later') => {
+      setOnboardingDone(true)
+      try {
+        await prefsSet({ onboardingDone: true })
+        track('onboarding_completed', { from })
+      } catch (e) {
+        setError(formatCmdError(e))
+      }
+    },
+    [setError],
+  )
 
   const setAnalyticsEnabled = useCallback(
     (next: boolean) => {
@@ -431,6 +434,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setPending(true)
     setError(null)
     setPermissionError(null)
+    const starting = status !== TaskStatus.Capturing
     try {
       if (status === TaskStatus.Capturing) {
         setStatus(await withTimeout(sessionStop(), STOP_TIMEOUT_MS, t('error.stopTimeout')))
@@ -452,11 +456,23 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       }
     } catch (e) {
       const denied = permissionOf(e)
+      const settings = settingsOf(e)
+      if (starting) {
+        track('session_start_failed', {
+          origin: 'ui',
+          audio_source: audioSource,
+          translate_engine: translateEngine,
+          asr_engine: asrEngine,
+          error_kind: denied ? 'permission' : settings ? 'settings' : typeof e === 'string' ? 'timeout' : 'failed',
+          permission_kind: denied?.permission ?? 'none',
+          settings_pane: settings?.pane ?? 'none',
+        })
+      }
       if (denied) {
         setPermissionError(denied)
         void refreshPermission()
       } else {
-        setErrorState({ message: formatCmdError(e), settingsPane: settingsOf(e)?.pane ?? null })
+        setErrorState({ message: formatCmdError(e), settingsPane: settings?.pane ?? null })
       }
       sessionStatus()
         .then((i) => setStatus(i.status))
@@ -471,6 +487,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     mixMicDevice,
     mixSystemDevice,
     translateEngine,
+    asrEngine,
     sourceLang,
     targetLang,
     zhScript,
@@ -620,9 +637,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setUpdatePhase('checking')
     if (!silent) setUpdateError(null)
     try {
-      setUpdateInfo(await updateCheck())
+      const result = await updateCheck()
+      setUpdateInfo(result)
+      track('update_checked', {
+        available: result.available ? 1 : 0,
+        manual: silent ? 0 : 1,
+        failed: 0,
+      })
       setUpdatePhase('idle')
     } catch (e) {
+      track('update_checked', { available: 0, manual: silent ? 0 : 1, failed: 1 })
       setUpdatePhase(silent ? 'idle' : 'error')
       if (!silent) setUpdateError(formatCmdError(e))
     } finally {
@@ -636,13 +660,16 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     setUpdatePhase('downloading')
     setUpdateError(null)
     setUpdateProgress({ downloaded: 0, total: null })
+    track('update_prompt', { action: 'install' })
     try {
       const r = await updateInstall()
       setInstalledVersion(r.version)
       setUpdatePhase('ready')
+      track('update_install', { result: 'ok' })
     } catch (e) {
       setUpdatePhase('error')
       setUpdateError(formatCmdError(e))
+      track('update_install', { result: 'failed' })
     } finally {
       updateBusyRef.current = false
     }

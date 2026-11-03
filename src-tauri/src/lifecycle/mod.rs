@@ -52,6 +52,7 @@ pub fn show_main(app: &AppHandle) {
 
 pub fn quit_app(app: &AppHandle) {
     tracing::info!("用户请求退出（唯一退出路径）");
+    crate::telemetry::report_exit(app, "tray");
     if let Some(state) = app.try_state::<LifecycleState>() {
         state.mark_quitting();
     }

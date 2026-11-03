@@ -22,28 +22,58 @@ const TRASH: &str = ".trash";
 const SPARE: u64 = 64 * 1024 * 1024;
 
 pub fn start_download(app: &AppHandle, model_id: &str) -> Result<String, ModelError> {
-    let entry =
-        catalog::entry(model_id).ok_or_else(|| ModelError::UnknownModel(model_id.to_owned()))?;
+    let entry = match catalog::entry(model_id) {
+        Some(entry) => entry,
+        None => {
+            return Err(reject(
+                app,
+                model_id,
+                None,
+                ModelError::UnknownModel(model_id.to_owned()),
+            ));
+        }
+    };
     if !entry.downloadable {
-        return Err(ModelError::NotDownloadable(model_id.to_owned()));
+        return Err(reject(
+            app,
+            model_id,
+            Some(entry),
+            ModelError::NotDownloadable(model_id.to_owned()),
+        ));
     }
-    let archive = entry
-        .archive
-        .as_ref()
-        .ok_or_else(|| ModelError::Internal(tf(Key::ModelNoDownloadInfo, &[&entry.id])))?;
+    let Some(archive) = entry.archive.as_ref() else {
+        return Err(reject(
+            app,
+            model_id,
+            Some(entry),
+            ModelError::MissingDownloadInfo(entry.id.clone()),
+        ));
+    };
     if archive.sha256.len() != 64 || archive.size_bytes == 0 {
-        return Err(ModelError::Internal(tf(
-            Key::ModelNoChecksumInfo,
-            &[&entry.id],
-        )));
+        return Err(reject(
+            app,
+            model_id,
+            Some(entry),
+            ModelError::MissingChecksumInfo(entry.id.clone()),
+        ));
     }
     if is_installed_complete(app, entry) {
-        return Err(ModelError::AlreadyInstalled(model_id.to_owned()));
+        return Err(reject(
+            app,
+            model_id,
+            Some(entry),
+            ModelError::AlreadyInstalled(model_id.to_owned()),
+        ));
     }
 
     let state = app.state::<ModelState>();
     let Some((job_id, cancel, status)) = state.start(model_id) else {
-        return Err(ModelError::JobInProgress);
+        return Err(reject(
+            app,
+            model_id,
+            Some(entry),
+            ModelError::JobInProgress,
+        ));
     };
 
     let app_for_thread = app.clone();
@@ -66,16 +96,15 @@ pub fn start_download(app: &AppHandle, model_id: &str) -> Result<String, ModelEr
                 )
             }));
 
-            app_for_thread
-                .state::<ModelState>()
-                .clear(&job_for_thread);
+            app_for_thread.state::<ModelState>().clear(&job_for_thread);
 
-            let result = match &outcome {
-                Ok(Ok(())) => "ok",
-                Ok(Err(ModelError::Cancelled)) => "cancelled",
-                Ok(Err(_)) => "failed",
-                Err(_) => "panicked",
+            let (result, error_code, http_status) = match &outcome {
+                Ok(Ok(())) => ("ok", "none", 0),
+                Ok(Err(ModelError::Cancelled)) => ("cancelled", "cancelled", 0),
+                Ok(Err(e)) => ("failed", e.telemetry_code(), e.http_status()),
+                Err(_) => ("panicked", "panicked", 0),
             };
+            let duration_ms = started.elapsed().as_millis() as u64;
 
             match outcome {
                 Ok(Ok(())) => set_phase(&app_for_thread, &status, ModelPhase::Done, None),
@@ -104,29 +133,83 @@ pub fn start_download(app: &AppHandle, model_id: &str) -> Result<String, ModelEr
                 }
             }
 
-            crate::telemetry::track(
+            track_download(
                 &app_for_thread,
-                "model_download",
-                Some(serde_json::json!({
-                    "model": model_for_thread,
-                    "kind": kind_for_thread,
-                    "tier": tier_for_thread,
-                    "result": result,
-                    "duration_bucket": crate::telemetry::duration_bucket(started.elapsed().as_millis() as u64),
-                })),
+                DownloadEvent {
+                    model: &model_for_thread,
+                    kind: &kind_for_thread,
+                    tier: &tier_for_thread,
+                    result,
+                    phase: "install",
+                    error_code,
+                    http_status,
+                    duration_ms,
+                },
             );
         });
 
     if let Err(e) = spawned {
         app.state::<ModelState>().clear(&job_id);
-        return Err(ModelError::Internal(tf(
-            Key::ModelThreadStartFailed,
-            &[&e.to_string()],
-        )));
+        return Err(reject(
+            app,
+            model_id,
+            Some(entry),
+            ModelError::ThreadStartFailed(tf(Key::ModelThreadStartFailed, &[&e.to_string()])),
+        ));
     }
 
     tracing::info!(model = model_id, job = %job_id, "模型下载已开始");
     Ok(job_id)
+}
+
+struct DownloadEvent<'a> {
+    model: &'a str,
+    kind: &'a str,
+    tier: &'a str,
+    result: &'a str,
+    phase: &'a str,
+    error_code: &'a str,
+    http_status: u16,
+    duration_ms: u64,
+}
+
+fn track_download(app: &AppHandle, event: DownloadEvent<'_>) {
+    crate::telemetry::track(
+        app,
+        "model_download",
+        Some(serde_json::json!({
+            "model": event.model,
+            "kind": event.kind,
+            "tier": event.tier,
+            "result": event.result,
+            "phase": event.phase,
+            "error_code": event.error_code,
+            "http_status": event.http_status,
+            "duration_bucket": crate::telemetry::duration_bucket(event.duration_ms),
+        })),
+    );
+}
+
+fn reject(
+    app: &AppHandle,
+    model_id: &str,
+    entry: Option<&CatalogEntry>,
+    error: ModelError,
+) -> ModelError {
+    track_download(
+        app,
+        DownloadEvent {
+            model: model_id,
+            kind: entry.map_or("unknown", |e| e.kind.as_str()),
+            tier: entry.map_or("unknown", |e| e.tier.as_str()),
+            result: "rejected",
+            phase: "precheck",
+            error_code: error.telemetry_code(),
+            http_status: 0,
+            duration_ms: 0,
+        },
+    );
+    error
 }
 
 fn cleanup_job(app: &AppHandle, job_id: &str) {
@@ -171,7 +254,7 @@ fn run_install(
     let archive = entry
         .archive
         .as_ref()
-        .ok_or_else(|| ModelError::Internal(tf(Key::ModelNoDownloadInfo, &[&entry.id])))?;
+        .ok_or_else(|| ModelError::MissingDownloadInfo(entry.id.clone()))?;
 
     let user_root = paths::ensure_user_models_root(app).map_err(ModelError::Internal)?;
     let downloads = user_root.join(DOWNLOADS);

@@ -10,8 +10,8 @@ use tauri::{AppHandle, Emitter, Manager};
 use crate::asr::{AsrEngine, TARGET_SAMPLE_RATE};
 use crate::audio::{self, CaptureHandle, SILENCE_RMS};
 use crate::config::{
-    effective_target_lang, AsrConfig, EngineType, MtModelTier, SessionConfig, TranslateConfig,
-    TranslateEngine, ZhScript,
+    effective_target_lang, AsrConfig, AsrModelTier, EngineType, MtModelTier, SessionConfig,
+    TranslateConfig, TranslateEngine, ZhScript,
 };
 use crate::error::CmdError;
 use crate::i18n::{tf, tr, Key};
@@ -303,6 +303,11 @@ struct RunningSession {
     engine: Arc<Mutex<Box<dyn AsrEngine>>>,
     device: String,
     device_sample_rate: u32,
+    source: audio::AudioSourceKind,
+    asr_tier: AsrModelTier,
+    asr_engine: EngineType,
+    translate_engine: TranslateEngine,
+    mt_tier: MtModelTier,
 
     queue: Arc<JobQueue>,
     events: Sender<UiEvent>,
@@ -454,7 +459,7 @@ pub struct SessionState {
 }
 
 impl SessionState {
-    fn note_first_text(&self) {
+    fn note_first_text(&self, app: &AppHandle) {
         if self.first_text_logged.swap(true, Ordering::SeqCst) {
             return;
         }
@@ -462,18 +467,41 @@ impl SessionState {
             .started_at
             .lock()
             .expect("session start mutex poisoned");
-        if let Some(t0) = t0 {
-            let ms = t0.elapsed().as_millis();
-            if ms <= FIRST_TEXT_BUDGET_MS {
-                tracing::info!(ms, budget = FIRST_TEXT_BUDGET_MS, "首次出字：达标");
-            } else {
-                tracing::warn!(
-                    ms,
-                    budget = FIRST_TEXT_BUDGET_MS,
-                    "首次出字：**超出预算**（含引擎加载——模型是在点开始时才加载的）"
-                );
-            }
+        let Some(t0) = t0 else {
+            return;
+        };
+        let ms = t0.elapsed().as_millis();
+        let within_budget = ms <= FIRST_TEXT_BUDGET_MS;
+        if within_budget {
+            tracing::info!(ms, budget = FIRST_TEXT_BUDGET_MS, "首次出字：达标");
+        } else {
+            tracing::warn!(
+                ms,
+                budget = FIRST_TEXT_BUDGET_MS,
+                "首次出字：**超出预算**（含引擎加载——模型是在点开始时才加载的）"
+            );
         }
+        let asr_tier = self
+            .running
+            .lock()
+            .expect("session running mutex poisoned")
+            .as_ref()
+            .map_or("unknown", |session| session.asr_tier.as_str());
+        let segments = self
+            .store
+            .lock()
+            .expect("transcript store mutex poisoned")
+            .segment_count() as u64;
+        crate::telemetry::track(
+            app,
+            "first_transcript",
+            Some(serde_json::json!({
+                "latency_bucket": crate::telemetry::first_text_bucket(ms as u64),
+                "within_budget": if within_budget { 1 } else { 0 },
+                "segments": segments,
+                "asr_model_tier": asr_tier,
+            })),
+        );
     }
 }
 
@@ -941,6 +969,11 @@ pub fn start(
         engine,
         device: device_name,
         device_sample_rate,
+        source,
+        asr_tier: prefs.asr_model_tier,
+        asr_engine: cfg.asr.engine_type,
+        translate_engine: cfg.translate.engine,
+        mt_tier: cfg.translate.mt_model_tier,
         queue,
         events,
     });
@@ -952,11 +985,15 @@ pub fn start(
         Some(serde_json::json!({
             "audio_source": source.as_str(),
             "translate_engine": cfg.translate.engine.as_str(),
+            "translate_enabled": if cfg.translate.engine != TranslateEngine::Off { 1 } else { 0 },
             "source_lang": cfg.translate.source_lang,
             "target_lang": cfg.translate.target_lang,
             "zh_script": cfg.translate.zh_script.as_str(),
+            "asr_engine": cfg.asr.engine_type.as_str(),
             "asr_model_tier": prefs.asr_model_tier.as_str(),
+            "mt_model_tier": cfg.translate.mt_model_tier.as_str(),
             "custom_asr_model": if cfg.asr.model_dir.as_deref().is_some_and(|s| !s.trim().is_empty()) { 1 } else { 0 },
+            "device_sample_rate": crate::telemetry::sample_rate_bucket(device_sample_rate),
         })),
     );
 
@@ -964,6 +1001,10 @@ pub fn start(
 }
 
 pub fn stop(app: &AppHandle) -> Result<(), String> {
+    stop_with_reason(app, "user")
+}
+
+pub fn stop_with_reason(app: &AppHandle, reason: &'static str) -> Result<(), String> {
     tracing::info!("停止：收到命令");
     let state = app.state::<SessionState>();
 
@@ -988,17 +1029,31 @@ pub fn stop(app: &AppHandle) -> Result<(), String> {
             .map(|t| t.elapsed().as_millis() as u64)
             .unwrap_or(0)
     };
+    session.capture.request_stop();
+    session.queue.close();
+
+    let (segments, had_text) = {
+        let store = state.store.lock().expect("transcript store mutex poisoned");
+        (
+            store.segment_count() as u64,
+            store.snapshot().iter().any(TranscriptSegment::has_text),
+        )
+    };
     crate::telemetry::track(
         app,
         "session_stopped",
         Some(serde_json::json!({
             "duration_bucket": crate::telemetry::duration_bucket(audio_ms),
-            "segments": state.snapshot().len() as u64,
+            "segments": segments,
+            "had_text": if had_text { 1 } else { 0 },
+            "stop_reason": reason,
+            "audio_source": session.source.as_str(),
+            "asr_model_tier": session.asr_tier.as_str(),
+            "asr_engine": session.asr_engine.as_str(),
+            "translate_engine": session.translate_engine.as_str(),
+            "mt_model_tier": session.mt_tier.as_str(),
         })),
     );
-
-    session.capture.request_stop();
-    session.queue.close();
 
     state.set_status(TaskStatus::Ready);
     let _ = session.events.send(UiEvent::Status(TaskStatus::Ready));
@@ -1149,12 +1204,14 @@ fn coalesce(batch: Vec<TranscriptSegment>) -> Vec<TranscriptSegment> {
 }
 
 fn emit_segments(app: &AppHandle, segments: Vec<TranscriptSegment>) {
-    if segments.iter().any(|s| !s.text.trim().is_empty()) {
-        app.state::<SessionState>().note_first_text();
-    }
+    let has_text = segments.iter().any(TranscriptSegment::has_text);
 
     if let Err(e) = app.emit(EVENT_SEGMENTS, segments) {
         tracing::debug!("广播段落失败（可能没有窗口在监听）：{e}");
+    }
+
+    if has_text {
+        app.state::<SessionState>().note_first_text(app);
     }
 }
 
