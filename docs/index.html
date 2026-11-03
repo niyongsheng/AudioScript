@@ -73,7 +73,7 @@
     </script>
 
     <style>
-      :root{color-scheme:dark; --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; --bg:#000000; --surface:#181818; --surface-2:#1f1f1f; --surface-3:#272727; --line:#272727; --line-2:#313131; --ink:#ffffff; --ink-2:#a3a3a3; --ink-3:#8a8a8a; --green:#30d158; --green-ink:#04150a; --blue:#007aff; --warm:#131209; --glow-a:rgba(48,209,88,0.16); --glow-b:rgba(0,122,255,0.2); --header-bg:rgba(18,18,18,0.76); --ease:cubic-bezier(0.22,1,0.36,1); --r-sm:4px; --r-md:6px; --r-lg:8px; --r-xl:12px; --r-2xl:16px; --r-3xl:24px; --container:1200px; --gutter:24px;}
+      :root{color-scheme:dark; --font:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei","Noto Sans CJK SC",sans-serif; --mono:ui-monospace,SFMono-Regular,Menlo,Monaco,Consolas,monospace; --bg:#000000; --surface:#181818; --surface-2:#1f1f1f; --surface-3:#272727; --line:#272727; --line-2:#313131; --ink:#ffffff; --ink-2:#a3a3a3; --ink-3:#8a8a8a; --green:#30d158; --green-ink:#04150a; --blue:#007aff; --warm:#131209; --glow-a:rgba(48,209,88,0.16); --glow-b:rgba(0,122,255,0.2); --header-bg:rgba(0,0,0,0.85); --ease:cubic-bezier(0.22,1,0.36,1); --r-sm:4px; --r-md:6px; --r-lg:8px; --r-xl:12px; --r-2xl:16px; --r-3xl:24px; --container:1200px; --gutter:24px;}
       html[data-lang="en"] .zh{display:none !important;}
       html[data-lang="zh"] .en{display:none !important;}
       *,*::before,*::after{box-sizing:border-box;}
@@ -110,7 +110,7 @@
       .btn-icon{width:20px; height:20px; flex:none;}
       .btn-sm .btn-icon{width:16px; height:16px;}
       .magnet{will-change:transform;}
-      .site-header{position:sticky; top:0; z-index:100; border-bottom:1px solid var(--line); background:var(--header-bg); -webkit-backdrop-filter:blur(16px) saturate(1.2); backdrop-filter:blur(16px) saturate(1.2);}
+      .site-header{position:sticky; top:0; z-index:100; border-bottom:1px solid var(--line); background-color:transparent; background-image:radial-gradient(transparent 2.5px,var(--header-bg) 2.5px); background-size:10px 10px; -webkit-backdrop-filter:blur(16px) saturate(1.2); backdrop-filter:blur(16px) saturate(1.2);}
       .nav{position:relative; z-index:100; display:flex; align-items:center; gap:26px; height:64px; width:min(100% - var(--gutter) * 2,var(--container)); margin-inline:auto;}
       .brand{display:inline-flex; align-items:center; gap:8px; flex:none; font-size:17px; font-weight:650; letter-spacing:-0.02em;}
       .brand svg{width:22px; height:22px;}
@@ -276,9 +276,10 @@
       .model-table td{color:var(--ink-2);}
       .model-table tr.group td{padding-top:24px; padding-bottom:8px; border-bottom:0; color:var(--ink); font-size:12px; line-height:16px; letter-spacing:0.08em; text-transform:uppercase;}
       .model-table tr:last-child td{border-bottom:0;}
-      .model-table td strong{display:block; color:var(--ink); font-weight:600;}
+      .model-table td:first-child{white-space:nowrap;}
+      .model-table td strong{display:inline; color:var(--ink); font-weight:600;}
       .model-table .num{color:var(--ink); font-family:var(--mono); font-size:14px; white-space:nowrap; font-variant-numeric:tabular-nums;}
-      .model-table .tag{display:inline-block; margin-top:4px; padding:0 8px; border-radius:999px; background:rgba(48,209,88,0.14); color:var(--green); font-size:12px; line-height:20px; white-space:nowrap;}
+      .model-table .tag{display:inline-block; margin-left:8px; padding:0 8px; border-radius:999px; background:rgba(48,209,88,0.14); color:var(--green); font-size:12px; line-height:20px; white-space:nowrap;}
       .model-table-note{margin-top:16px; color:var(--ink-3); font-size:14px; line-height:20px;}
       .release{margin-top:16px; color:var(--ink-3); font-size:14px; line-height:20px;}
       .release a{color:var(--ink); text-decoration:underline; text-underline-offset:3px;}
@@ -306,7 +307,13 @@
       .download-alt-note{margin-top:4px; color:var(--ink-2); font-size:14px; line-height:20px;}
       .download-alt-note .mono{color:var(--ink);}
       .download-alt .btn{flex:none;}
-      .faq{max-width:880px;}
+      .faq-layout{display:grid; grid-template-columns:minmax(0,880px) minmax(220px,1fr); gap:40px; align-items:stretch;}
+      .faq{min-width:0;}
+      .faq-aside{display:flex; flex-direction:column; padding:24px; border:1px solid var(--line-2); border-radius:var(--r-2xl); background:var(--surface);}
+      .faq-aside-kicker{color:var(--ink-3); font-family:var(--mono); font-size:11px; line-height:16px; letter-spacing:0.08em; text-transform:uppercase;}
+      .faq-aside h3{margin-top:8px; font-size:20px; line-height:28px; font-weight:600;}
+      .faq-aside p{margin:8px 0 24px; color:var(--ink-2); font-size:14px; line-height:20px;}
+      .faq-aside-actions{display:flex; flex-direction:column; gap:8px; margin-top:auto;}
       .faq details{border-bottom:1px solid var(--line-2);}
       .faq details:first-child{border-top:1px solid var(--line-2);}
       .faq summary{position:relative; padding:24px 48px 24px 0; font-size:18px; line-height:28px; font-weight:600; cursor:pointer; list-style:none;}
@@ -370,7 +377,7 @@
         .nav-links,.nav-github,.nav-download{display:none;}
         .nav-actions{margin-left:auto;}
         .menu-btn{display:inline-flex;}
-        .problem-grid,.how-grid,.download-grid{grid-template-columns:1fr;}
+        .problem-grid,.how-grid,.download-grid,.faq-layout{grid-template-columns:1fr;}
         .download{min-height:0;}
         .privacy-layout{grid-template-columns:1fr; gap:24px;}
         .lab{grid-template-columns:1fr;}
@@ -1165,42 +1172,59 @@
             <p class="eyebrow">07 · <span class="zh" lang="zh-CN">常见问题</span><span class="en" lang="en">FAQ</span></p>
             <h2 id="faq-title"><span class="zh" lang="zh-CN">常见问题解答</span><span class="en" lang="en">Frequently asked questions</span></h2>
           </header>
-          <div class="faq" data-reveal>
-            <details name="faq">
-              <summary><span class="zh" lang="zh-CN">免费吗？</span><span class="en" lang="en">Is it free?</span></summary>
-              <p>
-                <span class="zh" lang="zh-CN">免费，MIT 开源。多语言模型可选下载，其中 NLLB-200 仅限非商业用途。</span
-                ><span class="en" lang="en">Free and MIT-licensed. Multilingual models are optional downloads; NLLB-200 is for non-commercial use only.</span>
-              </p>
-            </details>
-            <details name="faq">
-              <summary><span class="zh" lang="zh-CN">支持哪些系统和语言？音频会上传吗？</span><span class="en" lang="en">Which systems and languages are supported? Is my audio uploaded?</span></summary>
-              <p>
-                <span class="zh" lang="zh-CN">macOS 14.2 及以上的 Apple Silicon、Windows 10 及以上、Ubuntu 24，不提供 Intel Mac 版本。中英互译开箱即用，翻译方向需手动选择；多语言模型可选下载（识别与翻译最多 30 种，NLLB-200 仅限非商业用途），macOS 26 及以上可用系统识别与翻译。识别与翻译都在本机完成，只有模型下载与更新检查需要联网；Aptabase 匿名统计不含音频与文本，可在「通用 → 隐私」关闭。</span
-                ><span class="en" lang="en">macOS 14.2+ on Apple Silicon, Windows 10+, Ubuntu 24; no Intel Mac build. English ↔ Chinese works out of the box and you pick the translation direction; optional multilingual models cover up to 30 languages for recognition and translation (NLLB-200 is non-commercial only), and macOS 26+ offers system recognition and translation. Recognition and translation run locally; only model downloads and update checks need the network. The anonymous Aptabase stats exclude audio and text and can be disabled under General → Privacy.</span>
-              </p>
-            </details>
-            <details name="faq">
-              <summary><span class="zh" lang="zh-CN">macOS 提示应用已损坏，无法打开？</span><span class="en" lang="en">macOS says the app is damaged and will not open?</span></summary>
-              <p>
-                <span class="zh" lang="zh-CN">这是 Gatekeeper 拦截未签名构建的提示，不是文件损坏。把应用拖入「应用程序」后，在终端执行下面的命令：<code>xattr -dr com.apple.quarantine /Applications/AudioScript.app</code> 即可正常打开。</span
-                ><span class="en" lang="en">Gatekeeper is blocking an unsigned build; the file itself is fine. Drag the app to Applications, then run this command in Terminal:<code>xattr -dr com.apple.quarantine /Applications/AudioScript.app</code> The app will open normally.</span>
-              </p>
-            </details>
-            <details name="faq">
-              <summary><span class="zh" lang="zh-CN">悬浮窗能盖住全屏吗？Linux 不置顶怎么办？</span><span class="en" lang="en">Does the overlay cover full screen? What about Linux?</span></summary>
-              <p>
-                <span class="zh" lang="zh-CN">macOS 上悬浮窗以 NSPanel 显示，可盖住其他应用的全屏窗口；Windows 除独占全屏游戏外都行。Wayland 不支持普通窗口置顶，GNOME 等桌面启动时请设置环境变量：<code>GDK_BACKEND=x11</code>。X11 桌面默认正常。</span
-                ><span class="en" lang="en">On macOS the overlay runs as an NSPanel and covers other apps in full screen; on Windows it works except in exclusive full-screen games. Wayland has no keep-above for regular windows. On GNOME and similar desktops, set this environment variable when launching:<code>GDK_BACKEND=x11</code>. X11 desktops work out of the box.</span>
-              </p>
-            </details>
-            <details name="faq">
-              <summary><span class="zh" lang="zh-CN">Windows 提示「已保护你的电脑」「未知发布者」，或被智能应用控制拦截？</span><span class="en" lang="en">Windows shows “Windows protected your PC”, “Unknown publisher”, or Smart App Control blocked it?</span></summary>
-              <p>
-                <span class="zh" lang="zh-CN">这是 Windows 对未签名安装包的拦截，安装包本身没有损坏。SmartScreen 提示可以点「更多信息 → 仍要运行」，或先右键安装包 →「属性」→ 勾选「解除锁定」再安装。智能应用控制则没有单次放行：需在 Windows 安全中心 →「应用和浏览器控制」→「智能应用控制」中关闭后再安装；关闭后除非重装系统，无法再开启。</span
-                ><span class="en" lang="en">Windows is blocking an unsigned installer; the file itself is fine. For the SmartScreen prompt, choose “More info → Run anyway”, or right-click the installer → Properties → check “Unblock” before installing. Smart App Control has no per-app bypass: turn it off under Windows Security → App &amp; browser control → Smart App Control, then install. Once it is off, it cannot be turned back on without reinstalling Windows.</span>
-              </p>
-            </details>
+          <div class="faq-layout" data-reveal>
+            <div class="faq">
+              <details name="faq">
+                <summary><span class="zh" lang="zh-CN">免费吗？</span><span class="en" lang="en">Is it free?</span></summary>
+                <p>
+                  <span class="zh" lang="zh-CN">免费，MIT 开源。多语言模型可选下载，其中 NLLB-200 仅限非商业用途。</span
+                  ><span class="en" lang="en">Free and MIT-licensed. Multilingual models are optional downloads; NLLB-200 is for non-commercial use only.</span>
+                </p>
+              </details>
+              <details name="faq">
+                <summary><span class="zh" lang="zh-CN">支持哪些系统和语言？音频会上传吗？</span><span class="en" lang="en">Which systems and languages are supported? Is my audio uploaded?</span></summary>
+                <p>
+                  <span class="zh" lang="zh-CN">macOS 14.2 及以上的 Apple Silicon、Windows 10 及以上、Ubuntu 24，不提供 Intel Mac 版本。中英互译开箱即用，翻译方向需手动选择；多语言模型可选下载（识别与翻译最多 30 种，NLLB-200 仅限非商业用途），macOS 26 及以上可用系统识别与翻译。识别与翻译都在本机完成，只有模型下载与更新检查需要联网；Aptabase 匿名统计不含音频与文本，可在「通用 → 隐私」关闭。</span
+                  ><span class="en" lang="en">macOS 14.2+ on Apple Silicon, Windows 10+, Ubuntu 24; no Intel Mac build. English ↔ Chinese works out of the box and you pick the translation direction; optional multilingual models cover up to 30 languages for recognition and translation (NLLB-200 is non-commercial only), and macOS 26+ offers system recognition and translation. Recognition and translation run locally; only model downloads and update checks need the network. The anonymous Aptabase stats exclude audio and text and can be disabled under General → Privacy.</span>
+                </p>
+              </details>
+              <details name="faq">
+                <summary><span class="zh" lang="zh-CN">macOS 提示应用已损坏，无法打开？</span><span class="en" lang="en">macOS says the app is damaged and will not open?</span></summary>
+                <p>
+                  <span class="zh" lang="zh-CN">这是 Gatekeeper 拦截未签名构建的提示，不是文件损坏。把应用拖入「应用程序」后，在终端执行下面的命令：<code>xattr -dr com.apple.quarantine /Applications/AudioScript.app</code> 即可正常打开。</span
+                  ><span class="en" lang="en">Gatekeeper is blocking an unsigned build; the file itself is fine. Drag the app to Applications, then run this command in Terminal:<code>xattr -dr com.apple.quarantine /Applications/AudioScript.app</code> The app will open normally.</span>
+                </p>
+              </details>
+              <details name="faq">
+                <summary><span class="zh" lang="zh-CN">悬浮窗能盖住全屏吗？Linux 不置顶怎么办？</span><span class="en" lang="en">Does the overlay cover full screen? What about Linux?</span></summary>
+                <p>
+                  <span class="zh" lang="zh-CN">macOS 上悬浮窗以 NSPanel 显示，可盖住其他应用的全屏窗口；Windows 除独占全屏游戏外都行。Wayland 不支持普通窗口置顶，GNOME 等桌面启动时请设置环境变量：<code>GDK_BACKEND=x11</code>。X11 桌面默认正常。</span
+                  ><span class="en" lang="en">On macOS the overlay runs as an NSPanel and covers other apps in full screen; on Windows it works except in exclusive full-screen games. Wayland has no keep-above for regular windows. On GNOME and similar desktops, set this environment variable when launching:<code>GDK_BACKEND=x11</code>. X11 desktops work out of the box.</span>
+                </p>
+              </details>
+              <details name="faq">
+                <summary><span class="zh" lang="zh-CN">Windows 提示「已保护你的电脑」「未知发布者」，或被智能应用控制拦截？</span><span class="en" lang="en">Windows shows “Windows protected your PC”, “Unknown publisher”, or Smart App Control blocked it?</span></summary>
+                <p>
+                  <span class="zh" lang="zh-CN">这是 Windows 对未签名安装包的拦截，安装包本身没有损坏。SmartScreen 提示可以点「更多信息 → 仍要运行」，或先右键安装包 →「属性」→ 勾选「解除锁定」再安装。智能应用控制则没有单次放行：需在 Windows 安全中心 →「应用和浏览器控制」→「智能应用控制」中关闭后再安装；关闭后除非重装系统，无法再开启。</span
+                  ><span class="en" lang="en">Windows is blocking an unsigned installer; the file itself is fine. For the SmartScreen prompt, choose “More info → Run anyway”, or right-click the installer → Properties → check “Unblock” before installing. Smart App Control has no per-app bypass: turn it off under Windows Security → App &amp; browser control → Smart App Control, then install. Once it is off, it cannot be turned back on without reinstalling Windows.</span>
+                </p>
+              </details>
+            </div>
+            <aside class="faq-aside">
+              <span class="faq-aside-kicker">GitHub Issues</span>
+              <h3><span class="zh" lang="zh-CN">还有疑问？</span><span class="en" lang="en">Still have questions?</span></h3>
+              <p><span class="zh" lang="zh-CN">带上系统版本、应用版本、复现步骤和日志提交 Issue，我们会尽快跟进。</span><span class="en" lang="en">Include your OS, app version, reproduction steps, and logs; we’ll follow up as soon as we can.</span></p>
+              <div class="faq-aside-actions">
+                <a class="btn btn-outline btn-block" href="https://github.com/niyongsheng/AudioScript/issues/new/choose" target="_blank" rel="noopener noreferrer">
+                  <svg class="btn-icon" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 .5C5.65.5.5 5.65.5 12c0 5.08 3.29 9.39 7.86 10.91.58.11.79-.25.79-.56v-2.17c-3.2.7-3.87-1.54-3.87-1.54-.52-1.33-1.28-1.68-1.28-1.68-1.05-.72.08-.7.08-.7 1.16.08 1.77 1.19 1.77 1.19 1.03 1.76 2.7 1.25 3.36.96.1-.75.4-1.25.73-1.54-2.55-.29-5.23-1.28-5.23-5.68 0-1.25.45-2.28 1.19-3.08-.12-.29-.52-1.46.11-3.05 0 0 .97-.31 3.18 1.18a11 11 0 0 1 5.79 0c2.21-1.49 3.18-1.18 3.18-1.18.63 1.59.23 2.76.11 3.05.74.8 1.19 1.83 1.19 3.08 0 4.41-2.69 5.38-5.25 5.67.41.36.78 1.06.78 2.14v3.17c0 .31.21.68.8.56A11.52 11.52 0 0 0 23.5 12C23.5 5.65 18.35.5 12 .5z"/></svg>
+                  <span class="zh" lang="zh-CN">提交 Issue</span><span class="en" lang="en">Open an issue</span>
+                </a>
+                <a class="btn btn-outline btn-block" href="https://qm.qq.com/q/QAY6kqCek0" target="_blank" rel="noopener noreferrer">
+                  <svg class="btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M20.25 8.511c.884.284 1.5 1.128 1.5 2.097v4.286c0 1.136-.847 2.1-1.98 2.193-.34.027-.68.052-1.02.072v3.091l-3-3c-1.354 0-2.694-.055-4.02-.163a2.115 2.115 0 0 1-.825-.242m9.345-8.334a2.126 2.126 0 0 0-.476-.095 48.64 48.64 0 0 0-8.048 0c-1.131.094-1.976 1.057-1.976 2.192v4.286c0 .837.46 1.58 1.155 1.951m9.345-8.334V6.637c0-1.621-1.152-3.026-2.76-3.235A48.455 48.455 0 0 0 11.25 3c-2.115 0-4.198.137-6.24.402-1.608.209-2.76 1.614-2.76 3.235v6.226c0 1.621 1.152 3.026 2.76 3.235.577.075 1.157.14 1.74.194V21l4.155-4.155"/></svg>
+                  <span class="zh" lang="zh-CN">加入 QQ 群</span><span class="en" lang="en">Join QQ group</span>
+                </a>
+              </div>
+            </aside>
           </div>
         </div>
       </section>
