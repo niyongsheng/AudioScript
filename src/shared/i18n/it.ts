@@ -331,11 +331,8 @@ export const it: Partial<Messages> = {
   'models.downloadFailedFallback': 'Download non riuscito',
   'models.asrGroup': 'Riconoscimento vocale',
   'models.mtGroup': 'Traduzione automatica',
-  'models.needsNetwork': 'Su reti lente puoi installare e usare il pacchetto di modelli offline.',
-  'models.needsNetworkLink': 'pacchetto di modelli offline',
   'models.noStorage':
     'Impossibile risolvere la cartella di archiviazione dei modelli; i modelli opzionali non sono disponibili.',
-  'models.openDir': 'Apri cartella modelli',
   'models.storageGroup': 'Archiviazione',
   'models.storageLocation': 'Posizione di archiviazione dei modelli',
   'models.storageChange': 'Cambia',

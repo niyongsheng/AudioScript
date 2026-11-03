@@ -1,4 +1,4 @@
-const COLORS = [
+export const GLOW_COLORS = [
   '#3186ff',
   '#9378ff',
   '#f96bd6',
@@ -17,7 +17,7 @@ const COLORS = [
 ]
 
 function palette(stops: readonly number[]): string {
-  return COLORS.slice(0, stops.length)
+  return GLOW_COLORS.slice(0, stops.length)
     .map((color, index) => `${color} ${stops[index]}%`)
     .join(', ')
 }

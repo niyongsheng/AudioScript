@@ -336,11 +336,8 @@ export const fr: Partial<Messages> = {
   'models.downloadFailedFallback': 'Échec du téléchargement',
   'models.asrGroup': 'Reconnaissance vocale',
   'models.mtGroup': 'Traduction automatique',
-  'models.needsNetwork': 'Si le réseau est lent, vous pouvez installer et utiliser le pack de modèles hors ligne.',
-  'models.needsNetworkLink': 'pack de modèles hors ligne',
   'models.noStorage':
     'Impossible de localiser le dossier de stockage des modèles ; les modèles optionnels sont indisponibles.',
-  'models.openDir': 'Ouvrir le dossier des modèles',
   'models.storageGroup': 'Stockage',
   'models.storageLocation': 'Emplacement des modèles',
   'models.storageChange': 'Modifier',

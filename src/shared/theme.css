@@ -143,3 +143,41 @@ html:has(.overlay-body) body,
   display: flex;
   align-items: flex-end;
 }
+
+@keyframes egg-fade {
+  from {
+    opacity: 0;
+  }
+}
+
+@keyframes egg-pop {
+  from {
+    opacity: 0;
+    transform: translateY(14px) scale(0.94);
+  }
+}
+
+@keyframes egg-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes egg-twinkle {
+  0%,
+  100% {
+    opacity: 0;
+    transform: scale(0.5) rotate(-12deg);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1) rotate(12deg);
+  }
+}
+
+@keyframes egg-tap {
+  40% {
+    transform: scale(1.18);
+  }
+}

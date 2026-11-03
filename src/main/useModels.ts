@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { EVENT, formatCmdError, type ModelJobStatus, ModelPhase, type ModelsList, modelsList, on } from '@/shared/ipc'
+import {
+  EVENT,
+  formatCmdError,
+  type ModelJobStatus,
+  ModelPhase,
+  type ModelsList,
+  modelDownload,
+  modelsList,
+  on,
+} from '@/shared/ipc'
 
 interface ModelJobFailure {
   modelId: string
@@ -12,6 +21,7 @@ interface ModelsState {
   job: ModelJobStatus | null
   loadError: string | null
   failure: ModelJobFailure | null
+  download: (modelId: string) => Promise<void>
   dismissFailure: () => void
   clearLoadError: () => void
   refresh: () => Promise<void>
@@ -61,8 +71,30 @@ export function useModels(): ModelsState {
     }
   }, [refresh])
 
+  const download = useCallback(
+    async (modelId: string) => {
+      setFailure(null)
+      try {
+        await modelDownload(modelId)
+        await refresh()
+      } catch (e) {
+        setFailure({ modelId, message: formatCmdError(e) })
+      }
+    },
+    [refresh],
+  )
   const dismissFailure = useCallback(() => setFailure(null), [])
   const clearLoadError = useCallback(() => setLoadError(null), [])
 
-  return { list, setList, job, loadError, failure, dismissFailure, clearLoadError, refresh }
+  return {
+    list,
+    setList,
+    job,
+    loadError,
+    failure,
+    download,
+    dismissFailure,
+    clearLoadError,
+    refresh,
+  }
 }

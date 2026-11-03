@@ -186,6 +186,7 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
 
         "update_restart" => {
             tracing::info!("正在重启以应用更新");
+            crate::telemetry::report_exit(app, "update");
             app.restart();
         }
         "overlay_toggle" => overlay::toggle(app)
@@ -256,6 +257,11 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
 
         "open_sponsor" => {
             open_with_system(std::ffi::OsStr::new(SPONSOR_URL), tr(Key::OpenWhatBrowser))?;
+            Ok(json!(null))
+        }
+
+        "open_contact" => {
+            open_with_system(std::ffi::OsStr::new(CONTACT_URL), tr(Key::OpenWhatLink))?;
             Ok(json!(null))
         }
 
@@ -645,6 +651,8 @@ const REPO_URL: &str = "https://github.com/niyongsheng/AudioScript";
 const SITE_URL: &str = "https://audioscript.looplooptech.com/";
 
 const SPONSOR_URL: &str = "https://ifdian.net/a/nico2026";
+
+const CONTACT_URL: &str = "mailto:niyongsheng@Outlook.com";
 
 fn export_dir(app: &AppHandle) -> Result<std::path::PathBuf, CmdError> {
     app.path()

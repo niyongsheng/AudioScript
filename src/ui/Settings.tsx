@@ -38,9 +38,10 @@ interface RowProps {
   control?: ReactNode
   onClick?: () => void
   unavailableReason?: string
+  noHover?: boolean
 }
 
-export function SettingsRow({ title, icon, description, control, onClick, unavailableReason }: RowProps) {
+export function SettingsRow({ title, icon, description, control, onClick, unavailableReason, noHover }: RowProps) {
   const content = (
     <>
       {icon && <Icon name={icon} size={17} className="mt-0.5 shrink-0 text-[var(--color-ink-1)]" />}
@@ -66,7 +67,11 @@ export function SettingsRow({ title, icon, description, control, onClick, unavai
       type="button"
       onClick={onClick}
       disabled={!!unavailableReason}
-      className={cn(base, 'w-full text-start transition', !unavailableReason && 'hover:bg-[var(--color-surface-2)]')}
+      className={cn(
+        base,
+        'w-full text-start transition',
+        !unavailableReason && !noHover && 'hover:bg-[var(--color-surface-2)]',
+      )}
     >
       {content}
     </button>

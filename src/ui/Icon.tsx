@@ -10,6 +10,7 @@ import {
   ChevronRightIcon,
   Cog6ToothIcon,
   CpuChipIcon,
+  EnvelopeIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
   EyeIcon,
@@ -24,7 +25,6 @@ import {
   PaintBrushIcon,
   PlayIcon,
   ShieldCheckIcon,
-  SignalSlashIcon,
   SparklesIcon,
   SpeakerWaveIcon,
   Square2StackIcon,
@@ -51,6 +51,7 @@ export type IconName =
   | 'reset'
   | 'folder'
   | 'external'
+  | 'mail'
   | 'alert'
   | 'error'
   | 'check'
@@ -59,7 +60,6 @@ export type IconName =
   | 'swatch'
   | 'border'
   | 'shield'
-  | 'wifiOff'
   | 'eye'
   | 'eyeOff'
   | 'lock'
@@ -117,6 +117,7 @@ const ICONS: Record<IconName, IconComponent> = {
   reset: ArrowUturnLeftIcon,
   folder: FolderOpenIcon,
   external: ArrowTopRightOnSquareIcon,
+  mail: EnvelopeIcon,
   alert: ExclamationTriangleIcon,
   error: ExclamationCircleIcon,
   check: CheckIcon,
@@ -125,7 +126,6 @@ const ICONS: Record<IconName, IconComponent> = {
   swatch: SwatchIcon,
   border: Square2StackIcon,
   shield: ShieldCheckIcon,
-  wifiOff: SignalSlashIcon,
   eye: EyeIcon,
   eyeOff: EyeSlashIcon,
   lock: LockClosedIcon,

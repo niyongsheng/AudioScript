@@ -334,11 +334,8 @@ export const es: Partial<Messages> = {
   'models.downloadFailedFallback': 'Error de descarga',
   'models.asrGroup': 'Reconocimiento de voz',
   'models.mtGroup': 'Traducción automática',
-  'models.needsNetwork': 'Si la red va lenta, puede instalar y usar el paquete de modelos sin conexión.',
-  'models.needsNetworkLink': 'paquete de modelos sin conexión',
   'models.noStorage':
     'No se puede resolver la carpeta de almacenamiento de modelos; los modelos opcionales no están disponibles.',
-  'models.openDir': 'Abrir carpeta de modelos',
   'models.storageGroup': 'Almacenamiento',
   'models.storageLocation': 'Ubicación de los modelos',
   'models.storageChange': 'Cambiar',

@@ -321,6 +321,10 @@ export function openSponsor(): Promise<null> {
   return call<null>('open_sponsor')
 }
 
+export function openContact(): Promise<null> {
+  return call<null>('open_contact')
+}
+
 export function openUrl(url: string): Promise<null> {
   return call<null>('open_url', { url })
 }

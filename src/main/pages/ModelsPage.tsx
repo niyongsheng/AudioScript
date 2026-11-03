@@ -12,12 +12,11 @@ import {
   type ModelsList,
   modelCancel,
   modelDirSet,
-  modelDownload,
   modelOpenDir,
   modelRemove,
   openUrl,
 } from '@/shared/ipc'
-import { MODEL_DOWNLOAD_URL } from '@/shared/links'
+import { DOWNLOAD_URL } from '@/shared/links'
 import { formatBytes, modelLanguageLabel, modelStatusBadge, modelTitle } from '@/shared/models'
 import { ModelKind, TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
@@ -38,35 +37,22 @@ const PHASE_KEYS: Record<ModelPhase, MessageKey> = {
   [ModelPhase.Failed]: 'models.phaseFailed',
 }
 
-function InlineModelPackLink({ text, label, onOpen }: { text: string; label: string; onOpen: () => void }) {
-  const at = text.indexOf(label)
-  const link = (
-    <button type="button" className="text-[var(--color-accent)] underline underline-offset-2" onClick={onOpen}>
-      {label}
-    </button>
-  )
-  if (at < 0) {
-    return (
-      <>
-        {text} {link}
-      </>
-    )
-  }
-  return (
-    <>
-      {text.slice(0, at)}
-      {link}
-      {text.slice(at + label.length)}
-    </>
-  )
-}
-
 export function ModelsPage() {
   const { status, setError } = useStore()
   const { t } = useI18n()
   const capturing = status === TaskStatus.Capturing
 
-  const { list, setList, job, loadError, failure, dismissFailure, clearLoadError, refresh } = useModels()
+  const {
+    list,
+    setList,
+    job,
+    loadError,
+    failure,
+    download: downloadModel,
+    dismissFailure,
+    clearLoadError,
+    refresh,
+  } = useModels()
   const [busyId, setBusyId] = useState<string | null>(null)
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
   const [confirmResetDir, setConfirmResetDir] = useState(false)
@@ -76,14 +62,14 @@ export function ModelsPage() {
     void refresh()
   }
 
+  function openOfflineModels() {
+    void openUrl(DOWNLOAD_URL).catch((e) => setError(formatCmdError(e)))
+  }
+
   async function download(modelId: string) {
-    dismissFailure()
     setBusyId(modelId)
     try {
-      await modelDownload(modelId)
-      await refresh()
-    } catch (e) {
-      setError(formatCmdError(e))
+      await downloadModel(modelId)
     } finally {
       setBusyId(null)
     }
@@ -208,8 +194,14 @@ export function ModelsPage() {
           tone="error"
           title={t('models.downloadFailedTitle', { title: modelTitleById(list, failure.modelId, t) })}
           onDismiss={dismissFailure}
+          actions={
+            <Button size="sm" variant="primary" icon="external" onClick={openOfflineModels}>
+              {t('models.downloadOffline')}
+            </Button>
+          }
         >
           <p className="break-words">{failure.message ?? t('models.downloadFailedFallback')}</p>
+          <p className="mt-1 text-[var(--color-ink-2)]">{t('models.downloadFailedOfflineHint')}</p>
         </Alert>
       )}
 
@@ -258,7 +250,15 @@ export function ModelsPage() {
       <SettingsGroup title={t('models.storageGroup')}>
         <SettingsRow
           icon="folder"
-          title={t('models.storageLocation')}
+          title={
+            connected ? (
+              <button type="button" onClick={openModelsDir} className="underline-offset-2 transition hover:underline">
+                {t('models.storageLocation')}
+              </button>
+            ) : (
+              t('models.storageLocation')
+            )
+          }
           description={
             <span>
               {list.userRoot ? (
@@ -287,26 +287,6 @@ export function ModelsPage() {
           }
         />
       </SettingsGroup>
-
-      <p className="px-1 text-[var(--color-ink-2)] text-[0.7rem] leading-relaxed">
-        {connected ? (
-          <>
-            <Icon name="wifiOff" size={12} className="me-1 inline-block align-[-0.125em]" />
-            <InlineModelPackLink
-              text={t('models.needsNetwork')}
-              label={t('models.needsNetworkLink')}
-              onOpen={() => void openUrl(MODEL_DOWNLOAD_URL).catch((e) => setError(formatCmdError(e)))}
-            />
-          </>
-        ) : (
-          t('models.noStorage')
-        )}
-        {connected && (
-          <button type="button" className="ms-1 underline underline-offset-2" onClick={openModelsDir}>
-            {t('models.openDir')}
-          </button>
-        )}
-      </p>
     </Page>
   )
 }
