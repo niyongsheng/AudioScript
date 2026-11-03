@@ -54,7 +54,7 @@ const FEATURES_V050: readonly WhatsNewFeature[] = [
   },
 ]
 
-const FEATURES_V060: readonly WhatsNewFeature[] = [
+const FEATURES_V061: readonly WhatsNewFeature[] = [
   {
     icon: 'translate',
     titleKey: 'whatsNew.localesTitle',
@@ -75,7 +75,7 @@ const FEATURES_V060: readonly WhatsNewFeature[] = [
 const WHATS_NEW: Record<string, readonly WhatsNewFeature[]> = {
   '0.3.0': FEATURES_V030,
   '0.5.0': FEATURES_V050,
-  '0.6.0': FEATURES_V060,
+  '0.6.1': FEATURES_V061,
 }
 
 export function whatsNewFor(version: string): readonly WhatsNewFeature[] | undefined {
