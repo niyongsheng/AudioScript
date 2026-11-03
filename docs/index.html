@@ -320,7 +320,7 @@
       .faq summary::-webkit-details-marker{display:none;}
       .faq summary::after{content:"+"; position:absolute; top:50%; right:8px; color:var(--ink-3); font-family:var(--mono); font-size:20px; font-weight:400; transform:translateY(-50%); transition:transform 300ms var(--ease),color 300ms var(--ease);}
       .faq details[open] summary::after{color:var(--ink); transform:translateY(-50%) rotate(45deg);}
-      .faq details p{max-width:74ch; padding:0 48px 24px 0; color:var(--ink-2); font-size:16px; line-height:24px;}
+      .faq details p{padding:0 48px 24px 0; color:var(--ink-2); font-size:16px; line-height:24px;}
       .faq code{display:block; width:fit-content; max-width:100%; overflow-x:auto; margin:6px 0; padding:1px 6px; border:1px solid var(--line-2); border-radius:var(--r-sm); background:var(--surface-2); font-family:var(--mono); font-size:14px; line-height:20px; color:var(--ink); white-space:nowrap; cursor:copy;}
       .faq code::after{content:"复制"; margin-left:8px; padding-left:8px; border-left:1px solid var(--line-2); font-family:var(--font); font-size:11px; color:var(--ink-3);}
       html[data-lang="en"] .faq code::after{content:"Copy";}
@@ -495,7 +495,7 @@
             "name": "支持哪些系统和语言？音频会上传吗？",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "macOS 14.2 及以上的 Apple Silicon、Windows 10 及以上、Ubuntu 24，不提供 Intel Mac 版本。中英互译开箱即用，翻译方向需手动选择；多语言模型可选下载（识别与翻译最多 30 种，NLLB-200 仅限非商业用途），macOS 26 及以上可用系统识别与翻译。识别与翻译都在本机完成，只有模型下载与更新检查需要联网；Aptabase 匿名统计不含音频与文本，可在「通用 → 隐私」关闭。"
+              "text": "macOS 14.2 及以上的 Apple Silicon、Windows 10 及以上、Ubuntu 24，不提供 Intel Mac 版本。中英互译开箱即用，翻译方向需手动选择；多语言模型可选下载，macOS 26 及以上可用系统识别与翻译。识别与翻译都在本机完成，只有模型下载与更新检查需要联网；Aptabase 匿名统计不含音频与文本，可在「通用 → 隐私」关闭。"
             }
           },
           {
@@ -511,7 +511,7 @@
             "name": "悬浮窗能盖住全屏吗？Linux 不置顶怎么办？",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "macOS 上悬浮窗以 NSPanel 显示，可盖住其他应用的全屏窗口；Windows 除独占全屏游戏外都行。Wayland 不支持普通窗口置顶，GNOME 等桌面启动时请设置环境变量：GDK_BACKEND=x11。X11 桌面默认正常。"
+              "text": "macOS 上悬浮窗以 NSPanel 显示，可盖住其他应用的全屏窗口；Windows 除独占全屏游戏外都行。Wayland 不支持普通窗口置顶，X11 桌面默认正常。GNOME 等桌面启动时请设置环境变量：GDK_BACKEND=x11。"
             }
           },
           {
@@ -519,7 +519,7 @@
             "name": "Windows 提示「已保护你的电脑」「未知发布者」，或被智能应用控制拦截？",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "这是 Windows 对未签名安装包的拦截，安装包本身没有损坏。SmartScreen 提示可以点「更多信息 → 仍要运行」，或先右键安装包 →「属性」→ 勾选「解除锁定」再安装。智能应用控制则没有单次放行：需在 Windows 安全中心 →「应用和浏览器控制」→「智能应用控制」中关闭后再安装；关闭后除非重装系统，无法再开启。"
+              "text": "这是 Windows 对未签名安装包的拦截，安装包本身没有损坏。SmartScreen 提示：「更多信息 → 仍要运行」，或先右键安装包 →「属性」→ 勾选「解除锁定」再安装。智能应用控制：需在 Windows 安全中心 →「应用和浏览器控制」→「智能应用控制」中关闭后再安装。"
             }
           }
         ]
@@ -759,7 +759,7 @@
           <div class="problem-grid">
             <article class="problem" data-reveal>
               <p class="problem-label"><span class="zh" lang="zh-CN">等字幕</span><span class="en" lang="en">Waiting</span></p>
-              <h3><span class="zh" lang="zh-CN">三天后才有的字幕文件</span><span class="en" lang="en">A subtitle file three days later</span></h3>
+              <h3><span class="zh" lang="zh-CN">告别字幕组</span><span class="en" lang="en">No subtitle crew</span></h3>
               <p><span class="zh" lang="zh-CN">播客、直播和会议没有现成字幕，等别人做完，内容已经凉了。</span><span class="en" lang="en">Podcasts, live streams, and meetings ship without subtitles. By the time someone writes them, the moment has passed.</span></p>
               <p class="problem-fix">
                 <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z" /></svg>
@@ -768,7 +768,7 @@
             </article>
             <article class="problem" data-reveal style="--d: 60ms">
               <p class="problem-label"><span class="zh" lang="zh-CN">上传</span><span class="en" lang="en">Uploading</span></p>
-              <h3><span class="zh" lang="zh-CN">把会议录音交给别人的服务器</span><span class="en" lang="en">Handing the meeting to someone else's server</span></h3>
+              <h3><span class="zh" lang="zh-CN">数据本地化</span><span class="en" lang="en">Local data</span></h3>
               <p><span class="zh" lang="zh-CN">云端转录要先上传音频，隐私条款比会议本身还长。</span><span class="en" lang="en">Cloud transcription starts with an upload, and the privacy policy is longer than the meeting.</span></p>
               <p class="problem-fix">
                 <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z" /></svg>
@@ -777,7 +777,7 @@
             </article>
             <article class="problem" data-reveal style="--d: 120ms">
               <p class="problem-label"><span class="zh" lang="zh-CN">配置</span><span class="en" lang="en">Wiring</span></p>
-              <h3><span class="zh" lang="zh-CN">为了一次转写装虚拟声卡</span><span class="en" lang="en">Installing a virtual sound card</span></h3>
+              <h3><span class="zh" lang="zh-CN">无需新硬件</span><span class="en" lang="en">No extra hardware</span></h3>
               <p><span class="zh" lang="zh-CN">采集系统声音通常要装 BlackHole，再把音频路由改一遍。</span><span class="en" lang="en">Capturing system audio usually means installing BlackHole and rewiring your output.</span></p>
               <p class="problem-fix">
                 <svg viewBox="0 0 256 256" fill="currentColor" aria-hidden="true"><path d="M173.66,98.34a8,8,0,0,1,0,11.32l-56,56a8,8,0,0,1-11.32,0l-24-24a8,8,0,0,1,11.32-11.32L112,148.69l50.34-50.35A8,8,0,0,1,173.66,98.34ZM232,128A104,104,0,1,1,128,24,104.11,104.11,0,0,1,232,128Zm-16,0a88,88,0,1,0-88,88A88.1,88.1,0,0,0,216,128Z" /></svg>
@@ -1184,8 +1184,8 @@
               <details name="faq">
                 <summary><span class="zh" lang="zh-CN">支持哪些系统和语言？音频会上传吗？</span><span class="en" lang="en">Which systems and languages are supported? Is my audio uploaded?</span></summary>
                 <p>
-                  <span class="zh" lang="zh-CN">macOS 14.2 及以上的 Apple Silicon、Windows 10 及以上、Ubuntu 24，不提供 Intel Mac 版本。中英互译开箱即用，翻译方向需手动选择；多语言模型可选下载（识别与翻译最多 30 种，NLLB-200 仅限非商业用途），macOS 26 及以上可用系统识别与翻译。识别与翻译都在本机完成，只有模型下载与更新检查需要联网；Aptabase 匿名统计不含音频与文本，可在「通用 → 隐私」关闭。</span
-                  ><span class="en" lang="en">macOS 14.2+ on Apple Silicon, Windows 10+, Ubuntu 24; no Intel Mac build. English ↔ Chinese works out of the box and you pick the translation direction; optional multilingual models cover up to 30 languages for recognition and translation (NLLB-200 is non-commercial only), and macOS 26+ offers system recognition and translation. Recognition and translation run locally; only model downloads and update checks need the network. The anonymous Aptabase stats exclude audio and text and can be disabled under General → Privacy.</span>
+                  <span class="zh" lang="zh-CN">macOS 14.2 及以上的 Apple Silicon、Windows 10 及以上、Ubuntu 24，不提供 Intel Mac 版本。中英互译开箱即用，翻译方向需手动选择；多语言模型可选下载，macOS 26 及以上可用系统识别与翻译。<br>识别与翻译都在本机完成，只有模型下载与更新检查需要联网；<br>Aptabase 匿名统计不含音频与文本，可在「通用 → 隐私」关闭。</span
+                  ><span class="en" lang="en">macOS 14.2+ on Apple Silicon, Windows 10+, Ubuntu 24; no Intel Mac build. English ↔ Chinese works out of the box and you pick the translation direction; optional multilingual models are available, and macOS 26+ offers system recognition and translation.<br>Recognition and translation run locally; only model downloads and update checks need the network.<br>The anonymous Aptabase stats exclude audio and text and can be disabled under General → Privacy.</span>
                 </p>
               </details>
               <details name="faq">
@@ -1198,15 +1198,15 @@
               <details name="faq">
                 <summary><span class="zh" lang="zh-CN">悬浮窗能盖住全屏吗？Linux 不置顶怎么办？</span><span class="en" lang="en">Does the overlay cover full screen? What about Linux?</span></summary>
                 <p>
-                  <span class="zh" lang="zh-CN">macOS 上悬浮窗以 NSPanel 显示，可盖住其他应用的全屏窗口；Windows 除独占全屏游戏外都行。Wayland 不支持普通窗口置顶，GNOME 等桌面启动时请设置环境变量：<code>GDK_BACKEND=x11</code>。X11 桌面默认正常。</span
-                  ><span class="en" lang="en">On macOS the overlay runs as an NSPanel and covers other apps in full screen; on Windows it works except in exclusive full-screen games. Wayland has no keep-above for regular windows. On GNOME and similar desktops, set this environment variable when launching:<code>GDK_BACKEND=x11</code>. X11 desktops work out of the box.</span>
+                  <span class="zh" lang="zh-CN">macOS 上悬浮窗以 NSPanel 显示，可盖住其他应用的全屏窗口；Windows 除独占全屏游戏外都行。Wayland 不支持普通窗口置顶，X11 桌面默认正常。GNOME 等桌面启动时请设置环境变量：<code>GDK_BACKEND=x11</code></span
+                  ><span class="en" lang="en">On macOS the overlay runs as an NSPanel and covers other apps in full screen; on Windows it works except in exclusive full-screen games. Wayland has no keep-above for regular windows; X11 desktops work out of the box. On GNOME and similar desktops, set this environment variable when launching:<code>GDK_BACKEND=x11</code></span>
                 </p>
               </details>
               <details name="faq">
                 <summary><span class="zh" lang="zh-CN">Windows 提示「已保护你的电脑」「未知发布者」，或被智能应用控制拦截？</span><span class="en" lang="en">Windows shows “Windows protected your PC”, “Unknown publisher”, or Smart App Control blocked it?</span></summary>
                 <p>
-                  <span class="zh" lang="zh-CN">这是 Windows 对未签名安装包的拦截，安装包本身没有损坏。SmartScreen 提示可以点「更多信息 → 仍要运行」，或先右键安装包 →「属性」→ 勾选「解除锁定」再安装。智能应用控制则没有单次放行：需在 Windows 安全中心 →「应用和浏览器控制」→「智能应用控制」中关闭后再安装；关闭后除非重装系统，无法再开启。</span
-                  ><span class="en" lang="en">Windows is blocking an unsigned installer; the file itself is fine. For the SmartScreen prompt, choose “More info → Run anyway”, or right-click the installer → Properties → check “Unblock” before installing. Smart App Control has no per-app bypass: turn it off under Windows Security → App &amp; browser control → Smart App Control, then install. Once it is off, it cannot be turned back on without reinstalling Windows.</span>
+                  <span class="zh" lang="zh-CN">这是 Windows 对未签名安装包的拦截，安装包本身没有损坏。<br>SmartScreen 提示：「更多信息 → 仍要运行」，或先右键安装包 →「属性」→ 勾选「解除锁定」再安装。<br>智能应用控制：需在 Windows 安全中心 →「应用和浏览器控制」→「智能应用控制」中关闭后再安装。</span
+                  ><span class="en" lang="en">Windows is blocking an unsigned installer; the file itself is fine.<br>SmartScreen: choose “More info → Run anyway”, or right-click the installer → Properties → check “Unblock” before installing.<br>Smart App Control: turn it off under Windows Security → App &amp; browser control → Smart App Control, then install.</span>
                 </p>
               </details>
             </div>
