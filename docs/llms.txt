@@ -79,5 +79,5 @@ AudioScript is a free, MIT-licensed, offline-first desktop app that listens to s
 ## 更多文档
 
 - 产品规范：[docs/SPEC.md](https://github.com/niyongsheng/AudioScript/blob/main/docs/SPEC.md)
-- 设计说明：[docs/design.md](https://github.com/niyongsheng/AudioScript/blob/main/docs/design.md)
+- 设计说明：[docs/DESIGN.md](https://github.com/niyongsheng/AudioScript/blob/main/docs/DESIGN.md)
 - 发布记录：[GitHub Releases](https://github.com/niyongsheng/AudioScript/releases)
