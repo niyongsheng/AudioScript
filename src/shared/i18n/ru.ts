@@ -98,6 +98,15 @@ export const ru: Partial<Messages> = {
   'whatsNew.lmtBody': 'Перевод между 60 языками под Apache-2.0, в быстрой и высокоточной версиях.',
   'whatsNew.glowWidthTitle': 'Настраиваемая ширина рамки',
   'whatsNew.glowWidthBody': 'Задайте ширину плавающей рамки оверлея от 1 до 8 пикселей.',
+  'whatsNew.localesTitle': 'Ещё пять языков интерфейса',
+  'whatsNew.localesBody':
+    'Арабский, португальский (Бразилия), русский, итальянский и индонезийский добавлены к 13 языкам интерфейса; для арабского используется раскладка справа налево.',
+  'whatsNew.manualUpdateTitle': 'Ручное обновление при сбое',
+  'whatsNew.manualUpdateBody':
+    'Если проверка или установка обновления не удалась, откройте страницу загрузки напрямую.',
+  'whatsNew.offlinePackTitle': 'Офлайн-набор моделей',
+  'whatsNew.offlinePackBody':
+    'При ошибке загрузки теперь есть ссылка на офлайн-набор моделей — он пригодится при медленной сети.',
   'whatsNew.viewNotes': 'Полные примечания к выпуску',
   'whatsNew.continue': 'Продолжить',
 
@@ -325,6 +334,9 @@ export const ru: Partial<Messages> = {
   'models.capturingBody': 'Остановите транскрипцию перед удалением модели.',
   'models.downloadFailedTitle': 'Не удалось скачать {title}',
   'models.downloadFailedFallback': 'Не удалось скачать',
+  'models.downloadFailedOfflineHint':
+    'Если загрузка снова не удалась, скачайте офлайн-набор моделей и следуйте инструкции на странице.',
+  'models.downloadOffline': 'Скачать офлайн-набор моделей',
   'models.asrGroup': 'Распознавание речи',
   'models.mtGroup': 'Машинный перевод',
   'models.noStorage': 'Не удалось определить папку моделей; дополнительные модели недоступны.',
@@ -373,6 +385,7 @@ export const ru: Partial<Messages> = {
   'about.updateReadyCapturing': 'v{version} установлена. Остановите транскрипцию перед перезапуском.',
   'about.updateReady': 'v{version} установлена. Перезапустите приложение, чтобы применить.',
   'about.updateError': 'Ошибка обновления: {error}',
+  'about.manualUpdate': 'Обновить вручную',
   'about.unknownError': 'Неизвестная ошибка',
   'about.updateChecking': 'Проверка последней версии…',
   'about.updateAvailableCapturing': 'Доступна новая версия. Остановите транскрипцию перед обновлением.',
@@ -396,6 +409,11 @@ export const ru: Partial<Messages> = {
   'about.licenseButton': 'Лицензия',
   'about.licenseLoadFailed': 'Не удалось загрузить лицензии моделей. Повторите на странице «Модели».',
 
+  'egg.badge': 'Секретное пасхальное яйцо',
+  'egg.body': 'Что слышите, то и видите.',
+  'egg.offline': 'Как и весь {name}, это пасхальное яйцо работает полностью офлайн — оно никогда не обращается к сети.',
+  'egg.encore': 'Ещё раз',
+  'egg.contact': 'Связаться с разработчиком',
   'overlayWindow.waiting': 'Ожидание речи…',
   'overlayWindow.translationFailed': 'Ошибка перевода',
   'overlayWindow.move': 'Переместить оверлей',

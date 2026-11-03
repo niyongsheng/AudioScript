@@ -91,6 +91,14 @@ export const ko: Partial<Messages> = {
   'whatsNew.lmtBody': 'Apache-2.0 라이선스로 60개 언어를 상호 번역합니다. 고속 버전과 고정밀 버전이 있습니다.',
   'whatsNew.glowWidthTitle': '테두리 두께 조절',
   'whatsNew.glowWidthBody': '흐르는 테두리 두께를 1~8 px로 조절할 수 있습니다.',
+  'whatsNew.localesTitle': 'UI 언어 5종 추가',
+  'whatsNew.localesBody':
+    '아랍어, 포르투갈어(브라질), 러시아어, 이탈리아어, 인도네시아어가 추가되어 총 13개 언어를 지원합니다. 아랍어는 오른쪽에서 왼쪽 레이아웃을 사용합니다.',
+  'whatsNew.manualUpdateTitle': '업데이트 실패 시 수동 다운로드',
+  'whatsNew.manualUpdateBody': '업데이트 확인이나 설치가 실패하면 다운로드 페이지를 바로 열 수 있습니다.',
+  'whatsNew.offlinePackTitle': '오프라인 모델 팩',
+  'whatsNew.offlinePackBody':
+    '다운로드 실패 안내에 오프라인 모델 팩 링크를 추가해 느린 네트워크에서도 설치할 수 있습니다.',
   'whatsNew.viewNotes': '전체 릴리스 노트 보기',
   'whatsNew.continue': '계속',
 
@@ -318,6 +326,8 @@ export const ko: Partial<Messages> = {
   'models.capturingBody': '모델을 삭제하려면 전사를 중지하세요.',
   'models.downloadFailedTitle': '{title} 다운로드 실패',
   'models.downloadFailedFallback': '다운로드 실패',
+  'models.downloadFailedOfflineHint': '계속 실패하면 오프라인 모델 팩을 받아 페이지 안내에 따라 설치하세요.',
+  'models.downloadOffline': '오프라인 모델 팩 받기',
   'models.asrGroup': '음성 인식',
   'models.mtGroup': '기계 번역',
   'models.noStorage': '모델 저장 폴더를 확인할 수 없어 선택 모델을 사용할 수 없습니다.',
@@ -366,6 +376,7 @@ export const ko: Partial<Messages> = {
   'about.updateReadyCapturing': 'v{version} 설치됨. 재시작하기 전에 전사를 중지하세요.',
   'about.updateReady': 'v{version} 설치됨. 앱을 재시작하여 적용하세요.',
   'about.updateError': '업데이트 실패: {error}',
+  'about.manualUpdate': '수동 업데이트',
   'about.unknownError': '알 수 없는 오류',
   'about.updateChecking': '최신 버전을 확인하는 중…',
   'about.updateAvailableCapturing': '새 버전이 있습니다. 업데이트하기 전에 전사를 중지하세요.',
@@ -389,6 +400,11 @@ export const ko: Partial<Messages> = {
   'about.licenseButton': '라이선스',
   'about.licenseLoadFailed': '모델 라이선스를 불러오지 못했습니다. 모델 페이지에서 다시 시도하세요.',
 
+  'egg.badge': '숨겨진 이스터 에그',
+  'egg.body': '들은 그대로, 보이는 그대로.',
+  'egg.offline': '{name}은(는) 전부 오프라인으로 실행됩니다. 이 이스터 에그도 네트워크에 연결하지 않습니다.',
+  'egg.encore': '한 번 더',
+  'egg.contact': '개발자에게 문의',
   'overlayWindow.waiting': '음성 대기 중…',
   'overlayWindow.translationFailed': '번역 실패',
   'overlayWindow.move': '오버레이 이동',

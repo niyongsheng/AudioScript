@@ -99,6 +99,15 @@ export const it: Partial<Messages> = {
   'whatsNew.lmtBody': 'Traduci tra 60 lingue con licenza Apache-2.0, con versioni veloce e ad alta precisione.',
   'whatsNew.glowWidthTitle': 'Larghezza del bordo regolabile',
   'whatsNew.glowWidthBody': 'Imposta il bordo animato della sovrapposizione da 1 a 8 pixel.',
+  'whatsNew.localesTitle': 'Cinque nuove lingue dell’interfaccia',
+  'whatsNew.localesBody':
+    'Arabo, portoghese (Brasile), russo, italiano e indonesiano si aggiungono alle 13 lingue dell’interfaccia; l’arabo passa al layout da destra a sinistra.',
+  'whatsNew.manualUpdateTitle': 'Aggiornamento manuale di riserva',
+  'whatsNew.manualUpdateBody':
+    'Se il controllo o l’installazione di un aggiornamento fallisce, apri direttamente la pagina di download.',
+  'whatsNew.offlinePackTitle': 'Pacchetto di modelli offline',
+  'whatsNew.offlinePackBody':
+    'In caso di download fallito ora c’è un link al pacchetto di modelli offline, utile sulle reti lente.',
   'whatsNew.viewNotes': 'Vedi le note di rilascio complete',
   'whatsNew.continue': 'Continua',
 
@@ -329,6 +338,9 @@ export const it: Partial<Messages> = {
   'models.capturingBody': 'Ferma la trascrizione prima di eliminare un modello.',
   'models.downloadFailedTitle': 'Download di {title} non riuscito',
   'models.downloadFailedFallback': 'Download non riuscito',
+  'models.downloadFailedOfflineHint':
+    'Se continua a fallire, scarica il pacchetto di modelli offline e segui le istruzioni della pagina.',
+  'models.downloadOffline': 'Ottieni il pacchetto offline',
   'models.asrGroup': 'Riconoscimento vocale',
   'models.mtGroup': 'Traduzione automatica',
   'models.noStorage':
@@ -378,6 +390,7 @@ export const it: Partial<Messages> = {
   'about.updateReadyCapturing': 'v{version} installata. Ferma la trascrizione prima di riavviare.',
   'about.updateReady': 'v{version} installata. Riavvia l’app per applicare.',
   'about.updateError': 'Aggiornamento non riuscito: {error}',
+  'about.manualUpdate': 'Aggiornamento manuale',
   'about.unknownError': 'Errore sconosciuto',
   'about.updateChecking': 'Verifica della versione più recente…',
   'about.updateAvailableCapturing': 'È disponibile una nuova versione. Ferma la trascrizione prima di aggiornare.',
@@ -401,6 +414,12 @@ export const it: Partial<Messages> = {
   'about.licenseButton': 'Licenza',
   'about.licenseLoadFailed': 'Impossibile caricare le licenze dei modelli. Riprova nella pagina Modelli.',
 
+  'egg.badge': 'Easter egg segreto',
+  'egg.body': 'Quello che senti è quello che vedi.',
+  'egg.offline':
+    'Come il resto di {name}, questo easter egg funziona completamente offline: non si connette mai alla rete.',
+  'egg.encore': 'Bis',
+  'egg.contact': 'Contatta lo sviluppatore',
   'overlayWindow.waiting': 'In attesa della voce…',
   'overlayWindow.translationFailed': 'Traduzione non riuscita',
   'overlayWindow.move': 'Sposta sovrapposizione',

@@ -97,6 +97,14 @@ export const ja: Partial<Messages> = {
   'whatsNew.lmtBody': 'Apache-2.0 で 60 言語を相互翻訳。高速版と高精度版があります。',
   'whatsNew.glowWidthTitle': '枠線の太さを調整',
   'whatsNew.glowWidthBody': '流れる枠線の太さを 1〜8 px で調整できます。',
+  'whatsNew.localesTitle': 'UI 言語を 5 種類追加',
+  'whatsNew.localesBody':
+    'アラビア語、ポルトガル語（ブラジル）、ロシア語、イタリア語、インドネシア語を追加し、計 13 言語に。アラビア語は右から左のレイアウトに対応します。',
+  'whatsNew.manualUpdateTitle': '更新失敗時に手動ダウンロード',
+  'whatsNew.manualUpdateBody': '更新の確認やインストールに失敗した場合、ダウンロードページを直接開けます。',
+  'whatsNew.offlinePackTitle': 'オフラインモデルパック',
+  'whatsNew.offlinePackBody':
+    'ダウンロード失敗時にオフラインモデルパックへのリンクを表示し、低速回線でもインストールできます。',
   'whatsNew.viewNotes': '完全なリリースノートを見る',
   'whatsNew.continue': '続ける',
 
@@ -324,6 +332,9 @@ export const ja: Partial<Messages> = {
   'models.capturingBody': 'モデルを削除するには文字起こしを停止してください。',
   'models.downloadFailedTitle': '{title} のダウンロードに失敗しました',
   'models.downloadFailedFallback': 'ダウンロードに失敗しました',
+  'models.downloadFailedOfflineHint':
+    '何度も失敗する場合は、オフラインモデルパックを入手し、ページの手順に従ってインストールしてください。',
+  'models.downloadOffline': 'オフラインモデルパックを入手',
   'models.asrGroup': '音声認識',
   'models.mtGroup': '機械翻訳',
   'models.noStorage': 'モデルの保存先を解決できないため、オプションのモデルは利用できません。',
@@ -372,6 +383,7 @@ export const ja: Partial<Messages> = {
   'about.updateReadyCapturing': 'v{version} をインストールしました。文字起こしを停止してから再起動してください。',
   'about.updateReady': 'v{version} をインストールしました。アプリを再起動すると反映されます。',
   'about.updateError': 'アップデートに失敗しました：{error}',
+  'about.manualUpdate': '手動更新',
   'about.unknownError': '不明なエラー',
   'about.updateChecking': '最新バージョンを確認しています…',
   'about.updateAvailableCapturing': '新しいバージョンがあります。文字起こしを停止してから更新してください。',
@@ -395,6 +407,11 @@ export const ja: Partial<Messages> = {
   'about.licenseButton': 'ライセンス',
   'about.licenseLoadFailed': 'モデルライセンスの読み込みに失敗しました。「モデル」ページで再試行してください。',
 
+  'egg.badge': '隠しイースターエッグ',
+  'egg.body': '聞こえたものが、そのまま見える。',
+  'egg.offline': '{name} はすべてオフラインで動作します。このイースターエッグもネットに接続しません。',
+  'egg.encore': 'もう一度',
+  'egg.contact': '開発者に連絡',
   'overlayWindow.waiting': '認識を待っています…',
   'overlayWindow.translationFailed': '翻訳に失敗しました',
   'overlayWindow.move': 'オーバーレイを移動',

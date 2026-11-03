@@ -94,6 +94,15 @@ export const fr: Partial<Messages> = {
   'whatsNew.lmtBody': 'Traduisez entre 60 langues sous Apache-2.0, avec des versions rapide et haute précision.',
   'whatsNew.glowWidthTitle': 'Épaisseur de bordure réglable',
   'whatsNew.glowWidthBody': 'Réglez la bordure animée de la superposition de 1 à 8 pixels.',
+  'whatsNew.localesTitle': 'Cinq nouvelles langues d’interface',
+  'whatsNew.localesBody':
+    'L’arabe, le portugais (Brésil), le russe, l’italien et l’indonésien rejoignent les 13 langues d’interface ; l’arabe passe la mise en page en droite à gauche.',
+  'whatsNew.manualUpdateTitle': 'Mise à jour manuelle en secours',
+  'whatsNew.manualUpdateBody':
+    'Si la vérification ou l’installation d’une mise à jour échoue, ouvrez directement la page de téléchargement.',
+  'whatsNew.offlinePackTitle': 'Pack de modèles hors ligne',
+  'whatsNew.offlinePackBody':
+    'En cas d’échec de téléchargement, un lien vers le pack de modèles hors ligne permet d’installer même sur un réseau lent.',
   'whatsNew.viewNotes': 'Voir les notes de version complètes',
   'whatsNew.continue': 'Continuer',
 
@@ -334,6 +343,9 @@ export const fr: Partial<Messages> = {
   'models.capturingBody': 'Arrêtez la transcription avant de supprimer un modèle.',
   'models.downloadFailedTitle': 'Échec du téléchargement de {title}',
   'models.downloadFailedFallback': 'Échec du téléchargement',
+  'models.downloadFailedOfflineHint':
+    'Si l’échec se répète, récupérez le pack de modèles hors ligne et suivez les instructions de la page.',
+  'models.downloadOffline': 'Obtenir le pack de modèles hors ligne',
   'models.asrGroup': 'Reconnaissance vocale',
   'models.mtGroup': 'Traduction automatique',
   'models.noStorage':
@@ -383,6 +395,7 @@ export const fr: Partial<Messages> = {
   'about.updateReadyCapturing': 'v{version} installée. Arrêtez la transcription avant de redémarrer.',
   'about.updateReady': 'v{version} installée. Redémarrez l’application pour appliquer.',
   'about.updateError': 'Échec de la mise à jour : {error}',
+  'about.manualUpdate': 'Mise à jour manuelle',
   'about.unknownError': 'Erreur inconnue',
   'about.updateChecking': 'Recherche de la dernière version…',
   'about.updateAvailableCapturing':
@@ -407,6 +420,12 @@ export const fr: Partial<Messages> = {
   'about.licenseButton': 'Licence',
   'about.licenseLoadFailed': 'Échec du chargement des licences des modèles. Réessayez sur la page Modèles.',
 
+  'egg.badge': 'Œuf de Pâques secret',
+  'egg.body': 'Ce que vous entendez, vous le voyez.',
+  'egg.offline':
+    'Comme le reste de {name}, cet œuf de Pâques fonctionne entièrement hors ligne — il n’appelle jamais le réseau.',
+  'egg.encore': 'Rappel',
+  'egg.contact': 'Contacter le développeur',
   'overlayWindow.waiting': 'En attente de parole…',
   'overlayWindow.translationFailed': 'Échec de la traduction',
   'overlayWindow.move': 'Déplacer la superposition',

@@ -54,9 +54,28 @@ const FEATURES_V050: readonly WhatsNewFeature[] = [
   },
 ]
 
+const FEATURES_V060: readonly WhatsNewFeature[] = [
+  {
+    icon: 'translate',
+    titleKey: 'whatsNew.localesTitle',
+    bodyKey: 'whatsNew.localesBody',
+  },
+  {
+    icon: 'external',
+    titleKey: 'whatsNew.manualUpdateTitle',
+    bodyKey: 'whatsNew.manualUpdateBody',
+  },
+  {
+    icon: 'download',
+    titleKey: 'whatsNew.offlinePackTitle',
+    bodyKey: 'whatsNew.offlinePackBody',
+  },
+]
+
 const WHATS_NEW: Record<string, readonly WhatsNewFeature[]> = {
   '0.3.0': FEATURES_V030,
   '0.5.0': FEATURES_V050,
+  '0.6.0': FEATURES_V060,
 }
 
 export function whatsNewFor(version: string): readonly WhatsNewFeature[] | undefined {

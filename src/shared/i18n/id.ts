@@ -98,6 +98,13 @@ export const id: Partial<Messages> = {
   'whatsNew.lmtBody': 'Terjemahkan antar 60 bahasa dengan Apache-2.0, tersedia versi cepat dan akurasi tinggi.',
   'whatsNew.glowWidthTitle': 'Lebar batas dapat diatur',
   'whatsNew.glowWidthBody': 'Atur batas overlay beranimasi dari 1 hingga 8 piksel.',
+  'whatsNew.localesTitle': 'Lima bahasa antarmuka baru',
+  'whatsNew.localesBody':
+    'Arab, Portugis (Brasil), Rusia, Italia, dan Indonesia bergabung ke 13 bahasa antarmuka; Arab menggunakan tata letak kanan ke kiri.',
+  'whatsNew.manualUpdateTitle': 'Pembaruan manual saat gagal',
+  'whatsNew.manualUpdateBody': 'Jika pemeriksaan atau pemasangan pembaruan gagal, buka langsung halaman unduhan.',
+  'whatsNew.offlinePackTitle': 'Paket model offline',
+  'whatsNew.offlinePackBody': 'Kegagalan unduhan kini menautkan ke paket model offline untuk jaringan lambat.',
   'whatsNew.viewNotes': 'Lihat catatan rilis lengkap',
   'whatsNew.continue': 'Lanjutkan',
 
@@ -325,6 +332,8 @@ export const id: Partial<Messages> = {
   'models.capturingBody': 'Hentikan transkripsi sebelum menghapus model.',
   'models.downloadFailedTitle': 'Unduhan {title} gagal',
   'models.downloadFailedFallback': 'Unduhan gagal',
+  'models.downloadFailedOfflineHint': 'Jika terus gagal, unduh paket model offline dan ikuti petunjuk di halaman.',
+  'models.downloadOffline': 'Dapatkan paket model offline',
   'models.asrGroup': 'Pengenalan ucapan',
   'models.mtGroup': 'Terjemahan mesin',
   'models.noStorage': 'Tidak dapat menentukan folder penyimpanan model; model opsional tidak tersedia.',
@@ -373,6 +382,7 @@ export const id: Partial<Messages> = {
   'about.updateReadyCapturing': 'v{version} terpasang. Hentikan transkripsi sebelum memulai ulang.',
   'about.updateReady': 'v{version} terpasang. Mulai ulang aplikasi untuk menerapkan.',
   'about.updateError': 'Pembaruan gagal: {error}',
+  'about.manualUpdate': 'Pembaruan manual',
   'about.unknownError': 'Kesalahan tidak diketahui',
   'about.updateChecking': 'Memeriksa versi terbaru…',
   'about.updateAvailableCapturing': 'Versi baru tersedia. Hentikan transkripsi sebelum memperbarui.',
@@ -396,6 +406,12 @@ export const id: Partial<Messages> = {
   'about.licenseButton': 'Lisensi',
   'about.licenseLoadFailed': 'Gagal memuat lisensi model. Coba lagi di halaman Model.',
 
+  'egg.badge': 'Easter egg rahasia',
+  'egg.body': 'Yang kamu dengar, itulah yang kamu lihat.',
+  'egg.offline':
+    'Seperti {name} lainnya, easter egg ini berjalan sepenuhnya offline — tidak pernah terhubung ke jaringan.',
+  'egg.encore': 'Lagi',
+  'egg.contact': 'Hubungi pengembang',
   'overlayWindow.waiting': 'Menunggu ucapan…',
   'overlayWindow.translationFailed': 'Terjemahan gagal',
   'overlayWindow.move': 'Pindahkan overlay',

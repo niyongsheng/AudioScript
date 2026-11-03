@@ -93,6 +93,15 @@ export const es: Partial<Messages> = {
   'whatsNew.lmtBody': 'Traduce entre 60 idiomas bajo Apache-2.0, con versiones rápida y de alta precisión.',
   'whatsNew.glowWidthTitle': 'Grosor del borde ajustable',
   'whatsNew.glowWidthBody': 'Ajusta el borde animado de la superposición de 1 a 8 píxeles.',
+  'whatsNew.localesTitle': 'Cinco idiomas de interfaz más',
+  'whatsNew.localesBody':
+    'El árabe, el portugués (Brasil), el ruso, el italiano y el indonesio se suman a los 13 idiomas de la interfaz; el árabe cambia el diseño a derecha a izquierda.',
+  'whatsNew.manualUpdateTitle': 'Actualización manual como alternativa',
+  'whatsNew.manualUpdateBody':
+    'Si falla la comprobación o la instalación de una actualización, abre directamente la página de descarga.',
+  'whatsNew.offlinePackTitle': 'Paquete de modelos sin conexión',
+  'whatsNew.offlinePackBody':
+    'Los fallos de descarga ahora enlazan al paquete de modelos sin conexión para redes lentas.',
   'whatsNew.viewNotes': 'Ver notas de la versión completas',
   'whatsNew.continue': 'Continuar',
 
@@ -332,6 +341,9 @@ export const es: Partial<Messages> = {
   'models.capturingBody': 'Detén la transcripción antes de eliminar un modelo.',
   'models.downloadFailedTitle': 'Error al descargar {title}',
   'models.downloadFailedFallback': 'Error de descarga',
+  'models.downloadFailedOfflineHint':
+    'Si vuelve a fallar, consigue el paquete de modelos sin conexión y sigue las instrucciones de la página.',
+  'models.downloadOffline': 'Obtener el paquete sin conexión',
   'models.asrGroup': 'Reconocimiento de voz',
   'models.mtGroup': 'Traducción automática',
   'models.noStorage':
@@ -381,6 +393,7 @@ export const es: Partial<Messages> = {
   'about.updateReadyCapturing': 'v{version} instalada. Detenga la transcripción antes de reiniciar.',
   'about.updateReady': 'v{version} instalada. Reinicie la aplicación para aplicar.',
   'about.updateError': 'Error de actualización: {error}',
+  'about.manualUpdate': 'Actualización manual',
   'about.unknownError': 'Error desconocido',
   'about.updateChecking': 'Buscando la última versión…',
   'about.updateAvailableCapturing': 'Hay una nueva versión disponible. Detenga la transcripción antes de actualizar.',
@@ -404,6 +417,12 @@ export const es: Partial<Messages> = {
   'about.licenseButton': 'Licencia',
   'about.licenseLoadFailed': 'No se pudieron cargar las licencias de los modelos. Reintente en la página Modelos.',
 
+  'egg.badge': 'Huevo de Pascua secreto',
+  'egg.body': 'Lo que oyes es lo que ves.',
+  'egg.offline':
+    'Como el resto de {name}, este huevo de Pascua funciona totalmente sin conexión: nunca se conecta a la red.',
+  'egg.encore': 'Otra vez',
+  'egg.contact': 'Contactar con el desarrollador',
   'overlayWindow.waiting': 'Esperando voz…',
   'overlayWindow.translationFailed': 'Error de traducción',
   'overlayWindow.move': 'Mover superposición',

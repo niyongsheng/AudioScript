@@ -94,6 +94,13 @@ export const zhCN = {
   'whatsNew.lmtBody': '60 种语言互译（Apache-2.0），提供快速版与高精度版。',
   'whatsNew.glowWidthTitle': '边框宽度可调',
   'whatsNew.glowWidthBody': '彩色流光边框支持 1–8 px 宽度调节。',
+  'whatsNew.localesTitle': '新增 5 种界面语言',
+  'whatsNew.localesBody':
+    '阿拉伯语、葡萄牙语（巴西）、俄语、意大利语、印尼语，共 13 种界面语言；阿拉伯语支持从右到左排版。',
+  'whatsNew.manualUpdateTitle': '更新失败可手动下载',
+  'whatsNew.manualUpdateBody': '检查或安装更新失败时，可直接打开官网下载页。',
+  'whatsNew.offlinePackTitle': '模型下载失败有备用方案',
+  'whatsNew.offlinePackBody': '下载失败提示新增离线模型包入口，弱网环境也能安装。',
   'whatsNew.viewNotes': '查看完整更新说明',
   'whatsNew.continue': '继续',
 

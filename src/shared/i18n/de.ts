@@ -93,6 +93,15 @@ export const de: Partial<Messages> = {
   'whatsNew.lmtBody': 'Übersetzen zwischen 60 Sprachen unter Apache-2.0, mit schneller und hochgenauer Variante.',
   'whatsNew.glowWidthTitle': 'Einstellbare Rahmenbreite',
   'whatsNew.glowWidthBody': 'Stellen Sie den fließenden Overlay-Rahmen auf 1 bis 8 Pixel ein.',
+  'whatsNew.localesTitle': 'Fünf weitere Oberflächensprachen',
+  'whatsNew.localesBody':
+    'Arabisch, Portugiesisch (Brasilien), Russisch, Italienisch und Indonesisch erweitern die 13 Oberflächensprachen; Arabisch stellt das Layout auf rechts nach links um.',
+  'whatsNew.manualUpdateTitle': 'Manuelles Update als Ausweg',
+  'whatsNew.manualUpdateBody':
+    'Schlägt die Prüfung oder Installation eines Updates fehl, öffnen Sie direkt die Downloadseite.',
+  'whatsNew.offlinePackTitle': 'Offline-Modellpaket',
+  'whatsNew.offlinePackBody':
+    'Bei Downloadfehlern führt ein Link zum Offline-Modellpaket, damit auch langsame Netzwerke installieren können.',
   'whatsNew.viewNotes': 'Vollständige Versionshinweise ansehen',
   'whatsNew.continue': 'Weiter',
 
@@ -331,6 +340,9 @@ export const de: Partial<Messages> = {
   'models.capturingBody': 'Beenden Sie die Transkription, bevor Sie ein Modell löschen.',
   'models.downloadFailedTitle': 'Download von {title} fehlgeschlagen',
   'models.downloadFailedFallback': 'Download fehlgeschlagen',
+  'models.downloadFailedOfflineHint':
+    'Wenn es wiederholt fehlschlägt, laden Sie das Offline-Modellpaket und folgen Sie den Hinweisen auf der Seite.',
+  'models.downloadOffline': 'Offline-Modellpaket holen',
   'models.asrGroup': 'Spracherkennung',
   'models.mtGroup': 'Maschinelle Übersetzung',
   'models.noStorage': 'Der Modellspeicherordner kann nicht ermittelt werden; optionale Modelle sind nicht verfügbar.',
@@ -379,6 +391,7 @@ export const de: Partial<Messages> = {
   'about.updateReadyCapturing': 'v{version} installiert. Beenden Sie die Transkription vor dem Neustart.',
   'about.updateReady': 'v{version} installiert. Starten Sie die App neu, um die Änderung anzuwenden.',
   'about.updateError': 'Update fehlgeschlagen: {error}',
+  'about.manualUpdate': 'Manuelles Update',
   'about.unknownError': 'Unbekannter Fehler',
   'about.updateChecking': 'Neueste Version wird gesucht…',
   'about.updateAvailableCapturing': 'Eine neue Version ist verfügbar. Beenden Sie die Transkription vor dem Update.',
@@ -404,6 +417,11 @@ export const de: Partial<Messages> = {
   'about.licenseLoadFailed':
     'Modelllizenzen konnten nicht geladen werden. Versuchen Sie es auf der Modellseite erneut.',
 
+  'egg.badge': 'Geheimes Easter Egg',
+  'egg.body': 'Was du hörst, ist was du siehst.',
+  'egg.offline': 'Wie der Rest von {name} läuft dieses Easter Egg vollständig offline — es ruft nie nach Hause.',
+  'egg.encore': 'Zugabe',
+  'egg.contact': 'Entwickler kontaktieren',
   'overlayWindow.waiting': 'Warte auf Sprache…',
   'overlayWindow.translationFailed': 'Übersetzung fehlgeschlagen',
   'overlayWindow.move': 'Overlay verschieben',

@@ -98,6 +98,15 @@ export const ptBR: Partial<Messages> = {
   'whatsNew.lmtBody': 'Traduza entre 60 idiomas sob Apache-2.0, com versões rápida e de alta precisão.',
   'whatsNew.glowWidthTitle': 'Largura da borda ajustável',
   'whatsNew.glowWidthBody': 'Defina a borda fluida da sobreposição entre 1 e 8 pixels.',
+  'whatsNew.localesTitle': 'Mais cinco idiomas de interface',
+  'whatsNew.localesBody':
+    'Árabe, português (Brasil), russo, italiano e indonésio entram nos 13 idiomas da interface; o árabe muda o layout para da direita para a esquerda.',
+  'whatsNew.manualUpdateTitle': 'Atualização manual como alternativa',
+  'whatsNew.manualUpdateBody':
+    'Se a verificação ou a instalação de uma atualização falhar, abra diretamente a página de download.',
+  'whatsNew.offlinePackTitle': 'Pacote de modelos offline',
+  'whatsNew.offlinePackBody':
+    'Falhas de download agora mostram um link para o pacote de modelos offline, útil em redes lentas.',
   'whatsNew.viewNotes': 'Ver notas de versão completas',
   'whatsNew.continue': 'Continuar',
 
@@ -327,6 +336,9 @@ export const ptBR: Partial<Messages> = {
   'models.capturingBody': 'Pare a transcrição antes de excluir um modelo.',
   'models.downloadFailedTitle': 'Falha no download de {title}',
   'models.downloadFailedFallback': 'Falha no download',
+  'models.downloadFailedOfflineHint':
+    'Se falhar repetidamente, baixe o pacote de modelos offline e siga as instruções da página.',
+  'models.downloadOffline': 'Obter pacote de modelos offline',
   'models.asrGroup': 'Reconhecimento de fala',
   'models.mtGroup': 'Tradução automática',
   'models.noStorage': 'Não foi possível resolver a pasta de armazenamento de modelos; modelos opcionais indisponíveis.',
@@ -375,6 +387,7 @@ export const ptBR: Partial<Messages> = {
   'about.updateReadyCapturing': 'v{version} instalada. Pare a transcrição antes de reiniciar.',
   'about.updateReady': 'v{version} instalada. Reinicie o aplicativo para aplicar.',
   'about.updateError': 'Falha na atualização: {error}',
+  'about.manualUpdate': 'Atualização manual',
   'about.unknownError': 'Erro desconhecido',
   'about.updateChecking': 'Verificando a versão mais recente…',
   'about.updateAvailableCapturing': 'Uma nova versão está disponível. Pare a transcrição antes de atualizar.',
@@ -398,6 +411,11 @@ export const ptBR: Partial<Messages> = {
   'about.licenseButton': 'Licença',
   'about.licenseLoadFailed': 'Falha ao carregar as licenças dos modelos. Tente novamente na página Modelos.',
 
+  'egg.badge': 'Ovo de Páscoa secreto',
+  'egg.body': 'O que você ouve é o que você vê.',
+  'egg.offline': 'Como o restante do {name}, este ovo de Páscoa roda totalmente offline — ele nunca se conecta à rede.',
+  'egg.encore': 'Bis',
+  'egg.contact': 'Falar com o desenvolvedor',
   'overlayWindow.waiting': 'Aguardando fala…',
   'overlayWindow.translationFailed': 'Falha na tradução',
   'overlayWindow.move': 'Mover sobreposição',

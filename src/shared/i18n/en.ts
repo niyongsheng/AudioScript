@@ -97,6 +97,13 @@ export const en: Messages = {
   'whatsNew.lmtBody': 'Translate across 60 languages under Apache-2.0, with fast and high-accuracy tiers.',
   'whatsNew.glowWidthTitle': 'Adjustable border width',
   'whatsNew.glowWidthBody': 'Set the flowing overlay border from 1 to 8 pixels.',
+  'whatsNew.localesTitle': 'Five more UI languages',
+  'whatsNew.localesBody':
+    'Arabic, Portuguese (Brazil), Russian, Italian and Indonesian join the 13 interface languages; Arabic switches the layout to right-to-left.',
+  'whatsNew.manualUpdateTitle': 'Manual update fallback',
+  'whatsNew.manualUpdateBody': 'If checking or installing an update fails, open the download page directly.',
+  'whatsNew.offlinePackTitle': 'Offline model pack',
+  'whatsNew.offlinePackBody': 'Download failures now link to the offline model pack for slow networks.',
   'whatsNew.viewNotes': 'View full release notes',
   'whatsNew.continue': 'Continue',
 
