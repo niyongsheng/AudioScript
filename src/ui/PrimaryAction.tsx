@@ -3,6 +3,7 @@ import { GLOW_PALETTE } from '@/shared/glow'
 import { useI18n } from '@/shared/i18n'
 import { cn } from './cn'
 import { Icon } from './Icon'
+import { Spinner } from './Spinner'
 
 interface Props {
   capturing: boolean
@@ -157,28 +158,36 @@ export function PrimaryAction({ capturing, pending, activeDevice, onToggle }: Pr
         className={cn(
           'group relative flex w-full items-center justify-center rounded-full px-3 py-2',
           'font-medium text-sm transition disabled:cursor-not-allowed disabled:opacity-50',
+          'duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]',
+          'motion-reduce:transition-none',
+          !capturing && 'hover:-translate-y-[0.5px] hover:scale-[1.01] hover:shadow-[0_4px_12px_rgb(0_0_0/0.22)]',
+          !capturing && 'disabled:hover:translate-y-0 disabled:hover:scale-100 disabled:hover:shadow-none',
+          !capturing &&
+            'motion-reduce:hover:translate-y-0 motion-reduce:hover:scale-100 motion-reduce:hover:shadow-none',
           'text-[var(--color-accent-ink)]',
         )}
       >
-        <span
-          aria-hidden="true"
-          className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-40 transition-opacity duration-300 group-hover:opacity-100"
-        >
-          <span style={BLUR}>
-            <span style={CLIP}>
-              <span style={WEDGE_SOFT}>
-                <span style={WHEEL} />
+        {!capturing && (
+          <span
+            aria-hidden="true"
+            className="pointer-events-none absolute inset-0 rounded-[inherit] opacity-40 transition-opacity duration-300 group-hover:opacity-100"
+          >
+            <span style={BLUR}>
+              <span style={CLIP}>
+                <span style={WEDGE_SOFT}>
+                  <span style={WHEEL} />
+                </span>
+              </span>
+            </span>
+            <span style={BLUR}>
+              <span style={CLIP}>
+                <span style={WEDGE_SHARP}>
+                  <span style={WHEEL} />
+                </span>
               </span>
             </span>
           </span>
-          <span style={BLUR}>
-            <span style={CLIP}>
-              <span style={WEDGE_SHARP}>
-                <span style={WHEEL} />
-              </span>
-            </span>
-          </span>
-        </span>
+        )}
         <span
           aria-hidden="true"
           className={cn(
@@ -186,11 +195,11 @@ export function PrimaryAction({ capturing, pending, activeDevice, onToggle }: Pr
             capturing ? 'bg-[var(--color-danger)]' : 'bg-[var(--color-success)]',
           )}
         >
-          <span className="absolute inset-0 rounded-[inherit] bg-white opacity-0 transition-opacity duration-150 group-hover:opacity-10" />
+          <span className="absolute inset-0 rounded-[inherit] bg-[linear-gradient(to_bottom,rgba(255,255,255,0.18),rgba(255,255,255,0.04)_42%,rgba(0,0,0,0.08))] opacity-0 transition-opacity duration-200 group-hover:opacity-100" />
         </span>
         <span className="relative flex items-center justify-center gap-1.5">
-          <Icon name={capturing ? 'stop' : 'play'} size={14} />
-          {capturing ? t('action.stop') : t('action.start')}
+          {pending ? <Spinner size={14} /> : <Icon name={capturing ? 'stop' : 'play'} size={14} />}
+          {pending ? state.label : capturing ? t('action.stop') : t('action.start')}
         </span>
       </button>
 
