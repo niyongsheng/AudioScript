@@ -287,7 +287,6 @@ export const zhTW: Partial<Messages> = {
   'general.autostart': '登入時啟動',
   'general.autostartDescription': '關閉主視窗後應用程式會繼續常駐選單列。',
   'general.privacy': '隱私',
-  'general.privacyFooter': '統計僅包含事件名稱與少量列舉屬性，不含轉寫文字、裝置名稱或檔案路徑。',
   'general.analytics': '匿名使用統計',
   'general.analyticsDescription': '透過 Aptabase 傳送功能使用情形，協助改進 AudioScript。',
   'general.diagnostics': '診斷',

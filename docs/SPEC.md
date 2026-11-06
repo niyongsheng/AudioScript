@@ -542,10 +542,11 @@ Remote API 密钥 MUST 存入系统密钥链（Keychain / Credential Manager / S
 
 ## 12. 匿名使用统计
 
-统计默认开启，可在「通用 → 隐私 → 匿名使用统计」关闭；关闭后 Rust 与前端都 MUST NOT 再入队新事件。
+统计与错误上报默认开启，可在「通用 → 隐私 → 匿名使用统计」关闭；关闭后 Rust 与前端都 MUST NOT 再入队新事件或错误报告。
 
 - 事件：`app_started` / `app_exited`、`session_started` / `session_stopped` / `session_start_failed` / `first_transcript`、`model_download`、`overlay_toggled`、`setting_changed`、`onboarding_completed`、`permission_result` / `permission_settings_opened`、`update_checked` / `update_prompt` / `update_install`。
 - `model_download` 记录 `phase`、`error_code`、`http_status`；`session_stopped` 记录停止来源、音源、模型档位与是否出字；`first_transcript` 使用延迟分档；退出事件记录原因、运行时长分档与是否仍在转写。
 - 属性只允许枚举值与分档（音源、翻译引擎、源语言、模型档位、时长分档、结果状态、错误码）。
-- MUST NOT 包含转写文本、设备名称或 ID、文件路径、错误原文。
-- 传输由 `tauri-plugin-aptabase` 完成；上报在后台线程，MUST NOT 阻塞启动、转写或退出。
+- 事件属性 MUST NOT 包含转写文本、设备名称或 ID、文件路径、错误原文。
+- 错误报告来自 panic 与 WebView 未捕获错误，含错误类型、消息、堆栈（可能含源码路径）与系统属性；MUST NOT 包含音频或转写文本。
+- 传输由 `tauri-plugin-aptabase` 完成；上报在后台线程，MUST NOT 阻塞启动或转写；崩溃退出前最多等待 3 秒发送。

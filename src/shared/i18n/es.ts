@@ -312,8 +312,6 @@ export const es: Partial<Messages> = {
   'general.autostartDescription':
     'La aplicación sigue ejecutándose en la barra de menús tras cerrar la ventana principal.',
   'general.privacy': 'Privacidad',
-  'general.privacyFooter':
-    'Las estadísticas solo incluyen nombres de eventos y algunas propiedades enumeradas; nunca el texto transcrito, nombres de dispositivos ni rutas de archivos.',
   'general.analytics': 'Estadísticas de uso anónimas',
   'general.analyticsDescription': 'Envía el uso de funciones a través de Aptabase para ayudar a mejorar AudioScript.',
   'general.diagnostics': 'Diagnóstico',

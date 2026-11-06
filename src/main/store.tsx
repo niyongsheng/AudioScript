@@ -191,7 +191,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   const [hotkeyProblems, setHotkeyProblems] = useState<HotkeyFailure[]>([])
 
   const [onboardingDone, setOnboardingDone] = useState(false)
-  const [analyticsEnabled, setAnalyticsEnabledState] = useState(false)
+  const [analyticsEnabled, setAnalyticsEnabledState] = useState(true)
   const [permissions, setPermissions] = useState<PermissionSnapshot | null>(null)
   const [speechStatus, setSpeechStatus] = useState<MacSpeechStatus | null>(null)
   const [systemAudioProbe, setSystemAudioProbe] = useState<SystemAudioProbe | null>(null)

@@ -307,8 +307,6 @@ export const ptBR: Partial<Messages> = {
   'general.autostart': 'Iniciar ao fazer login',
   'general.autostartDescription': 'O aplicativo continua na bandeja depois que você fecha a janela principal.',
   'general.privacy': 'Privacidade',
-  'general.privacyFooter':
-    'As estatísticas incluem apenas nomes de eventos e algumas propriedades enumeradas; nunca texto transcrito, nomes de dispositivos ou caminhos de arquivo.',
   'general.analytics': 'Estatísticas de uso anônimas',
   'general.analyticsDescription': 'Envia o uso de recursos pelo Aptabase para ajudar a melhorar o AudioScript.',
   'general.diagnostics': 'Diagnóstico',

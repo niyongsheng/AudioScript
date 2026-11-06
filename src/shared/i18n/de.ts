@@ -310,8 +310,6 @@ export const de: Partial<Messages> = {
   'general.autostart': 'Bei Anmeldung starten',
   'general.autostartDescription': 'Die App läuft nach dem Schließen des Hauptfensters im Menüleistensymbol weiter.',
   'general.privacy': 'Datenschutz',
-  'general.privacyFooter':
-    'Die Analyse enthält nur Ereignisnamen und wenige Enum-Eigenschaften; niemals Transkripttext, Gerätenamen oder Dateipfade.',
   'general.analytics': 'Anonyme Nutzungsstatistik',
   'general.analyticsDescription': 'Sendet die Funktionsnutzung über Aptabase, um AudioScript zu verbessern.',
   'general.diagnostics': 'Diagnose',

@@ -313,8 +313,6 @@ export const fr: Partial<Messages> = {
   'general.autostartDescription':
     'L’application reste active dans la barre des menus après la fermeture de la fenêtre principale.',
   'general.privacy': 'Confidentialité',
-  'general.privacyFooter':
-    'Les statistiques ne contiennent que des noms d’événements et quelques propriétés énumérées ; jamais le texte transcrit, les noms d’appareils ou les chemins de fichiers.',
   'general.analytics': 'Statistiques d’utilisation anonymes',
   'general.analyticsDescription':
     'Envoie l’utilisation des fonctionnalités via Aptabase pour aider à améliorer AudioScript.',

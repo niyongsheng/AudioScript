@@ -303,8 +303,6 @@ export const ja: Partial<Messages> = {
   'general.autostart': 'ログイン時に起動',
   'general.autostartDescription': 'メインウィンドウを閉じてもアプリはトレイに残ります。',
   'general.privacy': 'プライバシー',
-  'general.privacyFooter':
-    '統計にはイベント名と少数の列挙属性のみが含まれ、文字起こしテキスト、デバイス名、ファイルパスは含まれません。',
   'general.analytics': '匿名使用統計',
   'general.analyticsDescription': 'Aptabase を通じて機能の利用状況を送信し、AudioScript の改善に役立てます。',
   'general.diagnostics': '診断',

@@ -47,12 +47,12 @@ pub fn init(app: &AppHandle) -> PathBuf {
         .with(stderr_layer)
         .try_init();
 
-    install_panic_hook();
+    install_panic_hook(app.clone());
     tracing::info!(dir = %dir.display(), "日志已启动");
     dir
 }
 
-fn install_panic_hook() {
+fn install_panic_hook(app: AppHandle) {
     let default_hook = std::panic::take_hook();
     std::panic::set_hook(Box::new(move |info| {
         let thread = std::thread::current();
@@ -60,6 +60,7 @@ fn install_panic_hook() {
             thread = thread.name().unwrap_or("unnamed"),
             "线程 panic：{info}"
         );
+        crate::telemetry::report_panic(&app, info);
         default_hook(info);
     }));
 }

@@ -298,8 +298,6 @@ export const ko: Partial<Messages> = {
   'general.autostart': '로그인 시 실행',
   'general.autostartDescription': '메인 창을 닫아도 앱은 트레이에서 계속 실행됩니다.',
   'general.privacy': '개인정보',
-  'general.privacyFooter':
-    '분석에는 이벤트 이름과 일부 열거형 속성만 포함되며, 전사 텍스트, 장치 이름, 파일 경로는 절대 포함되지 않습니다.',
   'general.analytics': '익명 사용 통계',
   'general.analyticsDescription': 'Aptabase를 통해 기능 사용 정보를 보내 AudioScript 개선에 도움을 줍니다.',
   'general.diagnostics': '진단',

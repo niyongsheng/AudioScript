@@ -300,10 +300,8 @@ export const en: Messages = {
   'general.autostart': 'Launch at login',
   'general.autostartDescription': 'The app keeps running in the tray after you close the main window.',
   'general.privacy': 'Privacy',
-  'general.privacyFooter':
-    'Analytics include event names and a few enum properties only; never transcript text, device names, or file paths.',
   'general.analytics': 'Anonymous usage analytics',
-  'general.analyticsDescription': 'Sends feature usage through Aptabase to help improve AudioScript.',
+  'general.analyticsDescription': 'Sends feature usage and crash reports through Aptabase to help improve AudioScript.',
   'general.diagnostics': 'Diagnostics',
   'general.exportLogs': 'Export logs',
   'general.exportLogsDescription': 'Copies them to the desktop with a dated name, then opens the folder.',

@@ -309,8 +309,6 @@ export const it: Partial<Messages> = {
   'general.autostart': 'Apri all’accesso',
   'general.autostartDescription': 'L’app resta nel vassoio dopo aver chiuso la finestra principale.',
   'general.privacy': 'Privacy',
-  'general.privacyFooter':
-    'Le statistiche includono solo nomi di eventi e alcune proprietà enumerate; mai testo trascritto, nomi di dispositivi o percorsi di file.',
   'general.analytics': 'Statistiche d’uso anonime',
   'general.analyticsDescription': 'Invia l’uso delle funzionalità tramite Aptabase per migliorare AudioScript.',
   'general.diagnostics': 'Diagnostica',

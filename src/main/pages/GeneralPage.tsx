@@ -169,7 +169,7 @@ export function GeneralPage({ focusPermissions, onFocusPermissionsHandled }: Pro
         <PermissionPanel />
       </div>
 
-      <SettingsGroup title={t('general.privacy')} footer={t('general.privacyFooter')}>
+      <SettingsGroup title={t('general.privacy')}>
         <SettingsRow
           icon="shield"
           title={t('general.analytics')}

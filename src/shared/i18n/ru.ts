@@ -305,8 +305,6 @@ export const ru: Partial<Messages> = {
   'general.autostart': 'Запускать при входе',
   'general.autostartDescription': 'После закрытия главного окна приложение остаётся в трее.',
   'general.privacy': 'Конфиденциальность',
-  'general.privacyFooter':
-    'Статистика содержит только имена событий и несколько перечислимых свойств; никогда — текст транскрипции, имена устройств или пути к файлам.',
   'general.analytics': 'Анонимная статистика использования',
   'general.analyticsDescription': 'Отправляет данные об использовании через Aptabase, чтобы улучшить AudioScript.',
   'general.diagnostics': 'Диагностика',

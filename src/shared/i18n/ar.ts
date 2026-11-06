@@ -290,8 +290,6 @@ export const ar: Partial<Messages> = {
   'general.autostart': 'التشغيل عند تسجيل الدخول',
   'general.autostartDescription': 'يبقى التطبيق في شريط النظام بعد إغلاق النافذة الرئيسية.',
   'general.privacy': 'الخصوصية',
-  'general.privacyFooter':
-    'تتضمن الإحصاءات أسماء الأحداث وبعض خصائص التعداد فقط؛ لا نص النسخ ولا أسماء الأجهزة ولا مسارات الملفات.',
   'general.analytics': 'إحصاءات استخدام مجهولة',
   'general.analyticsDescription': 'يرسل استخدام الميزات عبر Aptabase للمساعدة في تحسين AudioScript.',
   'general.diagnostics': 'التشخيص',

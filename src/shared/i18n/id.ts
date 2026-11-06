@@ -303,8 +303,6 @@ export const id: Partial<Messages> = {
   'general.autostart': 'Jalankan saat masuk',
   'general.autostartDescription': 'Aplikasi tetap berjalan di baki setelah jendela utama ditutup.',
   'general.privacy': 'Privasi',
-  'general.privacyFooter':
-    'Statistik hanya berisi nama peristiwa dan beberapa properti enum; tidak pernah teks transkrip, nama perangkat, atau jalur file.',
   'general.analytics': 'Statistik penggunaan anonim',
   'general.analyticsDescription': 'Mengirim penggunaan fitur melalui Aptabase untuk membantu meningkatkan AudioScript.',
   'general.diagnostics': 'Diagnostik',
