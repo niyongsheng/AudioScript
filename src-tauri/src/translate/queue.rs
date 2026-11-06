@@ -74,6 +74,10 @@ impl JobQueue {
         drop(g);
         self.ready.notify_all();
     }
+
+    pub fn is_closed(&self) -> bool {
+        self.inner.lock().expect("job queue mutex poisoned").closed
+    }
 }
 
 impl Drop for JobQueue {

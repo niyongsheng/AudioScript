@@ -313,6 +313,28 @@ struct RunningSession {
     events: Sender<UiEvent>,
 }
 
+struct QueueGuard {
+    queue: Option<Arc<JobQueue>>,
+}
+
+impl QueueGuard {
+    fn new(queue: Arc<JobQueue>) -> Self {
+        Self { queue: Some(queue) }
+    }
+
+    fn disarm(&mut self) {
+        self.queue = None;
+    }
+}
+
+impl Drop for QueueGuard {
+    fn drop(&mut self) {
+        if let Some(queue) = self.queue.take() {
+            queue.close();
+        }
+    }
+}
+
 enum UiEvent {
     Status(TaskStatus),
     Level(f64),
@@ -711,6 +733,7 @@ pub fn start(
     let translator = translator_for(&roots, &cfg.translate)?;
 
     let queue = Arc::new(JobQueue::new(TRANSLATE_QUEUE_CAPACITY));
+    let mut queue_guard = QueueGuard::new(Arc::clone(&queue));
     let events = events_sender()?;
 
     let translate_tx = TRANSLATE_TX
@@ -977,6 +1000,7 @@ pub fn start(
         queue,
         events,
     });
+    queue_guard.disarm();
     state.set_status(TaskStatus::Capturing);
 
     crate::telemetry::track(
@@ -1126,6 +1150,16 @@ fn teardown(app: &AppHandle, session: RunningSession) {
     drop(capture);
     tracing::info!(ms = t0.elapsed().as_millis(), "收尾：采集线程已退出");
 
+    let dropped = queue.clear();
+    if dropped > 0 {
+        tracing::info!(dropped, "停止时丢弃了积压的翻译任务");
+    }
+    queue.close();
+    tracing::info!(
+        ms = t0.elapsed().as_millis(),
+        "收尾：翻译队列已关闭，翻译引擎保留在缓存"
+    );
+
     tracing::info!("收尾：冲刷引擎");
     let tail = {
         let mut eng = engine.lock().expect("engine mutex poisoned");
@@ -1155,17 +1189,6 @@ fn teardown(app: &AppHandle, session: RunningSession) {
         }
     };
     tracing::info!(ms = t0.elapsed().as_millis(), "收尾：引擎已关闭");
-
-    let dropped = queue.clear();
-    if dropped > 0 {
-        tracing::info!(dropped, "停止时丢弃了积压的翻译任务");
-    }
-    queue.close();
-
-    tracing::info!(
-        ms = t0.elapsed().as_millis(),
-        "收尾：翻译队列已关闭，翻译引擎保留在缓存"
-    );
 
     if !changed.is_empty() {
         let _ = events.send(UiEvent::Segments(changed));
@@ -1352,5 +1375,26 @@ mod tests {
     fn other_translate_errors_do_not_offer_the_settings_pane() {
         let err = translate_init_error(crate::translate::TranslateError::NotInitialized);
         assert!(matches!(err, CmdError::Failed(_)));
+    }
+
+    #[test]
+    fn abandoned_queue_is_closed_so_the_worker_is_not_stranded() {
+        let queue = Arc::new(JobQueue::new(4));
+        {
+            let _guard = QueueGuard::new(Arc::clone(&queue));
+        }
+        assert!(
+            queue.is_closed(),
+            "启动失败时必须关闭队列，否则翻译线程会永远卡在这个队列上"
+        );
+    }
+
+    #[test]
+    fn a_running_session_keeps_its_queue_open() {
+        let queue = Arc::new(JobQueue::new(4));
+        let mut guard = QueueGuard::new(Arc::clone(&queue));
+        guard.disarm();
+        drop(guard);
+        assert!(!queue.is_closed(), "会话运行期间队列不能被关闭");
     }
 }
