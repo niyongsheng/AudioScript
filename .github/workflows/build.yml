@@ -45,6 +45,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          # tag 构建只恢复不保存：GitHub 缓存按 ref 隔离，下一个 tag 用不上，还会挤占 10 GB 配额
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Cache sherpa-onnx native libs
         uses: actions/cache@v4
@@ -68,7 +70,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: src-tauri/assets/models/sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16
-          key: asr-model-${{ hashFiles('scripts/fetch-model.mjs') }}
+          key: asr-model-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
           restore-keys: asr-model-
 
       - name: Cache MT models
@@ -77,7 +79,7 @@ jobs:
           path: |
             src-tauri/assets/models/mt
             .cache/mt
-          key: mt-models-${{ hashFiles('scripts/fetch-mt-model.mjs') }}
+          key: mt-models-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
           restore-keys: mt-models-
 
       - name: Install typeshare CLI
@@ -137,6 +139,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          # tag 构建只恢复不保存：GitHub 缓存按 ref 隔离，下一个 tag 用不上，还会挤占 10 GB 配额
+          save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Cache sherpa-onnx native libs
         uses: actions/cache@v4
@@ -166,7 +170,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: src-tauri/assets/models/sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16
-          key: asr-model-${{ hashFiles('scripts/fetch-model.mjs') }}
+          key: asr-model-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
           restore-keys: asr-model-
 
       - name: Cache MT models
@@ -175,7 +179,7 @@ jobs:
           path: |
             src-tauri/assets/models/mt
             .cache/mt
-          key: mt-models-${{ hashFiles('scripts/fetch-mt-model.mjs') }}
+          key: mt-models-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
           restore-keys: mt-models-
 
       - name: Setup Python
@@ -260,6 +264,8 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: src-tauri
+          # tag 构建只恢复不保存：GitHub 缓存按 ref 隔离，下一个 tag 用不上，还会挤占 10 GB 配额
+          save-if: ${{ github.ref == 'refs/heads/main' }}
           # CXXFLAGS 改了必须换 key，否则会复用按新 ABI 编好的 CTranslate2
           key: cxx-abi-0
 
@@ -291,7 +297,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: src-tauri/assets/models/sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16
-          key: asr-model-${{ hashFiles('scripts/fetch-model.mjs') }}
+          key: asr-model-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
           restore-keys: asr-model-
 
       - name: Cache MT models
@@ -300,7 +306,7 @@ jobs:
           path: |
             src-tauri/assets/models/mt
             .cache/mt
-          key: mt-models-${{ hashFiles('scripts/fetch-mt-model.mjs') }}
+          key: mt-models-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
           restore-keys: mt-models-
 
       - name: Setup Python
