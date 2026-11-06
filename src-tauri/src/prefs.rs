@@ -64,7 +64,7 @@ pub fn load_from(path: &Path) -> Preferences {
 
     match parse(&raw) {
         Ok(p) => {
-            tracing::debug!(
+            tracing::trace!(
                 path = %path.display(),
                 audio_source = %p.audio_source,
                 engine = %p.translate_engine.as_str(),
@@ -101,7 +101,7 @@ pub fn save_to(path: &Path, prefs: &Preferences) -> Result<(), String> {
     std::fs::write(&tmp, &json).map_err(|e| tf(Key::PrefsWriteTempFailed, &[&e.to_string()]))?;
     std::fs::rename(&tmp, path).map_err(|e| tf(Key::PrefsReplaceFailed, &[&e.to_string()]))?;
 
-    tracing::debug!(path = %path.display(), "偏好已保存");
+    tracing::trace!(path = %path.display(), "偏好已保存");
     Ok(())
 }
 

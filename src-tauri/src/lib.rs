@@ -2,6 +2,7 @@ pub mod asr;
 pub mod audio;
 pub mod commands;
 pub mod config;
+pub mod env_info;
 pub mod error;
 pub mod i18n;
 pub mod lifecycle;
@@ -164,6 +165,7 @@ pub fn run() {
             let saved_prefs = prefs::load(&handle);
             i18n::set_locale(i18n::Locale::from_language(saved_prefs.language));
             update_window_titles(&handle);
+            env_info::log_startup(&saved_prefs);
             telemetry::track(
                 &handle,
                 "app_started",

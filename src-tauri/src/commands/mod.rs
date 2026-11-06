@@ -576,7 +576,7 @@ fn app_info() -> Value {
         "version": env!("CARGO_PKG_VERSION"),
         "platform": std::env::consts::OS,
         "arch": std::env::consts::ARCH,
-        "osVersion": os_version(),
+        "osVersion": crate::env_info::os_version(),
         "macSpeechSupported": crate::asr::mac_native::available() == crate::asr::mac_native::AVAILABLE,
         "builtAtMs": exe_mtime_ms(),
     })
@@ -605,46 +605,6 @@ fn mac_translation_languages() -> Result<Value, CmdError> {
     {
         Ok(json!([]))
     }
-}
-
-#[cfg(target_os = "macos")]
-fn os_version() -> Option<String> {
-    let name = b"kern.osproductversion\0";
-    let mut size = 0usize;
-    let first = unsafe {
-        libc::sysctlbyname(
-            name.as_ptr().cast(),
-            std::ptr::null_mut(),
-            &mut size,
-            std::ptr::null_mut(),
-            0,
-        )
-    };
-    if first != 0 || size == 0 {
-        return None;
-    }
-
-    let mut buffer = vec![0u8; size];
-    let second = unsafe {
-        libc::sysctlbyname(
-            name.as_ptr().cast(),
-            buffer.as_mut_ptr().cast(),
-            &mut size,
-            std::ptr::null_mut(),
-            0,
-        )
-    };
-    if second != 0 {
-        return None;
-    }
-
-    let end = buffer.iter().position(|b| *b == 0).unwrap_or(buffer.len());
-    String::from_utf8(buffer[..end].to_vec()).ok()
-}
-
-#[cfg(not(target_os = "macos"))]
-fn os_version() -> Option<String> {
-    None
 }
 
 const REPO_URL: &str = "https://github.com/niyongsheng/AudioScript";
@@ -893,18 +853,6 @@ fn exe_mtime_ms() -> Option<u64> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[cfg(target_os = "macos")]
-    #[test]
-    fn reports_the_macos_product_version() {
-        let version = os_version().expect("macOS 必须能读到 kern.osproductversion");
-        let major = version
-            .split('.')
-            .next()
-            .and_then(|v| v.parse::<u32>().ok())
-            .expect("版本号格式应为 major.minor.patch");
-        assert!(major >= 10, "{version}");
-    }
 
     fn tmp(tag: &str) -> std::path::PathBuf {
         let d = std::env::temp_dir().join(format!("audioscript-logs-{tag}-{}", std::process::id()));
