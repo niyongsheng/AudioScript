@@ -2,12 +2,18 @@ use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
+#[cfg(any(target_os = "windows", test))]
+use std::collections::VecDeque;
+
 use crate::config::normalize_device;
 use crate::i18n::{tf, tr, Key};
 use flexaudio::{DeviceInfo, OutputFormat, SourceKind, StreamConfig};
 use typeshare::typeshare;
 
 use crate::asr::TARGET_SAMPLE_RATE;
+
+#[cfg(target_os = "windows")]
+mod windows_mic;
 
 pub const CHUNK_SAMPLES: usize = 1600;
 
@@ -231,6 +237,19 @@ pub fn start<S>(
 where
     S: FnMut(&[f32]) + Send + 'static,
 {
+    #[cfg(target_os = "windows")]
+    if let Some(probe) = windows_mic::probe(kind, selection) {
+        let handle = windows_mic::start(kind, selection, probe, sink)?;
+        tracing::info!(
+            source = kind.as_str(),
+            device = %handle.device_name(),
+            native_rate = handle.device_sample_rate(),
+            target_rate = TARGET_SAMPLE_RATE,
+            "采集已启动"
+        );
+        return Ok(handle);
+    }
+
     let config = StreamConfig {
         kind: kind.to_flexaudio(),
         device_id: selection.device.clone(),
@@ -471,6 +490,21 @@ pub fn any_output_active() -> Result<u32, AudioError> {
         .count() as u32)
 }
 
+#[cfg(any(target_os = "windows", test))]
+fn mix_mic_and_system(
+    mic: &mut VecDeque<f32>,
+    system: &mut VecDeque<f32>,
+    frames: usize,
+) -> Vec<f32> {
+    let mut out = Vec::with_capacity(frames);
+    for _ in 0..frames {
+        let m = mic.pop_front().unwrap_or(0.0);
+        let s = system.pop_front().unwrap_or(0.0);
+        out.push((m + s).clamp(-1.0, 1.0));
+    }
+    out
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -576,5 +610,22 @@ mod tests {
     #[test]
     fn empty_probe_accum_reports_zero_rms() {
         assert_eq!(ProbeAccum::default().rms(), 0.0);
+    }
+
+    #[test]
+    fn mix_pads_the_silent_side_with_zeros() {
+        let mut mic = VecDeque::from(vec![0.25, 0.25]);
+        let mut system = VecDeque::new();
+        let mixed = mix_mic_and_system(&mut mic, &mut system, 3);
+        assert_eq!(mixed, vec![0.25, 0.25, 0.0]);
+        assert!(mic.is_empty() && system.is_empty());
+    }
+
+    #[test]
+    fn mix_clamps_overlapping_speech() {
+        let mut mic = VecDeque::from(vec![0.8, -0.8]);
+        let mut system = VecDeque::from(vec![0.8, -0.8]);
+        let mixed = mix_mic_and_system(&mut mic, &mut system, 2);
+        assert_eq!(mixed, vec![1.0, -1.0]);
     }
 }

@@ -63,6 +63,8 @@ tracing-subscriber = { version = "0.3", features = ["env-filter"] }
 tracing-appender = "0.2"
 # 系统语言探测（跟随系统界面语言）。Cargo.lock 里本来就有这个传递依赖。
 sys-locale = "0.3"
+# 启动日志里的 OS 名称与版本（Windows/macOS/Linux 统一）。Cargo.lock 里本来就有这个传递依赖。
+os_info = "3"
 
 typeshare = "1"
 uuid = { version = "1", features = ["v4"] }
@@ -134,6 +136,12 @@ libc = "0.2"
 windows-sys = { version = "0.59", features = [
     "Win32_Foundation",
     "Win32_Storage_FileSystem",
+    "Win32_System_SystemInformation",
 ] }
+# flexaudio 的麦克风后端只接受 1~2 声道；多声道阵列（如 Intel 智音）由 audio/windows_mic.rs
+# 用 cpal 按原生格式采集后自己下混，因此这里需要直接依赖 cpal / rubato / rtrb。
+cpal = "0.16"
+rubato = "3"
+rtrb = "0.3"
 # Windows 的系统代理在注册表里，ureq 的 proxy-from-env 读不到。
 winreg = "0.56"
