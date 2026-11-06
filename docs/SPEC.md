@@ -516,8 +516,6 @@ Remote API 密钥 MUST 存入系统密钥链（Keychain / Credential Manager / S
 - 初始化 / 注册 / 路径解析类失败 MUST 写日志，MUST NOT 被静默吞掉。
 - 用户能感知的失败 MUST 同时出现在界面上并给出下一步动作。
 - 资源路径解析（dev 与打包后不同）MUST 能从日志一眼看出走的是哪条分支。
-- 每次启动 MUST 记录版本、OS、CPU/内存、WebView 版本与当前配置（音源 / 模型档位 / 语言），用户回传单个日志文件即可定位环境差异。
-- Rust 线程 panic MUST 写入日志文件——GUI 进程的 stderr 用户看不到。
 
 ### 11.2 已知风险
 
