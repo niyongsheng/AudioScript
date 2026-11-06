@@ -125,6 +125,7 @@ pnpm release X.Y.Z        # 或 patch / minor / major
 约束：
 
 - **不要手动改版本号或手动打 tag** 绕过脚本。
+- tag 构建只读缓存（`rust-cache` 的 `save-if` 仅 main）：`Cargo.toml` / `Cargo.lock` 变更后，先在 `main` 手动触发一次 `Build & Release` 预热缓存，再发 tag，否则三平台会全量重编。
 - 发布必须走 CI：本地 `pnpm tauri build` 不产出更新包。
 - 更新签名私钥 `~/.tauri/audioscript.key` 不可再生；CI 缺 `TAURI_SIGNING_PRIVATE_KEY` / `TAURI_SIGNING_PRIVATE_KEY_PASSWORD` 时 `.sig` 不生成、latest.json 步骤失败。
 - `pnpm lint` 是 `biome check --write src/`，如果它自动改了文件，发布后工作区会残留改动，需要单独提交。
