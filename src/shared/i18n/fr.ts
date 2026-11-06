@@ -103,6 +103,12 @@ export const fr: Partial<Messages> = {
   'whatsNew.offlinePackTitle': 'Pack de modèles hors ligne',
   'whatsNew.offlinePackBody':
     'En cas d’échec de téléchargement, un lien vers le pack de modèles hors ligne permet d’installer même sur un réseau lent.',
+  'whatsNew.translateRecoveryTitle': 'Correctif : la traduction revient après un échec de démarrage',
+  'whatsNew.translateRecoveryBody':
+    'Un échec de démarrage de session pouvait laisser la fenêtre superposée avec le texte source uniquement. Le moteur de traduction se rétablit désormais automatiquement, sans redémarrer l’application.',
+  'whatsNew.multichannelMicTitle': 'Micros multicanaux sous Windows',
+  'whatsNew.multichannelMicBody':
+    'Les réseaux de micros multicanaux comme Intel Smart Sound sont maintenant capturés et mixés correctement au lieu d’échouer au démarrage.',
   'whatsNew.viewNotes': 'Voir les notes de version complètes',
   'whatsNew.continue': 'Continuer',
 

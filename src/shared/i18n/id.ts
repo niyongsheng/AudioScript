@@ -105,6 +105,12 @@ export const id: Partial<Messages> = {
   'whatsNew.manualUpdateBody': 'Jika pemeriksaan atau pemasangan pembaruan gagal, buka langsung halaman unduhan.',
   'whatsNew.offlinePackTitle': 'Paket model offline',
   'whatsNew.offlinePackBody': 'Kegagalan unduhan kini menautkan ke paket model offline untuk jaringan lambat.',
+  'whatsNew.translateRecoveryTitle': 'Perbaikan: terjemahan pulih setelah gagal memulai',
+  'whatsNew.translateRecoveryBody':
+    'Kegagalan memulai sesi bisa membuat jendela melayang hanya menampilkan teks asli. Pekerja terjemahan kini pulih otomatis tanpa perlu memulai ulang aplikasi.',
+  'whatsNew.multichannelMicTitle': 'Mikrofon multisaluran di Windows',
+  'whatsNew.multichannelMicBody':
+    'Array seperti Intel Smart Sound kini dapat ditangkap dan dicampur dengan benar, bukan gagal saat memulai.',
   'whatsNew.viewNotes': 'Lihat catatan rilis lengkap',
   'whatsNew.continue': 'Lanjutkan',
 

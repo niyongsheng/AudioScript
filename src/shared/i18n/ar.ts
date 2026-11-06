@@ -104,6 +104,12 @@ export const ar: Partial<Messages> = {
   'whatsNew.manualUpdateBody': 'إذا فشل التحقق من التحديث أو تثبيته، يمكنك فتح صفحة التنزيل مباشرة.',
   'whatsNew.offlinePackTitle': 'حزمة النماذج دون اتصال',
   'whatsNew.offlinePackBody': 'تعرض رسالة فشل التنزيل الآن رابطًا إلى حزمة النماذج دون اتصال، مناسبة للشبكات البطيئة.',
+  'whatsNew.translateRecoveryTitle': 'إصلاح: استعادة الترجمة بعد فشل البدء',
+  'whatsNew.translateRecoveryBody':
+    'قد يؤدي فشل بدء الجلسة إلى بقاء النافذة العائمة تعرض النص الأصلي فقط. أصبح عامل الترجمة يتعافى تلقائيًا دون إعادة تشغيل التطبيق.',
+  'whatsNew.multichannelMicTitle': 'ميكروفونات متعددة القنوات على Windows',
+  'whatsNew.multichannelMicBody':
+    'أصبحت المصفوفات متعددة القنوات مثل Intel Smart Sound تُلتقط وتُدمج بشكل صحيح بدلاً من فشل البدء.',
   'whatsNew.viewNotes': 'عرض ملاحظات الإصدار الكاملة',
   'whatsNew.continue': 'متابعة',
 

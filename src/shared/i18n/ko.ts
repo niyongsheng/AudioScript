@@ -99,6 +99,12 @@ export const ko: Partial<Messages> = {
   'whatsNew.offlinePackTitle': '오프라인 모델 팩',
   'whatsNew.offlinePackBody':
     '다운로드 실패 안내에 오프라인 모델 팩 링크를 추가해 느린 네트워크에서도 설치할 수 있습니다.',
+  'whatsNew.translateRecoveryTitle': '수정: 시작 실패 후에도 번역이 사라지지 않음',
+  'whatsNew.translateRecoveryBody':
+    '세션 시작에 실패하면 오버레이에 원문만 표시될 수 있었습니다. 이제 번역 워커가 자동으로 복구되며 앱을 다시 시작할 필요가 없습니다.',
+  'whatsNew.multichannelMicTitle': 'Windows 다채널 마이크 지원',
+  'whatsNew.multichannelMicBody':
+    'Intel Smart Sound 같은 다채널 어레이도 이제 시작 실패 없이 정상적으로 캡처 및 믹스됩니다.',
   'whatsNew.viewNotes': '전체 릴리스 노트 보기',
   'whatsNew.continue': '계속',
 

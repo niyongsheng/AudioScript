@@ -105,6 +105,12 @@ export const ja: Partial<Messages> = {
   'whatsNew.offlinePackTitle': 'オフラインモデルパック',
   'whatsNew.offlinePackBody':
     'ダウンロード失敗時にオフラインモデルパックへのリンクを表示し、低速回線でもインストールできます。',
+  'whatsNew.translateRecoveryTitle': '修正：起動失敗後も翻訳が消えない',
+  'whatsNew.translateRecoveryBody':
+    'セッションの起動に失敗すると、オーバーレイに原文しか表示されないことがありました。翻訳ワーカーが自動的に復帰するようになり、再起動は不要です。',
+  'whatsNew.multichannelMicTitle': 'Windows のマルチチャンネルマイクに対応',
+  'whatsNew.multichannelMicBody':
+    'Intel Smart Sound などのマルチチャンネルアレイでも、起動に失敗せず正常にキャプチャ・ミックスできます。',
   'whatsNew.viewNotes': '完全なリリースノートを見る',
   'whatsNew.continue': '続ける',
 

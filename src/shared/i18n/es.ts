@@ -102,6 +102,12 @@ export const es: Partial<Messages> = {
   'whatsNew.offlinePackTitle': 'Paquete de modelos sin conexión',
   'whatsNew.offlinePackBody':
     'Los fallos de descarga ahora enlazan al paquete de modelos sin conexión para redes lentas.',
+  'whatsNew.translateRecoveryTitle': 'Corrección: la traducción se recupera tras un inicio fallido',
+  'whatsNew.translateRecoveryBody':
+    'Un inicio de sesión fallido podía dejar la ventana flotante mostrando solo el texto original. El motor de traducción ahora se recupera automáticamente, sin reiniciar la app.',
+  'whatsNew.multichannelMicTitle': 'Micrófonos multicanal en Windows',
+  'whatsNew.multichannelMicBody':
+    'Las matrices multicanal como Intel Smart Sound ahora se capturan y mezclan correctamente en lugar de fallar al iniciar.',
   'whatsNew.viewNotes': 'Ver notas de la versión completas',
   'whatsNew.continue': 'Continuar',
 

@@ -103,6 +103,11 @@ export const zhTW: Partial<Messages> = {
   'whatsNew.manualUpdateBody': '檢查或安裝更新失敗時，可直接開啟官網下載頁。',
   'whatsNew.offlinePackTitle': '模型下載失敗有備用方案',
   'whatsNew.offlinePackBody': '下載失敗提示新增離線模型包入口，弱網環境也能安裝。',
+  'whatsNew.translateRecoveryTitle': '修復：啟動失敗後譯文不再消失',
+  'whatsNew.translateRecoveryBody':
+    '某次工作階段啟動失敗後，懸浮窗曾只剩英文字幕；現在翻譯執行緒會自動恢復，無需重新啟動應用程式。',
+  'whatsNew.multichannelMicTitle': 'Windows 多聲道麥克風可用',
+  'whatsNew.multichannelMicBody': 'Intel 智音等多聲道陣列現在可以正常擷取與混音，不再啟動失敗。',
   'whatsNew.viewNotes': '查看完整更新說明',
   'whatsNew.continue': '繼續',
 

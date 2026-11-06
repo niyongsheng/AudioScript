@@ -108,6 +108,12 @@ export const it: Partial<Messages> = {
   'whatsNew.offlinePackTitle': 'Pacchetto di modelli offline',
   'whatsNew.offlinePackBody':
     'In caso di download fallito ora c’è un link al pacchetto di modelli offline, utile sulle reti lente.',
+  'whatsNew.translateRecoveryTitle': 'Correzione: la traduzione riprende dopo un avvio fallito',
+  'whatsNew.translateRecoveryBody':
+    'Un avvio di sessione fallito poteva lasciare la finestra sovrapposta con il solo testo originale. Il motore di traduzione ora si ripristina automaticamente, senza riavviare l’app.',
+  'whatsNew.multichannelMicTitle': 'Microfoni multicanale su Windows',
+  'whatsNew.multichannelMicBody':
+    'Array come Intel Smart Sound ora vengono acquisiti e mixati correttamente invece di fallire all’avvio.',
   'whatsNew.viewNotes': 'Vedi le note di rilascio complete',
   'whatsNew.continue': 'Continua',
 

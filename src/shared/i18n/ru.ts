@@ -107,6 +107,12 @@ export const ru: Partial<Messages> = {
   'whatsNew.offlinePackTitle': 'Офлайн-набор моделей',
   'whatsNew.offlinePackBody':
     'При ошибке загрузки теперь есть ссылка на офлайн-набор моделей — он пригодится при медленной сети.',
+  'whatsNew.translateRecoveryTitle': 'Исправление: перевод восстанавливается после неудачного запуска',
+  'whatsNew.translateRecoveryBody':
+    'После неудачного запуска сеанса в оверлее мог оставаться только исходный текст. Теперь обработчик перевода восстанавливается автоматически, без перезапуска приложения.',
+  'whatsNew.multichannelMicTitle': 'Многоканальные микрофоны в Windows',
+  'whatsNew.multichannelMicBody':
+    'Массивы вроде Intel Smart Sound теперь корректно записываются и микшируются, а не завершаются ошибкой при запуске.',
   'whatsNew.viewNotes': 'Полные примечания к выпуску',
   'whatsNew.continue': 'Продолжить',
 

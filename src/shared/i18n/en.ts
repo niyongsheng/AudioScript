@@ -104,6 +104,12 @@ export const en: Messages = {
   'whatsNew.manualUpdateBody': 'If checking or installing an update fails, open the download page directly.',
   'whatsNew.offlinePackTitle': 'Offline model pack',
   'whatsNew.offlinePackBody': 'Download failures now link to the offline model pack for slow networks.',
+  'whatsNew.translateRecoveryTitle': 'Fix: translation recovers after a failed start',
+  'whatsNew.translateRecoveryBody':
+    'A failed session start could leave the overlay showing only the source text. The translation worker now recovers automatically, with no restart needed.',
+  'whatsNew.multichannelMicTitle': 'Multichannel microphones on Windows',
+  'whatsNew.multichannelMicBody':
+    'Arrays such as Intel Smart Sound now capture and mix correctly instead of failing to start.',
   'whatsNew.viewNotes': 'View full release notes',
   'whatsNew.continue': 'Continue',
 

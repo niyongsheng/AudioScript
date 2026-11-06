@@ -107,6 +107,12 @@ export const ptBR: Partial<Messages> = {
   'whatsNew.offlinePackTitle': 'Pacote de modelos offline',
   'whatsNew.offlinePackBody':
     'Falhas de download agora mostram um link para o pacote de modelos offline, útil em redes lentas.',
+  'whatsNew.translateRecoveryTitle': 'Correção: a tradução volta após uma falha de inicialização',
+  'whatsNew.translateRecoveryBody':
+    'Uma falha ao iniciar a sessão podia deixar a janela flutuante apenas com o texto original. O mecanismo de tradução agora se recupera automaticamente, sem reiniciar o app.',
+  'whatsNew.multichannelMicTitle': 'Microfones multicanal no Windows',
+  'whatsNew.multichannelMicBody':
+    'Matrizes multicanal como o Intel Smart Sound agora são capturadas e mixadas corretamente, em vez de falhar ao iniciar.',
   'whatsNew.viewNotes': 'Ver notas de versão completas',
   'whatsNew.continue': 'Continuar',
 

@@ -101,6 +101,10 @@ export const zhCN = {
   'whatsNew.manualUpdateBody': '检查或安装更新失败时，可直接打开官网下载页。',
   'whatsNew.offlinePackTitle': '模型下载失败有备用方案',
   'whatsNew.offlinePackBody': '下载失败提示新增离线模型包入口，弱网环境也能安装。',
+  'whatsNew.translateRecoveryTitle': '修复：启动失败后译文不再消失',
+  'whatsNew.translateRecoveryBody': '某次会话启动失败后，悬浮窗曾只剩英文字幕；现在翻译线程会自动恢复，无需重启应用。',
+  'whatsNew.multichannelMicTitle': 'Windows 多声道麦克风可用',
+  'whatsNew.multichannelMicBody': 'Intel 智音等多声道阵列现在可以正常采集与混音，不再启动失败。',
   'whatsNew.viewNotes': '查看完整更新说明',
   'whatsNew.continue': '继续',
 

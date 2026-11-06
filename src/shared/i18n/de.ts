@@ -102,6 +102,12 @@ export const de: Partial<Messages> = {
   'whatsNew.offlinePackTitle': 'Offline-Modellpaket',
   'whatsNew.offlinePackBody':
     'Bei Downloadfehlern führt ein Link zum Offline-Modellpaket, damit auch langsame Netzwerke installieren können.',
+  'whatsNew.translateRecoveryTitle': 'Fix: Übersetzung bleibt nach fehlgeschlagenem Start erhalten',
+  'whatsNew.translateRecoveryBody':
+    'Ein fehlgeschlagener Sitzungsstart konnte das Overlay nur mit dem Originaltext zurücklassen. Der Übersetzungs-Worker erholt sich jetzt automatisch, ohne Neustart der App.',
+  'whatsNew.multichannelMicTitle': 'Mehrkanal-Mikrofone unter Windows',
+  'whatsNew.multichannelMicBody':
+    'Arrays wie Intel Smart Sound werden jetzt korrekt aufgenommen und gemischt, statt beim Start zu scheitern.',
   'whatsNew.viewNotes': 'Vollständige Versionshinweise ansehen',
   'whatsNew.continue': 'Weiter',
 
