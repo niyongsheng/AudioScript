@@ -70,8 +70,9 @@ jobs:
         uses: actions/cache@v4
         with:
           path: src-tauri/assets/models/sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16
-          key: asr-model-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
+          key: asr-model-v1
           restore-keys: asr-model-
+          # 跨平台共享：hashFiles 在 Windows 会因换行符不同算出另一个哈希；换模型时手动升 v2
 
       - name: Cache MT models
         uses: actions/cache@v4
@@ -79,7 +80,7 @@ jobs:
           path: |
             src-tauri/assets/models/mt
             .cache/mt
-          key: mt-models-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
+          key: mt-models-v1
           restore-keys: mt-models-
 
       - name: Install typeshare CLI
@@ -170,7 +171,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: src-tauri/assets/models/sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16
-          key: asr-model-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
+          key: asr-model-v1
           restore-keys: asr-model-
 
       - name: Cache MT models
@@ -179,7 +180,7 @@ jobs:
           path: |
             src-tauri/assets/models/mt
             .cache/mt
-          key: mt-models-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
+          key: mt-models-v1
           restore-keys: mt-models-
 
       - name: Setup Python
@@ -297,7 +298,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: src-tauri/assets/models/sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16
-          key: asr-model-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
+          key: asr-model-v1
           restore-keys: asr-model-
 
       - name: Cache MT models
@@ -306,7 +307,7 @@ jobs:
           path: |
             src-tauri/assets/models/mt
             .cache/mt
-          key: mt-models-${{ hashFiles('src-tauri/assets/model-catalog.json') }}
+          key: mt-models-v1
           restore-keys: mt-models-
 
       - name: Setup Python
