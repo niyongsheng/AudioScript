@@ -1,5 +1,5 @@
 import { open } from '@tauri-apps/plugin-dialog'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useStore } from '@/main/store'
 import { useModels } from '@/main/useModels'
 import { track } from '@/shared/analytics'
@@ -57,6 +57,20 @@ export function ModelsPage() {
   const [confirmRemove, setConfirmRemove] = useState<string | null>(null)
   const [confirmResetDir, setConfirmResetDir] = useState(false)
   const [dirBusy, setDirBusy] = useState(false)
+  const [dismissedInitialError, setDismissedInitialError] = useState<string | null>(null)
+  const [dismissedBrokenId, setDismissedBrokenId] = useState<string | null>(null)
+  const [dismissedCapturing, setDismissedCapturing] = useState(false)
+
+  const brokenSelected = list ? [...list.asr, ...list.mt].find((m) => m.selected && !m.complete) : undefined
+  const brokenSelectedId = brokenSelected?.id
+
+  useEffect(() => {
+    if (!brokenSelectedId) setDismissedBrokenId(null)
+  }, [brokenSelectedId])
+
+  useEffect(() => {
+    if (!capturing) setDismissedCapturing(false)
+  }, [capturing])
 
   function retry() {
     void refresh()
@@ -138,10 +152,11 @@ export function ModelsPage() {
   if (!list) {
     return (
       <Page title={t('models.title')}>
-        {loadError ? (
+        {loadError && dismissedInitialError !== loadError ? (
           <Alert
             tone="error"
             title={t('models.loadFailed')}
+            onDismiss={() => setDismissedInitialError(loadError)}
             actions={
               <Button size="sm" onClick={retry}>
                 {t('common.retry')}
@@ -158,7 +173,6 @@ export function ModelsPage() {
   }
 
   const connected = list.userRoot !== undefined
-  const brokenSelected = [...list.asr, ...list.mt].find((m) => m.selected && !m.complete)
 
   return (
     <Page title={t('models.title')}>
@@ -177,14 +191,18 @@ export function ModelsPage() {
         </Alert>
       )}
 
-      {brokenSelected && (
-        <Alert tone="error" title={t('models.brokenSelectedTitle', { title: modelTitle(brokenSelected, t) })}>
+      {brokenSelected && dismissedBrokenId !== brokenSelected.id && (
+        <Alert
+          tone="error"
+          title={t('models.brokenSelectedTitle', { title: modelTitle(brokenSelected, t) })}
+          onDismiss={() => setDismissedBrokenId(brokenSelected.id)}
+        >
           {brokenSelected.bundled ? t('models.brokenBundled') : t('models.brokenDownloaded')}
         </Alert>
       )}
 
-      {capturing && (
-        <Alert tone="info" title={t('models.capturingTitle')}>
+      {capturing && !dismissedCapturing && (
+        <Alert tone="info" title={t('models.capturingTitle')} onDismiss={() => setDismissedCapturing(true)}>
           {t('models.capturingBody')}
         </Alert>
       )}

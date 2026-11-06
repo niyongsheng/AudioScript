@@ -67,7 +67,12 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
   const [previewOn, setPreviewOn] = useState(false)
   const [openMenu, setOpenMenu] = useState<'single' | 'mic' | 'system' | null>(null)
   const [monitorError, setMonitorError] = useState<{ message: string; permission: boolean } | null>(null)
+  const [dismissedDeviceError, setDismissedDeviceError] = useState<string | null>(null)
   const previewSeq = useRef(0)
+
+  useEffect(() => {
+    if (!deviceError) setDismissedDeviceError(null)
+  }, [deviceError])
   const previewing = previewOn && !pending && !capturing
 
   const targets = useMemo<MonitorTarget[]>(() => {
@@ -135,10 +140,11 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
 
   return (
     <Page title={t('audio.title')}>
-      {deviceError && (
+      {deviceError && dismissedDeviceError !== deviceError && (
         <Alert
           tone="warn"
           title={t('audio.enumerateFailed')}
+          onDismiss={() => setDismissedDeviceError(deviceError)}
           actions={
             <Button size="sm" onClick={onOpenPermissions}>
               {t('audio.viewPermissions')}
@@ -317,13 +323,17 @@ function SilenceHelp({
   onOpenPermissions: () => void
 }) {
   const { t } = useI18n()
+  const [dismissed, setDismissed] = useState(false)
   const systemAudio = audioSource !== AudioSourceKind.Mic
   const mic = audioSource !== AudioSourceKind.Loopback
+
+  if (dismissed) return null
 
   return (
     <Alert
       tone="warn"
       title={t('audio.silenceTitle')}
+      onDismiss={() => setDismissed(true)}
       actions={
         <>
           <Button size="sm" onClick={onOpenPermissions}>

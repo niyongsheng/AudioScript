@@ -83,6 +83,12 @@ export function TranslatePage() {
   const { locale, t } = useI18n()
   const { list: models, setList: setModels } = useModels()
   const capturing = status === TaskStatus.Capturing
+  const [dismissedCapturing, setDismissedCapturing] = useState(false)
+
+  useEffect(() => {
+    if (!capturing) setDismissedCapturing(false)
+  }, [capturing])
+
   const macMajor = Number.parseInt(info?.osVersion?.split('.')[0] ?? '', 10)
   const macEngineAvailable = info?.platform === 'macos' && macMajor >= 26
   const [appleLanguages, setAppleLanguages] = useState<string[]>(() => [...APPLE_TRANSLATION_FALLBACKS])
@@ -338,7 +344,11 @@ export function TranslatePage() {
 
   return (
     <Page title={t('translate.title')}>
-      {capturing && <Alert tone="info">{t('translate.capturingHint')}</Alert>}
+      {capturing && !dismissedCapturing && (
+        <Alert tone="info" onDismiss={() => setDismissedCapturing(true)}>
+          {t('translate.capturingHint')}
+        </Alert>
+      )}
 
       <SettingsGroup title={t('translate.engineGroup')}>
         <SettingsRow

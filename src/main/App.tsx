@@ -185,10 +185,24 @@ function Alerts({ onOpenPermissions, onOpenTranslate }: AlertsProps) {
     setPermissionError,
   } = useStore()
 
+  const [dismissedHotkeys, setDismissedHotkeys] = useState<string | null>(null)
+  const [silentDismissed, setSilentDismissed] = useState(false)
+
+  const hotkeyKey = hotkeyProblems.map((h) => `${h.accelerator}:${h.id}`).join('|')
+  const showHotkeys = hotkeyProblems.length > 0 && dismissedHotkeys !== hotkeyKey
+  const silentNow = Boolean(audio?.silent && audio.segments === 0 && status === TaskStatus.Capturing)
   const showMismatch = languageMismatch && status === TaskStatus.Capturing
-  const showSilent = Boolean(audio?.silent && audio.segments === 0 && status === TaskStatus.Capturing)
-  const hasAlerts =
-    Boolean(error) || Boolean(permissionError) || showMismatch || hotkeyProblems.length > 0 || showSilent
+  const showSilent = silentNow && !silentDismissed
+
+  useEffect(() => {
+    if (hotkeyProblems.length === 0) setDismissedHotkeys(null)
+  }, [hotkeyProblems.length])
+
+  useEffect(() => {
+    if (!silentNow) setSilentDismissed(false)
+  }, [silentNow])
+
+  const hasAlerts = Boolean(error) || Boolean(permissionError) || showMismatch || showHotkeys || showSilent
 
   if (!hasAlerts) return null
 
@@ -241,15 +255,19 @@ function Alerts({ onOpenPermissions, onOpenTranslate }: AlertsProps) {
         </Alert>
       )}
 
-      {hotkeyProblems.length > 0 && (
-        <Alert tone="warn" title={t('app.hotkeyFailed', { count: hotkeyProblems.length })}>
+      {showHotkeys && (
+        <Alert
+          tone="warn"
+          title={t('app.hotkeyFailed', { count: hotkeyProblems.length })}
+          onDismiss={() => setDismissedHotkeys(hotkeyKey)}
+        >
           {hotkeyProblems.map((h) => `${h.accelerator} ${hotkeyLabel(h.id, t)}`).join(t('common.listSeparator'))}
           {t('app.hotkeyFailedDetail')}
         </Alert>
       )}
 
       {showSilent && (
-        <Alert tone="warn" title={t('app.audioSilent')}>
+        <Alert tone="warn" title={t('app.audioSilent')} onDismiss={() => setSilentDismissed(true)}>
           {t('app.audioSilentDetail')}
         </Alert>
       )}
