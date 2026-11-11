@@ -460,4 +460,23 @@ export const es: Partial<Messages> = {
   'error.stopTimeout':
     'Se agotó el tiempo de la solicitud de detención. Inténtelo de nuevo o use «Detener transcripción» en la barra de menús.',
   'error.startTimeout': 'Se agotó el tiempo de la solicitud de inicio. Inténtelo de nuevo.',
+
+  'overlay.displayMode': 'Visualización de subtítulos',
+  'overlay.displayModeDescription': 'Solo cambia la visualización; la transcripción y la traducción continúan.',
+  'overlay.displaySource': 'Original',
+  'overlay.displayBilingual': 'Ambos',
+  'overlay.displayTranslation': 'Traducción',
+  'overlay.controlsHelp':
+    'Arrastre el asa superior para mover. × solo oculta los subtítulos; no detiene la transcripción. Puede mostrarlos o desbloquearlos aquí o desde la barra de menús.',
+  'overlayWindow.drag': 'Mover',
+  'overlayWindow.hide': 'Ocultar subtítulos (la transcripción continúa)',
+  'overlayWindow.hideShortcut': 'Ocultar subtítulos (la transcripción continúa). Mostrar: {shortcut}',
+  'overlayWindow.lock': 'Bloquear · los clics atraviesan la ventana. Desbloquear: {shortcut}',
+  'overlayWindow.lockUnavailable':
+    'Configure un atajo de desbloqueo funcional en los ajustes de subtítulos antes de bloquear aquí.',
+  'overlayWindow.locked': 'Bloqueado · {shortcut} para desbloquear',
+  'overlayWindow.recover': 'Desbloquear en la ventana principal → Subtítulos',
+  'overlayWindow.translationPending': 'Traduciendo…',
+  'overlayWindow.translationWaiting': 'Esperando traducción…',
+  'overlayWindow.translationUnavailable': 'Sin traducción para este segmento',
 }

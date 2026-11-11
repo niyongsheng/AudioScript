@@ -22,9 +22,10 @@ import {
   type MacSpeechStatus,
   macSpeechStatus,
   type OverlayConfig,
+  type OverlayConfigPatch,
   on,
   overlayConfigGet,
-  overlayConfigSet,
+  overlayConfigPatch,
   overlayIsVisible,
   overlayToggle,
   type PermissionSnapshot,
@@ -143,7 +144,7 @@ interface Store {
   changeTheme: (v: Theme) => Promise<void>
   changeLanguage: (v: Language) => Promise<void>
   setEndpoint: (v: EndpointConfig) => Promise<void>
-  updateOverlay: (patch: Partial<OverlayConfig>) => Promise<void>
+  updateOverlay: (patch: OverlayConfigPatch) => Promise<void>
   toggleOverlay: () => Promise<void>
   refreshDevices: () => Promise<void>
   refreshProcesses: () => Promise<void>
@@ -563,10 +564,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [])
 
   const updateOverlay = useCallback(
-    async (patch: Partial<OverlayConfig>) => {
+    async (patch: OverlayConfigPatch) => {
       if (!overlayCfg) return
       try {
-        setOverlayCfg(await overlayConfigSet({ ...overlayCfg, ...patch }))
+        setOverlayCfg(await overlayConfigPatch(patch))
       } catch (e) {
         setError(formatCmdError(e))
       }

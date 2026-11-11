@@ -11,7 +11,8 @@ use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
 use crate::config::{
-    OverlayConfig, OverlayMode, WindowGeometry, MAX_OVERLAY_HEIGHT, MIN_OVERLAY_HEIGHT,
+    OverlayConfig, OverlayConfigPatch, OverlayMode, WindowGeometry, MAX_OVERLAY_HEIGHT,
+    MIN_OVERLAY_HEIGHT, OVERLAY_TOOLBAR_HEIGHT,
 };
 use crate::i18n::{tf, tr, Key};
 
@@ -326,6 +327,13 @@ pub fn toggle(app: &AppHandle) -> Result<bool, String> {
     Ok(now)
 }
 
+pub fn hide(app: &AppHandle) -> Result<(), String> {
+    Frame::get(app)?.hide(app)?;
+    set_enable(app, false);
+    broadcast_visibility(app, false);
+    Ok(())
+}
+
 fn set_enable(app: &AppHandle, enable: bool) {
     let state = app.state::<OverlayState>();
     state.set_enable(enable);
@@ -387,6 +395,24 @@ pub fn config(app: &AppHandle) -> OverlayConfig {
     app.state::<OverlayState>().config()
 }
 
+pub fn patch_config(app: &AppHandle, patch: OverlayConfigPatch) -> Result<OverlayConfig, String> {
+    let state = app.state::<OverlayState>();
+    let (previous, applied) = {
+        let mut cfg = state.config.lock().expect("overlay config mutex poisoned");
+        let previous = cfg.clone();
+        let applied = patch.apply(previous.clone());
+        *cfg = applied.clone();
+        (previous, applied)
+    };
+    if previous.font_size != applied.font_size || previous.max_lines != applied.max_lines {
+        fit_height_to_lines(app, &applied);
+    }
+    let saved = crate::prefs::update(app, |p| p.overlay = patch.apply(p.overlay.clone()));
+    broadcast(app, &state);
+    saved?;
+    Ok(state.config())
+}
+
 pub fn set_config(app: &AppHandle, cfg: OverlayConfig) -> Result<OverlayConfig, String> {
     let cfg = cfg.sanitized();
     let state = app.state::<OverlayState>();
@@ -419,7 +445,9 @@ const OVERLAY_LINE_HEIGHT: f64 = 1.35;
 const OVERLAY_VERTICAL_PADDING: f64 = 16.0;
 
 fn lines_height(font_size: u8, max_lines: u16) -> f64 {
-    font_size as f64 * OVERLAY_LINE_HEIGHT * max_lines as f64 + OVERLAY_VERTICAL_PADDING
+    font_size as f64 * OVERLAY_LINE_HEIGHT * max_lines as f64
+        + OVERLAY_VERTICAL_PADDING
+        + OVERLAY_TOOLBAR_HEIGHT as f64
 }
 
 fn fit_height_to_lines(app: &AppHandle, cfg: &OverlayConfig) {
@@ -628,8 +656,34 @@ mod tests {
     use super::*;
 
     #[test]
+    fn bloom_preserves_original_geometry_until_end() {
+        let state = OverlayState::default();
+        let original = WindowGeometry {
+            position: crate::config::WindowPos { x: -840, y: 360 },
+            size: crate::config::WindowSize {
+                width: 640,
+                height: 240,
+            },
+        };
+        let expanded = WindowGeometry {
+            position: crate::config::WindowPos { x: -896, y: 304 },
+            size: crate::config::WindowSize {
+                width: 752,
+                height: 352,
+            },
+        };
+        assert!(state.begin_bloom(original));
+        assert!(state.is_blooming(), "扩张期间必须暂停几何保存");
+        assert!(!state.begin_bloom(expanded), "重复触发不能覆盖普通窗口快照");
+        assert_eq!(state.bloom_snapshot(), Some(original));
+        state.end_bloom();
+        assert!(!state.is_blooming(), "动画收尾后允许普通几何保存");
+        assert_eq!(state.bloom_snapshot(), None);
+    }
+
+    #[test]
     fn lines_height_matches_the_css_budget() {
-        assert!((lines_height(22, 6) - (22.0 * 1.35 * 6.0 + 16.0)).abs() < 1e-9);
+        assert!((lines_height(22, 6) - (22.0 * 1.35 * 6.0 + 16.0 + 40.0)).abs() < 1e-9);
         assert!(lines_height(48, 20) > lines_height(22, 6));
     }
 }

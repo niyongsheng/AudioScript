@@ -72,6 +72,7 @@ export const EVENT = {
   taskState: 'transcript://state',
   overlayState: 'overlay://state',
   overlayVisibility: 'overlay://visibility',
+  overlayShortcuts: 'overlay://shortcuts',
   eggBloom: 'overlay://bloom',
   audio: 'transcript://audio',
   level: 'transcript://level',
@@ -366,6 +367,16 @@ export function transcriptExport(stamp: string, path: string): Promise<{ path: s
 
 export function overlayToggle(): Promise<boolean> {
   return call<boolean>('overlay_toggle')
+}
+
+export function overlayHide(): Promise<void> {
+  return call<void>('overlay_hide')
+}
+
+export type OverlayConfigPatch = Partial<Omit<OverlayConfig, 'enable' | 'mode'>>
+
+export function overlayConfigPatch(patch: OverlayConfigPatch): Promise<OverlayConfig> {
+  return call<OverlayConfig>('overlay_config_patch', { patch })
 }
 
 export function overlaySetMode(mode: OverlayMode): Promise<OverlayMode> {

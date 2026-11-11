@@ -4,7 +4,7 @@ use tauri_plugin_autostart::ManagerExt;
 
 use crate::config::{
     direction_label, effective_target_lang, AppRef, EndpointConfig, EndpointProfile, OverlayConfig,
-    OverlayMode, Preferences, PrefsPatch, SessionConfig, TranslateEngine,
+    OverlayConfigPatch, OverlayMode, Preferences, PrefsPatch, SessionConfig, TranslateEngine,
 };
 pub use crate::error::CmdError;
 use crate::i18n::{tf, tr, Key};
@@ -198,6 +198,15 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
         "overlay_toggle" => overlay::toggle(app)
             .map(|v| json!(v))
             .map_err(CmdError::Failed),
+        "overlay_hide" => overlay::hide(app)
+            .map(|()| json!(null))
+            .map_err(CmdError::Failed),
+        "overlay_config_patch" => {
+            let patch: OverlayConfigPatch = json_arg(args, "patch")?;
+            overlay::patch_config(app, patch)
+                .map(|cfg| json!(cfg))
+                .map_err(CmdError::Failed)
+        }
         "overlay_set_mode" => {
             let raw = str_arg(args, "mode")?;
             let mode = OverlayMode::parse(raw)

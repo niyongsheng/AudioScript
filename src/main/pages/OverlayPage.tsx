@@ -11,6 +11,7 @@ import {
   MAX_OVERLAY_LINES,
   MIN_FONT_SIZE,
   MIN_GLOW_WIDTH,
+  OverlayDisplayMode,
   OverlayMode,
 } from '@/shared/types'
 import { Button } from '@/ui/Button'
@@ -47,7 +48,7 @@ export function OverlayPage() {
 
   return (
     <Page title={t('overlay.title')}>
-      <SettingsGroup title={t('overlay.displayGroup')}>
+      <SettingsGroup title={t('overlay.displayGroup')} footer={t('overlay.controlsHelp')}>
         <SettingsRow
           icon="overlay"
           title={overlayVisible ? t('overlay.hideOverlay') : t('overlay.showOverlay')}
@@ -55,6 +56,23 @@ export function OverlayPage() {
             <Button icon={overlayVisible ? 'eyeOff' : 'eye'} onClick={() => void toggleOverlay()}>
               {overlayVisible ? t('overlay.hide') : t('overlay.show')}
             </Button>
+          }
+        />
+        <SettingsRow
+          icon="translate"
+          title={t('overlay.displayMode')}
+          description={t('overlay.displayModeDescription')}
+          control={
+            <Segmented
+              label={t('overlay.displayMode')}
+              value={overlayCfg.displayMode}
+              options={[
+                { value: OverlayDisplayMode.Source, label: t('overlay.displaySource'), icon: 'waveform' },
+                { value: OverlayDisplayMode.Bilingual, label: t('overlay.displayBilingual'), icon: 'translate' },
+                { value: OverlayDisplayMode.Translation, label: t('overlay.displayTranslation'), icon: 'translate' },
+              ]}
+              onChange={(displayMode) => void updateOverlay({ displayMode })}
+            />
           }
         />
         <SettingsRow
@@ -73,7 +91,7 @@ export function OverlayPage() {
                 { value: OverlayMode.Locked, label: t('overlay.modeLocked'), icon: 'lock' },
                 { value: OverlayMode.Edit, label: t('overlay.modeEdit'), icon: 'unlock' },
               ]}
-              onChange={(v) => void overlaySetMode(v)}
+              onChange={(v) => void overlaySetMode(v).catch((e) => setError(formatCmdError(e)))}
             />
           }
         />

@@ -425,6 +425,23 @@ export const zhCN = {
   'error.modelsTimeout': '读取模型列表超时，请重试',
   'error.stopTimeout': '停止请求超时：请重试，或使用托盘「停止转写」',
   'error.startTimeout': '开始转写超时，请重试',
+
+  'overlay.displayMode': '字幕内容',
+  'overlay.displayModeDescription': '只改变显示内容，不影响转写和翻译。',
+  'overlay.displaySource': '原文',
+  'overlay.displayBilingual': '双语',
+  'overlay.displayTranslation': '译文',
+  'overlay.controlsHelp': '拖动顶部手柄可移动。× 仅隐藏字幕，不会停止转写；可在此页面或菜单栏重新显示、解锁。',
+  'overlayWindow.drag': '拖动',
+  'overlayWindow.hide': '隐藏字幕（不会停止转写）',
+  'overlayWindow.hideShortcut': '隐藏字幕（不会停止转写）。重新显示：{shortcut}',
+  'overlayWindow.lock': '锁定并鼠标穿透。解锁：{shortcut}',
+  'overlayWindow.lockUnavailable': '请先在「悬浮窗」设置中配置可用的解锁快捷键。',
+  'overlayWindow.locked': '已锁定 · {shortcut} 解锁',
+  'overlayWindow.recover': '解锁：主界面 → 悬浮窗',
+  'overlayWindow.translationPending': '翻译中…',
+  'overlayWindow.translationWaiting': '等待翻译…',
+  'overlayWindow.translationUnavailable': '此段暂无译文',
 }
 
 export type Messages = typeof zhCN

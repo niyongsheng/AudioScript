@@ -463,4 +463,23 @@ export const fr: Partial<Messages> = {
   'error.stopTimeout':
     'Délai dépassé pour la demande d’arrêt. Réessayez ou utilisez « Arrêter la transcription » dans la barre des menus.',
   'error.startTimeout': 'Délai dépassé pour la demande de démarrage. Réessayez.',
+
+  'overlay.displayMode': 'Affichage des sous-titres',
+  'overlay.displayModeDescription': 'Modifie uniquement l’affichage ; la transcription et la traduction continuent.',
+  'overlay.displaySource': 'Original',
+  'overlay.displayBilingual': 'Les deux',
+  'overlay.displayTranslation': 'Traduction',
+  'overlay.controlsHelp':
+    'Déplacez la fenêtre avec la poignée du haut. × masque les sous-titres sans arrêter la transcription. Vous pouvez les réafficher ou les déverrouiller ici ou dans la barre des menus.',
+  'overlayWindow.drag': 'Déplacer',
+  'overlayWindow.hide': 'Masquer les sous-titres (la transcription continue)',
+  'overlayWindow.hideShortcut': 'Masquer les sous-titres (la transcription continue). Réafficher : {shortcut}',
+  'overlayWindow.lock': 'Verrouiller · les clics traversent la fenêtre. Déverrouiller : {shortcut}',
+  'overlayWindow.lockUnavailable':
+    'Configurez un raccourci de déverrouillage fonctionnel dans les réglages des sous-titres avant de verrouiller ici.',
+  'overlayWindow.locked': 'Verrouillé · {shortcut} pour déverrouiller',
+  'overlayWindow.recover': 'Déverrouiller dans la fenêtre principale → Sous-titres',
+  'overlayWindow.translationPending': 'Traduction…',
+  'overlayWindow.translationWaiting': 'En attente de traduction…',
+  'overlayWindow.translationUnavailable': 'Aucune traduction pour ce segment',
 }

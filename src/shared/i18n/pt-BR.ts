@@ -453,4 +453,23 @@ export const ptBR: Partial<Messages> = {
   'error.stopTimeout':
     'Tempo esgotado na solicitação de parada. Tente novamente ou use “Parar transcrição” na bandeja.',
   'error.startTimeout': 'Tempo esgotado na solicitação de início. Tente novamente.',
+
+  'overlay.displayMode': 'Exibição de legendas',
+  'overlay.displayModeDescription': 'Altera apenas a exibição; a transcrição e a tradução continuam.',
+  'overlay.displaySource': 'Original',
+  'overlay.displayBilingual': 'Ambos',
+  'overlay.displayTranslation': 'Tradução',
+  'overlay.controlsHelp':
+    'Arraste a alça superior para mover. × apenas oculta as legendas; não interrompe a transcrição. Você pode exibi-las ou desbloqueá-las aqui ou na barra de menus.',
+  'overlayWindow.drag': 'Mover',
+  'overlayWindow.hide': 'Ocultar legendas (a transcrição continua)',
+  'overlayWindow.hideShortcut': 'Ocultar legendas (a transcrição continua). Exibir: {shortcut}',
+  'overlayWindow.lock': 'Bloquear · os cliques atravessam a janela. Desbloquear: {shortcut}',
+  'overlayWindow.lockUnavailable':
+    'Configure um atalho de desbloqueio funcional nas configurações de legendas antes de bloquear aqui.',
+  'overlayWindow.locked': 'Bloqueado · {shortcut} para desbloquear',
+  'overlayWindow.recover': 'Desbloquear na janela principal → Legendas',
+  'overlayWindow.translationPending': 'Traduzindo…',
+  'overlayWindow.translationWaiting': 'Aguardando tradução…',
+  'overlayWindow.translationUnavailable': 'Sem tradução para este segmento',
 }

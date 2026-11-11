@@ -201,6 +201,7 @@ pub struct SessionConfig {
 pub struct OverlayConfig {
     pub enable: bool,
     pub mode: OverlayMode,
+    pub display_mode: OverlayDisplayMode,
     pub always_on_top: bool,
     pub opacity: u8,
     pub font_size: u8,
@@ -219,6 +220,54 @@ pub enum OverlayMode {
     Locked,
     #[default]
     Edit,
+}
+
+#[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "camelCase")]
+pub enum OverlayDisplayMode {
+    Source,
+    #[default]
+    Bilingual,
+    Translation,
+}
+
+#[derive(Debug, Clone, Default, Deserialize)]
+#[serde(rename_all = "camelCase", default, deny_unknown_fields)]
+pub struct OverlayConfigPatch {
+    pub display_mode: Option<OverlayDisplayMode>,
+    pub always_on_top: Option<bool>,
+    pub opacity: Option<u8>,
+    pub font_size: Option<u8>,
+    pub font_color: Option<String>,
+    pub bg_color: Option<String>,
+    pub max_lines: Option<u16>,
+    pub glow: Option<bool>,
+    pub glow_speed: Option<u8>,
+    pub glow_width: Option<u8>,
+}
+
+impl OverlayConfigPatch {
+    pub fn apply(&self, mut cfg: OverlayConfig) -> OverlayConfig {
+        macro_rules! apply {
+            ($($field:ident),+ $(,)?) => {
+                $(if let Some(value) = &self.$field { cfg.$field = value.clone(); })+
+            };
+        }
+        apply!(
+            display_mode,
+            always_on_top,
+            opacity,
+            font_size,
+            font_color,
+            bg_color,
+            max_lines,
+            glow,
+            glow_speed,
+            glow_width
+        );
+        cfg.sanitized()
+    }
 }
 
 impl OverlayMode {
@@ -247,6 +296,7 @@ impl Default for OverlayConfig {
         Self {
             enable: true,
             mode: OverlayMode::Edit,
+            display_mode: OverlayDisplayMode::Bilingual,
             always_on_top: true,
             opacity: 60,
             font_size: 22,
@@ -282,6 +332,8 @@ pub const MIN_MAX_UTTERANCE_MS: u32 = 2_000;
 #[typeshare]
 pub const MAX_MAX_UTTERANCE_MS: u32 = 20_000;
 
+#[typeshare]
+pub const OVERLAY_TOOLBAR_HEIGHT: u16 = 40;
 #[typeshare]
 pub const MIN_OVERLAY_WIDTH: u32 = 320;
 #[typeshare]
@@ -1548,6 +1600,57 @@ mod tests {
         assert!(c.glow);
         assert_eq!(c.glow_speed, 0);
         assert_eq!(c.glow_width, 2, "旧版偏好文件缺少 glowWidth 时用默认宽度");
+    }
+
+    #[test]
+    fn overlay_display_mode_migrates_and_round_trips() {
+        let old: OverlayConfig =
+            serde_json::from_str(r#"{"fontSize":28,"mode":"locked"}"#).unwrap();
+        assert_eq!(
+            old.display_mode,
+            OverlayDisplayMode::Bilingual,
+            "旧配置默认双语"
+        );
+        assert_eq!(old.font_size, 28, "旧配置其他字段不丢失");
+        for mode in [
+            OverlayDisplayMode::Source,
+            OverlayDisplayMode::Bilingual,
+            OverlayDisplayMode::Translation,
+        ] {
+            let cfg = OverlayConfig {
+                display_mode: mode,
+                ..old.clone()
+            };
+            let restored: OverlayConfig =
+                serde_json::from_str(&serde_json::to_string(&cfg).unwrap()).unwrap();
+            assert_eq!(restored, cfg, "显示模式应能持久化");
+        }
+    }
+
+    #[test]
+    fn overlay_patch_preserves_other_controls_and_rejects_bad_modes() {
+        let original = OverlayConfig {
+            mode: OverlayMode::Locked,
+            enable: false,
+            font_size: 28,
+            ..Default::default()
+        };
+        let mode: OverlayConfigPatch =
+            serde_json::from_str(r#"{"displayMode":"translation"}"#).unwrap();
+        let size: OverlayConfigPatch = serde_json::from_str(r#"{"fontSize":32}"#).unwrap();
+        let cfg = size.apply(mode.apply(original));
+        assert_eq!(
+            cfg.display_mode,
+            OverlayDisplayMode::Translation,
+            "字号补丁不能覆盖显示模式"
+        );
+        assert_eq!(cfg.font_size, 32);
+        assert_eq!(cfg.mode, OverlayMode::Locked, "外观补丁不能解锁");
+        assert!(!cfg.enable, "外观补丁不能重新显示");
+        assert!(
+            serde_json::from_str::<OverlayConfigPatch>(r#"{"displayMode":"invalid"}"#).is_err()
+        );
+        assert!(serde_json::from_str::<OverlayConfigPatch>(r#"{"enable":true}"#).is_err());
     }
 
     #[test]

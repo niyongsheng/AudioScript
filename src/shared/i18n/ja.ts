@@ -448,4 +448,23 @@ export const ja: Partial<Messages> = {
   'error.modelsTimeout': 'モデル一覧の読み込みがタイムアウトしました。再試行してください。',
   'error.stopTimeout': '停止要求がタイムアウトしました。再試行するか、トレイの「文字起こしを停止」を使用してください。',
   'error.startTimeout': '開始要求がタイムアウトしました。再試行してください。',
+
+  'overlay.displayMode': '字幕の表示',
+  'overlay.displayModeDescription': '表示内容のみを変更します。文字起こしと翻訳は続行します。',
+  'overlay.displaySource': '原文',
+  'overlay.displayBilingual': '両方',
+  'overlay.displayTranslation': '訳文',
+  'overlay.controlsHelp':
+    '上部のハンドルをドラッグして移動します。× は字幕を非表示にするだけで、文字起こしは停止しません。ここまたはメニューバーから再表示やロック解除ができます。',
+  'overlayWindow.drag': '移動',
+  'overlayWindow.hide': '字幕を非表示（文字起こしは続行）',
+  'overlayWindow.hideShortcut': '字幕を非表示（文字起こしは続行）。再表示：{shortcut}',
+  'overlayWindow.lock': 'ロック · クリックを背後のウィンドウへ通します。解除：{shortcut}',
+  'overlayWindow.lockUnavailable':
+    'ここでロックする前に、字幕ウィンドウ設定で有効なロック解除ショートカットを設定してください。',
+  'overlayWindow.locked': 'ロック中 · {shortcut} で解除',
+  'overlayWindow.recover': 'メインウィンドウ → 字幕ウィンドウでロック解除',
+  'overlayWindow.translationPending': '翻訳中…',
+  'overlayWindow.translationWaiting': '翻訳を待機中…',
+  'overlayWindow.translationUnavailable': 'この区間の訳文はありません',
 }

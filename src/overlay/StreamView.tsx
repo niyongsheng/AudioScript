@@ -1,7 +1,6 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useI18n } from '@/shared/i18n'
-import { SegmentState, type TranscriptSegment, TranslationState } from '@/shared/types'
-import { FlowingBorder } from './FlowingBorder'
+import { OverlayDisplayMode, SegmentState, type TranscriptSegment, TranslationState } from '@/shared/types'
 
 const SOURCE_SCALE = 0.8
 
@@ -16,28 +15,15 @@ const TYPEWRITER_MS = 260
 const STICK_BOTTOM_PX = 24
 
 interface Props {
+  displayMode: OverlayDisplayMode
   segments: TranscriptSegment[]
   fontSize: number
   fontColor: string
   opacity: number
   bgColor: string
-  glow: boolean
-  glowSpeed: number
-  glowWidth: number
-  streaming: boolean
 }
 
-export function StreamView({
-  segments,
-  fontSize,
-  fontColor,
-  opacity,
-  bgColor,
-  glow,
-  glowSpeed,
-  glowWidth,
-  streaming,
-}: Props) {
+export function StreamView({ segments, displayMode, fontSize, fontColor, opacity, bgColor }: Props) {
   const { t } = useI18n()
   const scrollRef = useRef<HTMLDivElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -94,17 +80,25 @@ export function StreamView({
               {t('overlayWindow.waiting')}
             </p>
           ) : (
-            segments.map((s, i) => <BilingualSegment key={s.id} seg={s} active={i === segments.length - 1} />)
+            segments.map((s, i) => (
+              <BilingualSegment key={s.id} seg={s} active={i === segments.length - 1} displayMode={displayMode} />
+            ))
           )}
         </div>
       </div>
-
-      {glow && <FlowingBorder streaming={streaming} speed={glowSpeed} width={glowWidth} />}
     </div>
   )
 }
 
-const BilingualSegment = memo(function BilingualSegment({ seg, active }: { seg: TranscriptSegment; active: boolean }) {
+const BilingualSegment = memo(function BilingualSegment({
+  seg,
+  active,
+  displayMode,
+}: {
+  seg: TranscriptSegment
+  active: boolean
+  displayMode: OverlayDisplayMode
+}) {
   const { t } = useI18n()
   const isPartial = seg.state === SegmentState.Partial
   const [shown, setShown] = useState(seg.text)
@@ -155,33 +149,51 @@ const BilingualSegment = memo(function BilingualSegment({ seg, active }: { seg: 
   }, [seg.text, isPartial])
 
   const text = isPartial ? shown : seg.text
+  const showSource = displayMode !== OverlayDisplayMode.Translation
+  const showTranslation = displayMode !== OverlayDisplayMode.Source
+  const hasTranslation = seg.translationState === TranslationState.Done && !!seg.translation?.trim()
+  const translationStatus =
+    seg.translationState === TranslationState.Failed
+      ? t('overlayWindow.translationFailed')
+      : seg.translationState === TranslationState.Pending
+        ? t('overlayWindow.translationPending')
+        : seg.translationState === TranslationState.Done
+          ? t('overlayWindow.translationUnavailable')
+          : t('overlayWindow.translationWaiting')
 
   return (
     <div
       className={`py-[0.2em] ${seg.state === SegmentState.Edited ? 'border-[var(--color-accent)] border-s-2 ps-2' : ''}`}
     >
-      <p
-        className="m-0"
-        dir="auto"
-        style={{
-          fontSize: `${SOURCE_SCALE}em`,
-          opacity: isPartial ? PARTIAL_OPACITY : SOURCE_OPACITY,
-        }}
-      >
-        {text}
-        {isPartial && active && <Caret />}
-      </p>
+      {showSource && (
+        <p
+          className="m-0"
+          dir="auto"
+          style={{
+            fontSize: displayMode === OverlayDisplayMode.Source ? '1em' : `${SOURCE_SCALE}em`,
+            opacity: isPartial ? PARTIAL_OPACITY : displayMode === OverlayDisplayMode.Source ? 1 : SOURCE_OPACITY,
+          }}
+        >
+          {text}
+          {isPartial && active && <Caret />}
+        </p>
+      )}
 
-      {seg.translationState === TranslationState.Done && seg.translation && (
+      {showTranslation && hasTranslation && (
         <p className="m-0" dir="auto">
           {seg.translation}
         </p>
       )}
-      {seg.translationState === TranslationState.Failed && (
-        <p className="m-0 opacity-40" style={{ fontSize: `${SOURCE_SCALE}em` }}>
-          <span className="italic">{t('overlayWindow.translationFailed')}</span>
-        </p>
-      )}
+      {showTranslation &&
+        !hasTranslation &&
+        (displayMode === OverlayDisplayMode.Translation || seg.translationState === TranslationState.Failed) && (
+          <p
+            className={`m-0 ${displayMode === OverlayDisplayMode.Bilingual ? 'opacity-40' : 'opacity-60'}`}
+            style={{ fontSize: `${SOURCE_SCALE}em` }}
+          >
+            <span className="italic">{translationStatus}</span>
+          </p>
+        )}
     </div>
   )
 })

@@ -432,4 +432,22 @@ export const ar: Partial<Messages> = {
   'error.modelsTimeout': 'انتهت مهلة تحميل قائمة النماذج. حاول مرة أخرى.',
   'error.stopTimeout': 'انتهت مهلة طلب الإيقاف. حاول مرة أخرى أو استخدم «إيقاف النسخ» في شريط النظام.',
   'error.startTimeout': 'انتهت مهلة طلب البدء. حاول مرة أخرى.',
+
+  'overlay.displayMode': 'عرض النص',
+  'overlay.displayModeDescription': 'يغيّر العرض فقط؛ يستمر التفريغ والترجمة.',
+  'overlay.displaySource': 'الأصل',
+  'overlay.displayBilingual': 'كلاهما',
+  'overlay.displayTranslation': 'الترجمة',
+  'overlay.controlsHelp':
+    'اسحب المقبض العلوي للتحريك. تخفي × النافذة فقط ولا توقف التفريغ. يمكنك إظهارها أو إلغاء قفلها هنا أو من شريط القوائم.',
+  'overlayWindow.drag': 'تحريك',
+  'overlayWindow.hide': 'إخفاء النص (يستمر التفريغ)',
+  'overlayWindow.hideShortcut': 'إخفاء النص (يستمر التفريغ). إظهار مجددًا: {shortcut}',
+  'overlayWindow.lock': 'قفل · تمر نقرات الفأرة عبر النافذة. إلغاء القفل: {shortcut}',
+  'overlayWindow.lockUnavailable': 'اضبط اختصارًا صالحًا لإلغاء القفل في إعدادات نافذة النص قبل قفلها هنا.',
+  'overlayWindow.locked': 'مقفل · {shortcut} لإلغاء القفل',
+  'overlayWindow.recover': 'إلغاء القفل من قسم نافذة النص في النافذة الرئيسية',
+  'overlayWindow.translationPending': 'جارٍ الترجمة…',
+  'overlayWindow.translationWaiting': 'في انتظار الترجمة…',
+  'overlayWindow.translationUnavailable': 'لا توجد ترجمة لهذا المقطع',
 }

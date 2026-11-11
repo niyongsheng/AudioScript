@@ -451,4 +451,23 @@ export const ru: Partial<Messages> = {
   'error.modelsTimeout': 'Истекло время загрузки списка моделей. Повторите попытку.',
   'error.stopTimeout': 'Истекло время запроса остановки. Повторите или используйте «Остановить транскрипцию» в трее.',
   'error.startTimeout': 'Истекло время запроса запуска. Повторите попытку.',
+
+  'overlay.displayMode': 'Отображение субтитров',
+  'overlay.displayModeDescription': 'Меняет только отображение; расшифровка и перевод продолжаются.',
+  'overlay.displaySource': 'Оригинал',
+  'overlay.displayBilingual': 'Оба',
+  'overlay.displayTranslation': 'Перевод',
+  'overlay.controlsHelp':
+    'Перетащите верхнюю ручку для перемещения. × только скрывает субтитры и не останавливает расшифровку. Показать или разблокировать окно можно здесь или в строке меню.',
+  'overlayWindow.drag': 'Переместить',
+  'overlayWindow.hide': 'Скрыть субтитры (расшифровка продолжается)',
+  'overlayWindow.hideShortcut': 'Скрыть субтитры (расшифровка продолжается). Показать: {shortcut}',
+  'overlayWindow.lock': 'Заблокировать · щелчки проходят сквозь окно. Разблокировать: {shortcut}',
+  'overlayWindow.lockUnavailable':
+    'Перед блокировкой задайте рабочее сочетание клавиш для разблокировки в настройках субтитров.',
+  'overlayWindow.locked': 'Заблокировано · {shortcut} для разблокировки',
+  'overlayWindow.recover': 'Разблокировать в главном окне → Субтитры',
+  'overlayWindow.translationPending': 'Перевод…',
+  'overlayWindow.translationWaiting': 'Ожидание перевода…',
+  'overlayWindow.translationUnavailable': 'Нет перевода для этого сегмента',
 }

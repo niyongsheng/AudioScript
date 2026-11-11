@@ -154,9 +154,16 @@ export enum OverlayMode {
 	Edit = "edit",
 }
 
+export enum OverlayDisplayMode {
+	Source = "source",
+	Bilingual = "bilingual",
+	Translation = "translation",
+}
+
 export interface OverlayConfig {
 	enable: boolean;
 	mode: OverlayMode;
+	displayMode: OverlayDisplayMode;
 	alwaysOnTop: boolean;
 	opacity: number;
 	fontSize: number;
@@ -374,6 +381,7 @@ export const MIN_TRAILING_SILENCE_MS: number = 200;
 export const MAX_TRAILING_SILENCE_MS: number = 2000;
 export const MIN_MAX_UTTERANCE_MS: number = 2000;
 export const MAX_MAX_UTTERANCE_MS: number = 20000;
+export const OVERLAY_TOOLBAR_HEIGHT: number = 40;
 export const MIN_OVERLAY_WIDTH: number = 320;
 export const MIN_OVERLAY_HEIGHT: number = 80;
 export const MAX_OVERLAY_WIDTH: number = 4096;

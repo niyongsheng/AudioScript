@@ -445,4 +445,22 @@ export const en: Messages = {
   'error.modelsTimeout': 'Timed out loading the model list. Try again.',
   'error.stopTimeout': 'Stop request timed out. Try again, or use “Stop transcribing” in the tray.',
   'error.startTimeout': 'Start request timed out. Try again.',
+
+  'overlay.displayMode': 'Subtitle display',
+  'overlay.displayModeDescription': 'Changes only what is shown; transcription and translation keep running.',
+  'overlay.displaySource': 'Source',
+  'overlay.displayBilingual': 'Both',
+  'overlay.displayTranslation': 'Translation',
+  'overlay.controlsHelp':
+    'Drag the top handle to move. × only hides the overlay; it does not stop transcription. You can show or unlock it here or from the menu bar.',
+  'overlayWindow.drag': 'Move',
+  'overlayWindow.hide': 'Hide subtitles (transcription continues)',
+  'overlayWindow.hideShortcut': 'Hide subtitles (transcription continues). Show again: {shortcut}',
+  'overlayWindow.lock': 'Lock · mouse clicks pass through. Unlock: {shortcut}',
+  'overlayWindow.lockUnavailable': 'Set a working unlock shortcut in Overlay settings before locking here.',
+  'overlayWindow.locked': 'Locked · {shortcut} to unlock',
+  'overlayWindow.recover': 'Unlock in the main window → Overlay',
+  'overlayWindow.translationPending': 'Translating…',
+  'overlayWindow.translationWaiting': 'Waiting for translation…',
+  'overlayWindow.translationUnavailable': 'No translation for this segment',
 }

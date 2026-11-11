@@ -440,4 +440,22 @@ export const ko: Partial<Messages> = {
   'error.modelsTimeout': '모델 목록을 불러오는 시간이 초과되었습니다. 다시 시도하세요.',
   'error.stopTimeout': '중지 요청 시간 초과. 다시 시도하거나 트레이의 “전사 중지”를 사용하세요.',
   'error.startTimeout': '시작 요청 시간 초과. 다시 시도하세요.',
+
+  'overlay.displayMode': '자막 표시',
+  'overlay.displayModeDescription': '표시 내용만 변경합니다. 전사와 번역은 계속됩니다.',
+  'overlay.displaySource': '원문',
+  'overlay.displayBilingual': '둘 다',
+  'overlay.displayTranslation': '번역문',
+  'overlay.controlsHelp':
+    '상단 손잡이를 드래그하여 이동하세요. ×는 자막만 숨기며 전사를 중지하지 않습니다. 여기 또는 메뉴 막대에서 다시 표시하거나 잠금을 해제할 수 있습니다.',
+  'overlayWindow.drag': '이동',
+  'overlayWindow.hide': '자막 숨기기 (전사는 계속됨)',
+  'overlayWindow.hideShortcut': '자막 숨기기 (전사는 계속됨). 다시 표시: {shortcut}',
+  'overlayWindow.lock': '잠금 · 마우스 클릭이 창을 통과합니다. 잠금 해제: {shortcut}',
+  'overlayWindow.lockUnavailable': '여기서 잠그기 전에 자막 창 설정에서 작동하는 잠금 해제 단축키를 설정하세요.',
+  'overlayWindow.locked': '잠김 · {shortcut}로 잠금 해제',
+  'overlayWindow.recover': '메인 창 → 자막 창에서 잠금 해제',
+  'overlayWindow.translationPending': '번역 중…',
+  'overlayWindow.translationWaiting': '번역 대기 중…',
+  'overlayWindow.translationUnavailable': '이 구간의 번역이 없습니다',
 }

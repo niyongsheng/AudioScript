@@ -448,4 +448,23 @@ export const id: Partial<Messages> = {
   'error.modelsTimeout': 'Waktu habis memuat daftar model. Coba lagi.',
   'error.stopTimeout': 'Waktu permintaan berhenti habis. Coba lagi atau gunakan “Hentikan transkripsi” di baki.',
   'error.startTimeout': 'Waktu permintaan mulai habis. Coba lagi.',
+
+  'overlay.displayMode': 'Tampilan takarir',
+  'overlay.displayModeDescription': 'Hanya mengubah tampilan; transkripsi dan terjemahan tetap berjalan.',
+  'overlay.displaySource': 'Asli',
+  'overlay.displayBilingual': 'Keduanya',
+  'overlay.displayTranslation': 'Terjemahan',
+  'overlay.controlsHelp':
+    'Seret pegangan atas untuk memindahkan. × hanya menyembunyikan takarir, tidak menghentikan transkripsi. Tampilkan kembali atau buka kunci di sini atau dari bilah menu.',
+  'overlayWindow.drag': 'Pindahkan',
+  'overlayWindow.hide': 'Sembunyikan takarir (transkripsi berlanjut)',
+  'overlayWindow.hideShortcut': 'Sembunyikan takarir (transkripsi berlanjut). Tampilkan: {shortcut}',
+  'overlayWindow.lock': 'Kunci · klik tetikus menembus jendela. Buka kunci: {shortcut}',
+  'overlayWindow.lockUnavailable':
+    'Atur pintasan buka kunci yang berfungsi di pengaturan takarir sebelum mengunci di sini.',
+  'overlayWindow.locked': 'Terkunci · {shortcut} untuk membuka kunci',
+  'overlayWindow.recover': 'Buka kunci di jendela utama → Takarir',
+  'overlayWindow.translationPending': 'Menerjemahkan…',
+  'overlayWindow.translationWaiting': 'Menunggu terjemahan…',
+  'overlayWindow.translationUnavailable': 'Tidak ada terjemahan untuk segmen ini',
 }

@@ -459,4 +459,23 @@ export const de: Partial<Messages> = {
   'error.stopTimeout':
     'Zeitüberschreitung bei der Stoppanforderung. Versuchen Sie es erneut oder verwenden Sie „Transkription beenden“ im Menüleistensymbol.',
   'error.startTimeout': 'Zeitüberschreitung bei der Startanforderung. Versuchen Sie es erneut.',
+
+  'overlay.displayMode': 'Untertitelanzeige',
+  'overlay.displayModeDescription': 'Ändert nur die Anzeige; Transkription und Übersetzung laufen weiter.',
+  'overlay.displaySource': 'Original',
+  'overlay.displayBilingual': 'Beide',
+  'overlay.displayTranslation': 'Übersetzung',
+  'overlay.controlsHelp':
+    'Zum Verschieben den oberen Griff ziehen. × blendet nur die Untertitel aus; die Transkription läuft weiter. Hier oder über die Menüleiste können Sie das Fenster wieder einblenden oder entsperren.',
+  'overlayWindow.drag': 'Verschieben',
+  'overlayWindow.hide': 'Untertitel ausblenden (Transkription läuft weiter)',
+  'overlayWindow.hideShortcut': 'Untertitel ausblenden (Transkription läuft weiter). Einblenden: {shortcut}',
+  'overlayWindow.lock': 'Sperren · Mausklicks werden durchgereicht. Entsperren: {shortcut}',
+  'overlayWindow.lockUnavailable':
+    'Richten Sie vor dem Sperren in den Untertiteleinstellungen ein funktionierendes Tastenkürzel zum Entsperren ein.',
+  'overlayWindow.locked': 'Gesperrt · {shortcut} zum Entsperren',
+  'overlayWindow.recover': 'Im Hauptfenster entsperren → Untertitel',
+  'overlayWindow.translationPending': 'Wird übersetzt…',
+  'overlayWindow.translationWaiting': 'Warten auf Übersetzung…',
+  'overlayWindow.translationUnavailable': 'Keine Übersetzung für diesen Abschnitt',
 }

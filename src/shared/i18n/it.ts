@@ -456,4 +456,23 @@ export const it: Partial<Messages> = {
   'error.modelsTimeout': 'Timeout durante il caricamento dell’elenco dei modelli. Riprova.',
   'error.stopTimeout': 'Timeout della richiesta di arresto. Riprova o usa “Ferma trascrizione” nel vassoio.',
   'error.startTimeout': 'Timeout della richiesta di avvio. Riprova.',
+
+  'overlay.displayMode': 'Visualizzazione sottotitoli',
+  'overlay.displayModeDescription': 'Cambia solo la visualizzazione; trascrizione e traduzione continuano.',
+  'overlay.displaySource': 'Originale',
+  'overlay.displayBilingual': 'Entrambi',
+  'overlay.displayTranslation': 'Traduzione',
+  'overlay.controlsHelp':
+    'Trascina la maniglia superiore per spostare. × nasconde solo i sottotitoli, senza interrompere la trascrizione. Puoi mostrarli o sbloccarli qui o dalla barra dei menu.',
+  'overlayWindow.drag': 'Sposta',
+  'overlayWindow.hide': 'Nascondi sottotitoli (la trascrizione continua)',
+  'overlayWindow.hideShortcut': 'Nascondi sottotitoli (la trascrizione continua). Mostra: {shortcut}',
+  'overlayWindow.lock': 'Blocca · i clic attraversano la finestra. Sblocca: {shortcut}',
+  'overlayWindow.lockUnavailable':
+    'Configura una scorciatoia di sblocco funzionante nelle impostazioni dei sottotitoli prima di bloccare qui.',
+  'overlayWindow.locked': 'Bloccato · {shortcut} per sbloccare',
+  'overlayWindow.recover': 'Sblocca nella finestra principale → Sottotitoli',
+  'overlayWindow.translationPending': 'Traduzione…',
+  'overlayWindow.translationWaiting': 'In attesa di traduzione…',
+  'overlayWindow.translationUnavailable': 'Nessuna traduzione per questo segmento',
 }
