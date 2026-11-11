@@ -2,6 +2,7 @@ import { type CSSProperties, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { GLOW_COLORS, GLOW_RING_PALETTE } from '@/shared/glow'
 import { useI18n } from '@/shared/i18n'
+import { EVENT, emit } from '@/shared/ipc'
 import { Button } from '@/ui/Button'
 import { Icon } from '@/ui/Icon'
 import { LogoMark } from './Brand'
@@ -42,6 +43,10 @@ interface Particle {
 
 function pickColor(): string {
   return GLOW_COLORS[Math.floor(Math.random() * GLOW_COLORS.length)]
+}
+
+function emitBloom(): void {
+  emit(EVENT.eggBloom).catch((e) => console.error('彩蛋事件发送失败', e))
 }
 
 function makeParticles(): Particle[] {
@@ -192,6 +197,10 @@ export function EasterEgg({ name, version, platform, arch, onClose, onContact }:
     return () => window.clearTimeout(timer)
   }, [onClose])
 
+  useEffect(() => {
+    emitBloom()
+  }, [])
+
   return createPortal(
     <div
       role="dialog"
@@ -248,7 +257,10 @@ export function EasterEgg({ name, version, platform, arch, onClose, onContact }:
               />
               <button
                 type="button"
-                onClick={() => setBurst((n) => n + 1)}
+                onClick={() => {
+                  setBurst((n) => n + 1)
+                  emitBloom()
+                }}
                 aria-label={t('egg.encore')}
                 className="absolute inset-3 grid place-items-center rounded-[26px] bg-[var(--color-surface-1)] shadow-[0_16px_36px_rgb(0_0_0/0.35)] ring-1 ring-white/10 transition hover:scale-[1.05] active:scale-95 motion-reduce:transition-none"
               >

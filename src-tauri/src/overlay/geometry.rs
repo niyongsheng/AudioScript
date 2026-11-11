@@ -2,7 +2,7 @@ use std::time::Duration;
 
 use tauri::{AppHandle, Manager};
 
-use super::{Frame, LABEL};
+use super::{Frame, OverlayState, LABEL};
 use crate::config::{WindowGeometry, WindowPos, WindowSize, MIN_OVERLAY_HEIGHT, MIN_OVERLAY_WIDTH};
 
 const POLL: Duration = Duration::from_millis(2_000);
@@ -63,6 +63,10 @@ pub fn start_watch(app: &AppHandle) {
                     continue;
                 };
                 if Some(now) == last {
+                    continue;
+                }
+                // 彩蛋花边会把悬浮窗临时放大；这段期间的几何不能落盘，否则重启后窗口会保持放大尺寸。
+                if app.state::<OverlayState>().is_blooming() {
                     continue;
                 }
                 last = Some(now);

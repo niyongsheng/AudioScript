@@ -1,5 +1,5 @@
 import { invoke } from '@tauri-apps/api/core'
-import { listen, type UnlistenFn } from '@tauri-apps/api/event'
+import { listen, emit as tauriEmit, type UnlistenFn } from '@tauri-apps/api/event'
 import { t } from './i18n'
 import { withTimeout } from './timeout'
 import type {
@@ -72,6 +72,7 @@ export const EVENT = {
   taskState: 'transcript://state',
   overlayState: 'overlay://state',
   overlayVisibility: 'overlay://visibility',
+  eggBloom: 'overlay://bloom',
   audio: 'transcript://audio',
   level: 'transcript://level',
   languageMismatch: 'transcript://language-mismatch',
@@ -83,6 +84,10 @@ export const EVENT = {
 
 export function on<T>(event: string, handler: (payload: T) => void): Promise<UnlistenFn> {
   return listen<T>(event, (e) => handler(e.payload))
+}
+
+export function emit<T>(event: string, payload?: T): Promise<void> {
+  return tauriEmit(event, payload)
 }
 
 export interface AppInfo {

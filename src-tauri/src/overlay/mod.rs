@@ -10,7 +10,9 @@ use std::sync::Mutex;
 
 use tauri::{AppHandle, Emitter, Manager, WebviewWindow};
 
-use crate::config::{OverlayConfig, OverlayMode, MAX_OVERLAY_HEIGHT, MIN_OVERLAY_HEIGHT};
+use crate::config::{
+    OverlayConfig, OverlayMode, WindowGeometry, MAX_OVERLAY_HEIGHT, MIN_OVERLAY_HEIGHT,
+};
 use crate::i18n::{tf, tr, Key};
 
 pub const LABEL: &str = "overlay";
@@ -25,6 +27,7 @@ pub const EVENT_OVERLAY_VISIBILITY: &str = "overlay://visibility";
 pub struct OverlayState {
     config: Mutex<OverlayConfig>,
     applied_click_through: Mutex<Option<bool>>,
+    bloom_geometry: Mutex<Option<WindowGeometry>>,
 }
 
 impl OverlayState {
@@ -59,6 +62,39 @@ impl OverlayState {
             .lock()
             .expect("overlay config mutex poisoned")
             .enable = enable;
+    }
+
+    fn begin_bloom(&self, geometry: WindowGeometry) -> bool {
+        let mut bloom = self
+            .bloom_geometry
+            .lock()
+            .expect("overlay bloom mutex poisoned");
+        if bloom.is_some() {
+            return false;
+        }
+        *bloom = Some(geometry);
+        true
+    }
+
+    fn bloom_snapshot(&self) -> Option<WindowGeometry> {
+        *self
+            .bloom_geometry
+            .lock()
+            .expect("overlay bloom mutex poisoned")
+    }
+
+    fn end_bloom(&self) {
+        *self
+            .bloom_geometry
+            .lock()
+            .expect("overlay bloom mutex poisoned") = None;
+    }
+
+    pub fn is_blooming(&self) -> bool {
+        self.bloom_geometry
+            .lock()
+            .expect("overlay bloom mutex poisoned")
+            .is_some()
     }
 
     fn needs_click_through_write(&self, want: bool) -> bool {
@@ -213,6 +249,55 @@ pub(crate) fn set_geometry(
         g.position.y as f64,
     ))
     .map_err(|e| tf(Key::OverlayPositionFailed, &[&e.to_string()]))?;
+    Ok(())
+}
+
+pub fn bloom_begin(app: &AppHandle, margin: u32) -> Result<u32, String> {
+    let margin = margin.clamp(24, 160);
+    let state = app.state::<OverlayState>();
+    if state.is_blooming() {
+        return Ok(margin);
+    }
+    let Some(original) = geometry(app) else {
+        return Err(tr(Key::OverlayWindowUnavailable).into());
+    };
+    if !state.begin_bloom(original) {
+        return Ok(margin);
+    }
+    let Some(w) = window(app) else {
+        state.end_bloom();
+        return Err(tr(Key::OverlayWindowUnavailable).into());
+    };
+    let m = margin as f64;
+    let resized = w
+        .set_position(tauri::LogicalPosition::new(
+            original.position.x as f64 - m,
+            original.position.y as f64 - m,
+        ))
+        .and_then(|_| {
+            w.set_size(tauri::LogicalSize::new(
+                original.size.width as f64 + m * 2.0,
+                original.size.height as f64 + m * 2.0,
+            ))
+        });
+    if let Err(e) = resized {
+        let _ = set_geometry(app, &original);
+        state.end_bloom();
+        return Err(e.to_string());
+    }
+    tracing::debug!(margin, "悬浮窗已为彩蛋花边扩展出生长区");
+    Ok(margin)
+}
+
+pub fn bloom_end(app: &AppHandle) -> Result<(), String> {
+    let state = app.state::<OverlayState>();
+    let Some(original) = state.bloom_snapshot() else {
+        return Ok(());
+    };
+    let restored = set_geometry(app, &original);
+    state.end_bloom();
+    restored?;
+    tracing::debug!("悬浮窗已收尾彩蛋花边");
     Ok(())
 }
 

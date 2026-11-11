@@ -209,6 +209,17 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
 
         "overlay_debug" => overlay::debug_state(app).map_err(CmdError::Failed),
 
+        "overlay_bloom_begin" => {
+            let margin: u32 = json_arg(args, "margin")?;
+            overlay::bloom_begin(app, margin)
+                .map(|margin| json!({ "margin": margin }))
+                .map_err(CmdError::Failed)
+        }
+
+        "overlay_bloom_end" => overlay::bloom_end(app)
+            .map(|_| json!(null))
+            .map_err(CmdError::Failed),
+
         "prefs_get" => Ok(json!(prefs::load(app))),
 
         "prefs_set" => {

@@ -9,6 +9,7 @@ import { initLocale } from '@/shared/locale'
 import { type OverlayConfig, OverlayMode, TaskStatus } from '@/shared/types'
 import { useBroadcastSnapshot } from '@/shared/useBroadcastSnapshot'
 import { useTranscriptStream } from '@/shared/useTranscriptStream'
+import { FloralBorder, useEggBloom } from './FloralBorder'
 import { StreamView } from './StreamView'
 
 const DEFAULT_CONFIG: OverlayConfig = {
@@ -44,23 +45,31 @@ function OverlayApp() {
   const { segments } = useTranscriptStream()
   const capturing = useCapturing()
   const [config, setConfig] = useState<OverlayConfig>(DEFAULT_CONFIG)
+  const { bloom, finish } = useEggBloom()
 
   useBroadcastSnapshot<OverlayConfig>(EVENT.overlayState, overlayConfigGet, setConfig)
 
+  const panelStyle = bloom
+    ? { left: bloom.margin, top: bloom.margin, width: bloom.width, height: bloom.height }
+    : { inset: 0 }
+
   return (
     <div className="fixed inset-0">
-      <StreamView
-        segments={segments}
-        fontSize={config.fontSize}
-        fontColor={config.fontColor}
-        opacity={config.opacity}
-        bgColor={config.bgColor}
-        glow={config.glow}
-        glowSpeed={config.glowSpeed}
-        glowWidth={config.glowWidth}
-        streaming={capturing}
-      />
-      {config.mode === OverlayMode.Edit && <EditChrome />}
+      <div className="absolute" style={panelStyle}>
+        <StreamView
+          segments={segments}
+          fontSize={config.fontSize}
+          fontColor={config.fontColor}
+          opacity={config.opacity}
+          bgColor={config.bgColor}
+          glow={config.glow && !bloom}
+          glowSpeed={config.glowSpeed}
+          glowWidth={config.glowWidth}
+          streaming={capturing}
+        />
+      </div>
+      {bloom && <FloralBorder bloom={bloom} bgColor={config.bgColor} onDone={() => finish(bloom.id)} />}
+      {config.mode === OverlayMode.Edit && !bloom && <EditChrome />}
     </div>
   )
 }
