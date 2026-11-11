@@ -231,8 +231,9 @@ pub fn toggle(app: &AppHandle) -> Result<bool, String> {
     let now = !visible;
     set_enable(app, now);
     broadcast_visibility(app, now);
-    crate::telemetry::track(
+    crate::telemetry::track_at(
         app,
+        crate::telemetry::Detail::Full,
         "overlay_toggled",
         Some(serde_json::json!({ "visible": if now { 1 } else { 0 } })),
     );

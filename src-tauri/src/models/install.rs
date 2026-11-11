@@ -174,8 +174,9 @@ struct DownloadEvent<'a> {
 }
 
 fn track_download(app: &AppHandle, event: DownloadEvent<'_>) {
-    crate::telemetry::track(
+    crate::telemetry::track_at(
         app,
+        crate::telemetry::Detail::Standard,
         "model_download",
         Some(serde_json::json!({
             "model": event.model,
