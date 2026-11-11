@@ -16,6 +16,8 @@ import { SettingsGroup, SettingsRow } from '@/ui/Settings'
 const EGG_TAPS = 7
 const EGG_TAP_WINDOW = 1100
 
+const VERSION_COLORS = ['#fc413d', '#ff6b2b', '#fec700', '#88de42', '#00a9bb', '#3186ff', '#9378ff'] as const
+
 function afdianBadge(label: string): string {
   return `https://img.shields.io/badge/${encodeURIComponent(label)}-Afdian-946ce6?style=for-the-badge&logo=github&logoColor=white`
 }
@@ -40,6 +42,7 @@ export function AboutPage() {
   const [licensesOpen, setLicensesOpen] = useState(false)
   const [eggOpen, setEggOpen] = useState(false)
   const [eggTaps, setEggTaps] = useState(0)
+  const [versionPulse, setVersionPulse] = useState(0)
   const lastEggTap = useRef(0)
   const closeEgg = useCallback(() => setEggOpen(false), [])
   const run = useCallback(
@@ -50,6 +53,7 @@ export function AboutPage() {
   )
 
   function tapVersion() {
+    setVersionPulse((n) => n + 1)
     const now = performance.now()
     const taps = now - lastEggTap.current > EGG_TAP_WINDOW ? 1 : eggTaps + 1
     lastEggTap.current = now
@@ -117,8 +121,9 @@ export function AboutPage() {
           control={
             <Mono>
               <span
-                key={eggTaps}
-                className={eggTaps > 0 ? 'inline-block animate-[egg-tap_260ms_ease-out]' : 'inline-block'}
+                key={versionPulse}
+                className={versionPulse > 0 ? 'inline-block animate-[egg-tap_260ms_ease-out]' : 'inline-block'}
+                style={versionPulse > 0 ? { color: VERSION_COLORS[versionPulse % VERSION_COLORS.length] } : undefined}
               >
                 {info?.version ?? '—'}
               </span>

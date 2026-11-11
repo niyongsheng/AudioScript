@@ -1,4 +1,4 @@
-import { useEffect, useId, useRef, useState } from 'react'
+import { type CSSProperties, useEffect, useId, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { GLOW_COLORS, GLOW_RING_PALETTE } from '@/shared/glow'
 import { useI18n } from '@/shared/i18n'
@@ -9,6 +9,9 @@ import { LogoMark } from './Brand'
 const BURST = 140
 const RAIN = 48
 const GRAVITY = 1500
+const AUTO_CLOSE_MS = 5000
+const COUNTDOWN_RADIUS = 14
+const COUNTDOWN_LENGTH = 2 * Math.PI * COUNTDOWN_RADIUS
 
 const RING = `conic-gradient(${GLOW_RING_PALETTE})`
 const TITLE = `linear-gradient(90deg, ${GLOW_COLORS.slice(0, 3).join(', ')})`
@@ -184,6 +187,11 @@ export function EasterEgg({ name, version, platform, arch, onClose, onContact }:
     return () => window.removeEventListener('keydown', onKeyDown)
   }, [onClose])
 
+  useEffect(() => {
+    const timer = window.setTimeout(onClose, AUTO_CLOSE_MS)
+    return () => window.clearTimeout(timer)
+  }, [onClose])
+
   return createPortal(
     <div
       role="dialog"
@@ -208,7 +216,23 @@ export function EasterEgg({ name, version, platform, arch, onClose, onContact }:
               aria-label={t('common.close')}
               className="absolute end-3 top-3 rounded-full p-1.5 text-[var(--color-ink-2)] transition hover:bg-[var(--color-surface-2)] hover:text-[var(--color-ink-0)]"
             >
-              <Icon name="close" size={15} />
+              <span aria-hidden className="pointer-events-none absolute -inset-1">
+                <svg aria-hidden="true" viewBox="0 0 32 32" className="-rotate-90 size-full">
+                  <circle
+                    cx="16"
+                    cy="16"
+                    r={COUNTDOWN_RADIUS}
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="1.5"
+                    strokeLinecap="round"
+                    strokeDasharray={COUNTDOWN_LENGTH}
+                    className="animate-[egg-countdown_5s_linear_forwards] text-[var(--color-accent)] opacity-40 motion-reduce:animate-none"
+                    style={{ '--egg-countdown-length': COUNTDOWN_LENGTH } as CSSProperties}
+                  />
+                </svg>
+              </span>
+              <Icon name="close" size={15} className="relative" />
             </button>
 
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--color-border-subtle)] px-2.5 py-1 font-mono text-[0.62rem] text-[var(--color-ink-2)] uppercase tracking-[0.16em]">
