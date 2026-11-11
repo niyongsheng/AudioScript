@@ -2892,22 +2892,66 @@ messages! {
 
     AudioProcessUnsupported {
         zh_cn: "当前系统不支持按应用采集系统声音：{0}",
-        en: "Per-app system audio capture is not supported on this system: {0}"
+        en: "Per-app system audio capture is not supported on this system: {0}",
+        zh_tw: "目前系統不支援按應用程式擷取系統聲音：{0}",
+        ja: "このシステムはアプリごとのシステム音声キャプチャに対応していません：{0}",
+        ko: "이 시스템은 앱별 시스템 오디오 캡처를 지원하지 않습니다: {0}",
+        fr: "La capture de l’audio système par application n’est pas prise en charge sur ce système : {0}",
+        de: "Die systemweite Audioaufnahme pro App wird auf diesem System nicht unterstützt: {0}",
+        es: "La captura de audio del sistema por aplicación no es compatible con este sistema: {0}",
+        pt_br: "A captura de áudio do sistema por aplicativo não é compatível com este sistema: {0}",
+        ru: "Захват системного звука по приложениям не поддерживается в этой системе: {0}",
+        it: "L’acquisizione dell’audio di sistema per app non è supportata su questo sistema: {0}",
+        id: "Penangkapan audio sistem per aplikasi tidak didukung di sistem ini: {0}",
+        ar: "التقاط صوت النظام حسب التطبيق غير مدعوم على هذا النظام: {0}"
     },
 
     AudioProcessNotFound {
         zh_cn: "未找到应用「{0}」的音频输出。请先让它播放声音，然后重新选择应用",
-        en: "No audio output found for \"{0}\". Start playback in that app, then select it again"
+        en: "No audio output found for \"{0}\". Start playback in that app, then select it again",
+        zh_tw: "找不到應用程式「{0}」的音訊輸出。請先讓它播放聲音，然後重新選擇應用程式",
+        ja: "「{0}」の音声出力が見つかりません。先に再生してから、もう一度アプリを選択してください",
+        ko: "「{0}」의 오디오 출력을 찾을 수 없습니다. 먼저 소리를 재생한 뒤 앱을 다시 선택하세요",
+        fr: "Aucune sortie audio trouvée pour « {0} ». Lancez une lecture, puis sélectionnez à nouveau l’application.",
+        de: "Keine Audioausgabe für „{0}“ gefunden. Starten Sie die Wiedergabe und wählen Sie die App erneut aus.",
+        es: "No se encontró salida de audio para «{0}». Reproduce algo y vuelve a seleccionar la aplicación.",
+        pt_br: "Nenhuma saída de áudio encontrada para «{0}». Inicie a reprodução e selecione o aplicativo novamente.",
+        ru: "Не найдена аудиовыход приложения «{0}». Включите воспроизведение и выберите приложение заново.",
+        it: "Nessuna uscita audio trovata per «{0}». Avvia la riproduzione e seleziona di nuovo l’app.",
+        id: "Tidak ada keluaran audio untuk «{0}». Mulai pemutaran, lalu pilih ulang aplikasi.",
+        ar: "لم يُعثر على إخراج صوتي لـ«{0}». ابدأ التشغيل ثم أعد اختيار التطبيق."
     },
 
     AudioAppNotSelected {
         zh_cn: "请选择要采集的应用",
-        en: "Select an application to capture"
+        en: "Select an application to capture",
+        zh_tw: "請選擇要擷取的應用程式",
+        ja: "キャプチャするアプリを選択してください",
+        ko: "캡처할 앱을 선택하세요",
+        fr: "Choisissez une application à capturer",
+        de: "Wählen Sie eine App zum Aufnehmen",
+        es: "Elige una aplicación para capturar",
+        pt_br: "Escolha um aplicativo para capturar",
+        ru: "Выберите приложение для захвата",
+        it: "Scegli un’app da catturare",
+        id: "Pilih aplikasi untuk ditangkap",
+        ar: "اختر تطبيقًا لالتقاطه"
     },
 
     AudioAppDefault {
         zh_cn: "应用声音",
-        en: "Application audio"
+        en: "Application audio",
+        zh_tw: "應用程式聲音",
+        ja: "アプリの音声",
+        ko: "앱 소리",
+        fr: "Audio d’une application",
+        de: "App-Audio",
+        es: "Audio de una aplicación",
+        pt_br: "Áudio de um aplicativo",
+        ru: "Звук приложения",
+        it: "Audio di un’app",
+        id: "Audio aplikasi",
+        ar: "صوت التطبيق"
     },
 
     AudioAccumulatorBusy {

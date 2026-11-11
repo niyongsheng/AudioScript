@@ -109,6 +109,12 @@ export const fr: Partial<Messages> = {
   'whatsNew.multichannelMicTitle': 'Micros multicanaux sous Windows',
   'whatsNew.multichannelMicBody':
     'Les réseaux de micros multicanaux comme Intel Smart Sound sont maintenant capturés et mixés correctement au lieu d’échouer au démarrage.',
+  'whatsNew.appAudioTitle': 'Capter l’audio d’une application',
+  'whatsNew.appAudioBody':
+    'Choisissez jusqu’à quatre applications (navigateur, visioconférence…) et transcrivez uniquement leur son.',
+  'whatsNew.crashReportsTitle': 'Rapports de plantage via Sentry',
+  'whatsNew.crashReportsBody':
+    'Les plantages nous parviennent via Sentry, sans audio ni texte transcrit. Désactivable dans Général → Confidentialité.',
   'whatsNew.viewNotes': 'Voir les notes de version complètes',
   'whatsNew.continue': 'Continuer',
 
@@ -127,14 +133,30 @@ export const fr: Partial<Messages> = {
   'audio.title': 'Audio',
   'audio.sourceSection': 'Source audio',
   'audio.sourceLoopbackLabel': 'Audio du système',
-  'audio.sourceLoopbackDescription':
-    'Transcrit ce que le lecteur diffuse. Nécessite l’autorisation d’enregistrement de l’écran et de l’audio système.',
+  'audio.sourceLoopbackDescription': 'Transcrit ce que le lecteur diffuse.',
+  'audio.sourceAppLabel': 'Audio d’une application',
+  'audio.sourceAppDescription': 'Transcrit uniquement la sortie d’une application.',
   'audio.sourceMicLabel': 'Microphone',
   'audio.sourceMicDescription': 'Transcrit uniquement l’entrée du microphone ; l’audio du lecteur n’est pas touché.',
   'audio.sourceMixLabel': 'Microphone + audio du système',
   'audio.sourceMixDescription': 'Capture les deux à la fois : l’autre personne et vous. Idéal pour les réunions.',
   'audio.sourceHint': 'Changer de source réénumère la liste des appareils.',
   'audio.inputDevice': 'Périphérique d’entrée',
+  'audio.appSection': 'Application',
+  'audio.app': 'Application',
+  'audio.appSelectPlaceholder': 'Choisir une application',
+  'audio.appHint': 'Capture jusqu’à 4 sources audio d’applications.',
+  'audio.appPickHint': 'Choisissez jusqu’à 4 applications à capturer ensemble.',
+  'audio.appRequired': 'Choisissez une application à capturer',
+  'audio.appLoading': 'Recherche des applications qui émettent du son…',
+  'audio.appEmpty': 'Aucune application n’émet de son. Lancez une lecture, puis actualisez.',
+  'audio.appPlaying': 'En lecture',
+  'audio.appNotRunning': 'Non lancée',
+  'audio.appIdle': 'Pas en lecture',
+  'audio.appShowAll': 'Afficher toutes les applications',
+  'audio.appOnlyPlaying': 'Afficher seulement celles en lecture',
+  'audio.appShowAllHint': 'Inclure les applications qui n’émettent pas de son',
+  'audio.appNoPlaying': 'Aucune application en lecture. Déployez « Afficher toutes les applications ».',
   'audio.micDevice': 'Microphone',
   'audio.systemDevice': 'Périphérique audio système',
   'audio.deviceSpec': '{channels} canaux · {rate}',
@@ -147,6 +169,8 @@ export const fr: Partial<Messages> = {
   'audio.previewFailed': 'Impossible de prévisualiser le niveau d’entrée',
   'audio.captureHint': 'Les changements de périphérique pendant la capture s’appliquent à la session suivante.',
   'audio.silenceTitle': 'Aucun son détecté (niveau ≈ 0)',
+  'audio.silenceCheckApp':
+    'Vérifiez que « {app} » émet du son ; une application silencieuse n’a aucun flux audio à capturer.',
   'audio.silenceCheckPlayer': 'Vérifiez que le lecteur émet du son et que le volume système n’est pas à zéro.',
   'audio.silenceCheckPermission': 'Vérifiez l’autorisation d’enregistrement de l’écran et de l’audio système de macOS.',
   'audio.silencePermissionDeniedNote':
@@ -315,7 +339,7 @@ export const fr: Partial<Messages> = {
   'general.privacy': 'Confidentialité',
   'general.analytics': 'Statistiques d’utilisation anonymes',
   'general.analyticsDescription':
-    'Envoie l’utilisation des fonctionnalités via Aptabase pour aider à améliorer AudioScript.',
+    'Envoie des statistiques anonymes et des rapports de plantage via Aptabase et Sentry ; jamais l’audio ni le texte transcrit.',
   'general.diagnostics': 'Diagnostics',
   'general.exportLogs': 'Exporter les journaux',
   'general.exportLogsDescription': 'Les copie sur le bureau avec un nom daté, puis ouvre le dossier.',

@@ -110,6 +110,12 @@ export const en: Messages = {
   'whatsNew.multichannelMicTitle': 'Multichannel microphones on Windows',
   'whatsNew.multichannelMicBody':
     'Arrays such as Intel Smart Sound now capture and mix correctly instead of failing to start.',
+  'whatsNew.appAudioTitle': 'Capture one app’s audio',
+  'whatsNew.appAudioBody':
+    'Pick up to four applications, such as a browser and a meeting app, and transcribe only their sound.',
+  'whatsNew.crashReportsTitle': 'Crash reports via Sentry',
+  'whatsNew.crashReportsBody':
+    'Crashes reach us through Sentry with no audio or transcript text; disable it under General → Privacy.',
   'whatsNew.viewNotes': 'View full release notes',
   'whatsNew.continue': 'Continue',
 

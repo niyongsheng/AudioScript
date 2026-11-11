@@ -105,6 +105,10 @@ export const zhCN = {
   'whatsNew.translateRecoveryBody': '某次会话启动失败后，悬浮窗曾只剩英文字幕；现在翻译线程会自动恢复，无需重启应用。',
   'whatsNew.multichannelMicTitle': 'Windows 多声道麦克风可用',
   'whatsNew.multichannelMicBody': 'Intel 智音等多声道阵列现在可以正常采集与混音，不再启动失败。',
+  'whatsNew.appAudioTitle': '应用声音采集',
+  'whatsNew.appAudioBody': '可选择最多 4 个应用（如浏览器 + 会议软件），只转写它们的声音。',
+  'whatsNew.crashReportsTitle': '崩溃报告接入 Sentry',
+  'whatsNew.crashReportsBody': '崩溃会自动上报以便定位问题，不含音频与转写文本；可在「通用 → 隐私」关闭。',
   'whatsNew.viewNotes': '查看完整更新说明',
   'whatsNew.continue': '继续',
 
