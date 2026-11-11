@@ -41,7 +41,7 @@ https://github.com/user-attachments/assets/b1f88a82-b3fe-4721-8736-af6a9e4d828e
 ## 隐私
 
 * 语音识别与翻译全部在本机完成，离线可用。
-* Aptabase 匿名使用统计，可在「通用 → 隐私」中关闭。
+* Aptabase 匿名使用统计与 Sentry 崩溃报告，可在「通用 → 隐私」中关闭。
 
 ## 构建
 

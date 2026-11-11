@@ -132,6 +132,7 @@ pub fn run() {
             let handle = app.handle().clone();
 
             handle.manage(log::LogDir(log::init(&handle)));
+            handle.manage(telemetry::init_error_reporting(&handle));
 
             if let Err(e) = session::init_emitter(&handle) {
                 tracing::error!("{e}");
@@ -166,8 +167,9 @@ pub fn run() {
             i18n::set_locale(i18n::Locale::from_language(saved_prefs.language));
             update_window_titles(&handle);
             env_info::log_startup(&saved_prefs);
-            telemetry::track(
+            telemetry::track_at(
                 &handle,
+                telemetry::Detail::Launch,
                 "app_started",
                 Some(serde_json::json!({
                     "asr_model_tier": saved_prefs.asr_model_tier.as_str(),
@@ -334,6 +336,7 @@ pub fn run() {
             tauri::RunEvent::Reopen { .. } => lifecycle::show_main(app),
             tauri::RunEvent::Exit => {
                 telemetry::report_exit(app, "os");
+                telemetry::flush_error_reporting(app);
             }
             _ => {}
         });

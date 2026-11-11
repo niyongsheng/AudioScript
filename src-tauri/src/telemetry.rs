@@ -1,23 +1,207 @@
-use std::backtrace::Backtrace;
-use std::panic::PanicHookInfo;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::{mpsc, OnceLock};
+use std::sync::atomic::{AtomicBool, AtomicUsize, Ordering};
+use std::sync::OnceLock;
 use std::time::{Duration, Instant};
 
+use sentry::protocol::{Event, Exception, Frame, Stacktrace, Values};
+use sentry::Level;
+use serde::Deserialize;
 use serde_json::Value;
 use tauri::{AppHandle, Manager};
-use tauri_plugin_aptabase::{ErrorReport, ErrorTracker, EventTracker};
+use tauri_plugin_aptabase::EventTracker;
+
+use crate::config::AnalyticsTier;
 
 pub const APP_KEY: &str = "A-US-2179981546";
 
-const PANIC_FLUSH_TIMEOUT: Duration = Duration::from_secs(3);
+pub const SENTRY_DSN: &str = "https://1cf246b882cdd2d53f589b6aab5a3f78@o4512410989428736.ingest.us.sentry.io/4512411088977920";
+
+pub const ANALYTICS_TIER: AnalyticsTier = AnalyticsTier::Minimal;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Detail {
+    Launch,
+    Core,
+    Standard,
+    Full,
+}
 
 static STARTED_AT: OnceLock<Instant> = OnceLock::new();
 static EXIT_REPORTED: AtomicBool = AtomicBool::new(false);
-static PANIC_REPORTING: AtomicBool = AtomicBool::new(false);
+static SENT: AtomicUsize = AtomicUsize::new(0);
+
+pub struct SentryGuard(sentry::ClientInitGuard);
+
+pub fn init_error_reporting(app: &AppHandle) -> SentryGuard {
+    let gate = app.clone();
+    let options = sentry::ClientOptions::new()
+        .release(format!("audioscript@{}", env!("CARGO_PKG_VERSION")))
+        .environment(if cfg!(debug_assertions) {
+            "development"
+        } else {
+            "production"
+        })
+        .send_default_pii(false)
+        .attach_stacktrace(true)
+        .shutdown_timeout(Duration::from_secs(3))
+        .before_send(move |event| crate::prefs::load(&gate).analytics_enabled.then_some(event));
+    SentryGuard(sentry::init((SENTRY_DSN, options)))
+}
+
+pub fn flush_error_reporting(app: &AppHandle) {
+    if let Some(guard) = app.try_state::<SentryGuard>() {
+        guard.0.flush(Some(Duration::from_secs(3)));
+    }
+}
+
+#[derive(Debug, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct FrontendError {
+    pub kind: String,
+    pub name: String,
+    pub message: String,
+    #[serde(default)]
+    pub stack: Option<String>,
+    #[serde(default)]
+    pub source: Option<String>,
+    #[serde(default)]
+    pub line: Option<u64>,
+    #[serde(default)]
+    pub column: Option<u64>,
+    #[serde(default)]
+    pub window: Option<String>,
+}
+
+pub fn capture_frontend_error(app: &AppHandle, report: FrontendError) {
+    if !crate::prefs::load(app).analytics_enabled {
+        return;
+    }
+
+    let message = truncate(report.message.trim(), 2_000);
+    let name = truncate(report.name.trim(), 120);
+    let stacktrace = report
+        .stack
+        .as_deref()
+        .and_then(parse_js_stack)
+        .or_else(|| single_frame(report.source.as_deref(), report.line, report.column));
+
+    let mut event = Event::new();
+    event.level = Level::Error;
+    event.platform = "javascript".into();
+    event.tags.insert("source".into(), "webview".into());
+    event.tags.insert(
+        "kind".into(),
+        match report.kind.as_str() {
+            "unhandledrejection" => "unhandledrejection".into(),
+            _ => "error".into(),
+        },
+    );
+    if let Some(window) = report
+        .window
+        .as_deref()
+        .filter(|w| *w == "main" || *w == "overlay")
+    {
+        event.tags.insert("window".into(), window.to_owned());
+    }
+    event.exception = Values::from(vec![Exception {
+        ty: if name.is_empty() {
+            "Error".into()
+        } else {
+            name
+        },
+        value: (!message.is_empty()).then_some(message),
+        stacktrace,
+        ..Default::default()
+    }]);
+    sentry::capture_event(event);
+}
+
+fn truncate(value: &str, max: usize) -> String {
+    value.chars().take(max).collect()
+}
+
+fn parse_js_stack(stack: &str) -> Option<Stacktrace> {
+    let frames: Vec<Frame> = stack
+        .lines()
+        .filter_map(|line| parse_frame(line.trim()))
+        .collect();
+    Stacktrace::from_frames_reversed(frames)
+}
+
+fn parse_frame(line: &str) -> Option<Frame> {
+    let (function, location) = if let Some(rest) = line.strip_prefix("at ") {
+        let rest = rest.strip_prefix("async ").unwrap_or(rest).trim();
+        match rest.find(" (") {
+            Some(at) if rest.ends_with(')') => (Some(&rest[..at]), &rest[at + 2..rest.len() - 1]),
+            _ => (None, rest),
+        }
+    } else {
+        let (function, location) = line.rsplit_once('@')?;
+        (Some(function.trim()), location)
+    };
+
+    let mut parts = location.rsplitn(3, ':');
+    let colno = parts.next()?.parse::<u64>().ok()?;
+    let lineno = parts.next()?.parse::<u64>().ok()?;
+    let file = parts.next()?.trim();
+    if file.is_empty() {
+        return None;
+    }
+
+    Some(Frame {
+        function: function
+            .map(|f| f.trim().to_owned())
+            .filter(|f| !f.is_empty()),
+        filename: basename(file),
+        abs_path: Some(file.to_owned()),
+        lineno: Some(lineno),
+        colno: Some(colno),
+        in_app: Some(is_app_frame(file)),
+        ..Default::default()
+    })
+}
+
+fn single_frame(
+    source: Option<&str>,
+    line: Option<u64>,
+    column: Option<u64>,
+) -> Option<Stacktrace> {
+    let source = source?;
+    Some(Stacktrace {
+        frames: vec![Frame {
+            filename: basename(source),
+            abs_path: Some(source.to_owned()),
+            lineno: line,
+            colno: column,
+            in_app: Some(true),
+            ..Default::default()
+        }],
+        ..Default::default()
+    })
+}
+
+fn basename(path: &str) -> Option<String> {
+    path.rsplit(|c| c == '/' || c == '\\')
+        .next()
+        .filter(|name| !name.is_empty())
+        .map(str::to_owned)
+}
+
+fn is_app_frame(file: &str) -> bool {
+    file.contains("/assets/")
+        || file.contains("/src/")
+        || file.starts_with("tauri://")
+        || file.starts_with("http://tauri.localhost")
+}
 
 pub fn track(app: &AppHandle, event: &str, props: Option<Value>) {
-    if !crate::prefs::load(app).analytics_enabled {
+    track_at(app, Detail::Core, event, props);
+}
+
+pub fn track_at(app: &AppHandle, detail: Detail, event: &str, props: Option<Value>) {
+    if !crate::prefs::load(app).analytics_enabled || !allows(ANALYTICS_TIER, detail) {
+        return;
+    }
+    if SENT.fetch_add(1, Ordering::Relaxed) >= budget(ANALYTICS_TIER) {
         return;
     }
     if let Err(e) = app.track_event(event, props) {
@@ -25,79 +209,26 @@ pub fn track(app: &AppHandle, event: &str, props: Option<Value>) {
     }
 }
 
+fn allows(tier: AnalyticsTier, detail: Detail) -> bool {
+    match tier {
+        AnalyticsTier::UltraMinimal => detail <= Detail::Launch,
+        AnalyticsTier::Minimal => detail <= Detail::Core,
+        AnalyticsTier::Standard => detail <= Detail::Standard,
+        AnalyticsTier::Full => true,
+    }
+}
+
+fn budget(tier: AnalyticsTier) -> usize {
+    match tier {
+        AnalyticsTier::UltraMinimal => 4,
+        AnalyticsTier::Minimal => 30,
+        AnalyticsTier::Standard => 150,
+        AnalyticsTier::Full => 1_000,
+    }
+}
+
 pub fn mark_start() {
     let _ = STARTED_AT.set(Instant::now());
-}
-
-// 不用插件的 with_crash_reporting()：它没有开关，会在用户关掉匿名统计后继续上报错误。
-pub fn report_panic(app: &AppHandle, info: &PanicHookInfo<'_>) {
-    if PANIC_REPORTING.swap(true, Ordering::SeqCst) {
-        return;
-    }
-    let _reset = ResetOnDrop;
-    if !crate::prefs::load(app).analytics_enabled {
-        return;
-    }
-
-    let thread = std::thread::current();
-    let location = info
-        .location()
-        .map(|l| format!("{}:{}:{}", l.file(), l.line(), l.column()));
-    let payload = panic_payload(info);
-    let message = match &location {
-        Some(at) => format!("{payload} (at {at})"),
-        None => payload,
-    };
-    let stack_trace = format!(
-        "thread '{}' panicked at {}\n{}",
-        thread.name().unwrap_or("<unnamed>"),
-        location.as_deref().unwrap_or("an unknown location"),
-        Backtrace::force_capture()
-    );
-    let fatal = thread.name() == Some("main") || cfg!(panic = "abort");
-    app.track_error_report(
-        ErrorReport::new("panic", message)
-            .with_stack_trace(stack_trace)
-            .with_fatal(fatal),
-    );
-    if fatal {
-        flush_within(app, PANIC_FLUSH_TIMEOUT);
-    }
-}
-
-struct ResetOnDrop;
-
-impl Drop for ResetOnDrop {
-    fn drop(&mut self) {
-        PANIC_REPORTING.store(false, Ordering::SeqCst);
-    }
-}
-
-fn panic_payload(info: &PanicHookInfo<'_>) -> String {
-    payload_text(info.payload())
-}
-
-fn payload_text(payload: &(dyn std::any::Any + Send)) -> String {
-    if let Some(s) = payload.downcast_ref::<&str>() {
-        return (*s).to_owned();
-    }
-    if let Some(s) = payload.downcast_ref::<String>() {
-        return s.clone();
-    }
-    format!("{payload:?}")
-}
-
-fn flush_within(app: &AppHandle, timeout: Duration) {
-    let handle = app.clone();
-    let (done, wait) = mpsc::channel();
-    let spawned = std::thread::Builder::new()
-        .name("aptabase-flush".into())
-        .spawn(move || {
-            let _ = done.send(handle.flush_events_blocking());
-        });
-    if spawned.is_ok() {
-        let _ = wait.recv_timeout(timeout);
-    }
 }
 
 pub fn report_exit(app: &AppHandle, reason: &'static str) {
@@ -111,8 +242,9 @@ pub fn report_exit(app: &AppHandle, reason: &'static str) {
     let capturing = app
         .try_state::<crate::session::SessionState>()
         .is_some_and(|s| s.is_running());
-    track(
+    track_at(
         app,
+        Detail::Launch,
         "app_exited",
         Some(serde_json::json!({
             "reason": reason,
@@ -161,10 +293,64 @@ mod tests {
     use super::*;
 
     #[test]
-    fn panic_payload_reads_str_and_string() {
-        assert_eq!(payload_text(&"boom"), "boom");
-        assert_eq!(payload_text(&"boom".to_string()), "boom");
-        assert_eq!(payload_text(&7u32), "Any { .. }");
+    fn sentry_dsn_parses() {
+        assert!(SENTRY_DSN.parse::<sentry::types::Dsn>().is_ok());
+    }
+
+    #[test]
+    fn js_stack_frames_are_reversed_and_parsed() {
+        let stack = parse_js_stack(
+            "TypeError: boom\n    at handle (http://localhost/assets/index.js:12:34)\n    at http://localhost/assets/index.js:56:78\n    at async run (http://localhost/src/main.tsx:9:10)",
+        )
+        .expect("应解析出堆栈");
+
+        assert_eq!(stack.frames.len(), 3);
+        assert_eq!(
+            stack.frames[0].function.as_deref(),
+            Some("run"),
+            "最外层帧应排在最前"
+        );
+        assert_eq!(stack.frames[2].function.as_deref(), Some("handle"));
+        assert_eq!(stack.frames[2].lineno, Some(12));
+        assert_eq!(stack.frames[2].colno, Some(34));
+        assert_eq!(
+            stack.frames[1].abs_path.as_deref(),
+            Some("http://localhost/assets/index.js")
+        );
+        assert_eq!(stack.frames[0].in_app, Some(true));
+    }
+
+    #[test]
+    fn js_stack_parses_jsc_format() {
+        let stack = parse_js_stack(
+            "TypeError: boom\nhandle@http://localhost/assets/index.js:12:34\nrun@http://localhost/src/main.tsx:9:10",
+        )
+        .expect("JSC 堆栈应可解析");
+
+        assert_eq!(stack.frames.len(), 2);
+        assert_eq!(stack.frames[0].function.as_deref(), Some("run"));
+        assert_eq!(stack.frames[1].function.as_deref(), Some("handle"));
+        assert_eq!(stack.frames[1].lineno, Some(12));
+        assert_eq!(stack.frames[1].colno, Some(34));
+    }
+
+    #[test]
+    fn junk_stack_lines_are_ignored() {
+        assert!(parse_js_stack("Error: boom\n    at native\n    at <anonymous>").is_none());
+    }
+
+    #[test]
+    fn tiers_only_widen_with_detail() {
+        assert!(allows(AnalyticsTier::UltraMinimal, Detail::Launch));
+        assert!(!allows(AnalyticsTier::UltraMinimal, Detail::Core));
+        assert!(allows(AnalyticsTier::Minimal, Detail::Launch));
+        assert!(allows(AnalyticsTier::Minimal, Detail::Core));
+        assert!(!allows(AnalyticsTier::Minimal, Detail::Standard));
+        assert!(!allows(AnalyticsTier::Minimal, Detail::Full));
+        assert!(allows(AnalyticsTier::Standard, Detail::Core));
+        assert!(allows(AnalyticsTier::Standard, Detail::Standard));
+        assert!(!allows(AnalyticsTier::Standard, Detail::Full));
+        assert!(allows(AnalyticsTier::Full, Detail::Full));
     }
 
     #[test]

@@ -2,6 +2,7 @@ import { getCurrentWindow } from '@tauri-apps/api/window'
 import { StrictMode, useState } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@/shared/theme.css'
+import { syncTrackingFromPrefs } from '@/shared/analytics'
 import { useI18n } from '@/shared/i18n'
 import { EVENT, overlayConfigGet, sessionStatus } from '@/shared/ipc'
 import { initLocale } from '@/shared/locale'
@@ -25,6 +26,7 @@ const DEFAULT_CONFIG: OverlayConfig = {
 }
 
 void initLocale()
+void syncTrackingFromPrefs()
 
 function useCapturing(): boolean {
   const [capturing, setCapturing] = useState(false)

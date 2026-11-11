@@ -42,6 +42,7 @@ pub fn log_startup(prefs: &Preferences) {
         zh_script = prefs.zh_script.as_str(),
         models_dir = prefs.models_dir.as_deref().unwrap_or("default"),
         analytics_enabled = prefs.analytics_enabled,
+        analytics_tier = crate::telemetry::ANALYTICS_TIER.as_str(),
         "当前配置"
     );
 }

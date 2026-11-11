@@ -41,7 +41,7 @@ https://github.com/user-attachments/assets/b1f88a82-b3fe-4721-8736-af6a9e4d828e
 ## Privacy
 
 * Speech recognition and translation run entirely on-device and work offline.
-* Anonymous usage analytics via Aptabase; disable it under General → Privacy.
+* Anonymous usage analytics via Aptabase and crash reports via Sentry; disable both under General → Privacy.
 
 ## Build
 
