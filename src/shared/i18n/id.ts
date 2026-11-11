@@ -130,7 +130,7 @@ export const id: Partial<Messages> = {
   'audio.sourceLoopbackLabel': 'Audio sistem',
   'audio.sourceLoopbackDescription': 'Mentranskripsi audio yang diputar pemutar.',
   'audio.sourceAppLabel': 'Audio aplikasi',
-  'audio.sourceAppDescription': 'Mentranskripsi keluaran satu aplikasi saja.',
+  'audio.sourceAppDescription': 'Mentranskripsi keluaran aplikasi yang dipilih saja.',
   'audio.sourceMicLabel': 'Mikrofon',
   'audio.sourceMicDescription': 'Hanya mentranskripsi input mikrofon; audio pemutar tidak disentuh.',
   'audio.sourceMixLabel': 'Mikrofon + audio sistem',

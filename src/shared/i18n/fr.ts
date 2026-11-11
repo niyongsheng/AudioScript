@@ -135,7 +135,7 @@ export const fr: Partial<Messages> = {
   'audio.sourceLoopbackLabel': 'Audio du système',
   'audio.sourceLoopbackDescription': 'Transcrit ce que le lecteur diffuse.',
   'audio.sourceAppLabel': 'Audio d’une application',
-  'audio.sourceAppDescription': 'Transcrit uniquement la sortie d’une application.',
+  'audio.sourceAppDescription': 'Transcrit uniquement la sortie des applications sélectionnées.',
   'audio.sourceMicLabel': 'Microphone',
   'audio.sourceMicDescription': 'Transcrit uniquement l’entrée du microphone ; l’audio du lecteur n’est pas touché.',
   'audio.sourceMixLabel': 'Microphone + audio du système',

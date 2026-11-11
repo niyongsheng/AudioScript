@@ -126,7 +126,7 @@ export const zhTW: Partial<Messages> = {
   'audio.sourceLoopbackLabel': '系統聲音',
   'audio.sourceLoopbackDescription': '轉寫播放器輸出的聲音。',
   'audio.sourceAppLabel': '應用程式聲音',
-  'audio.sourceAppDescription': '只轉寫指定應用程式的輸出。',
+  'audio.sourceAppDescription': '只轉寫所選應用程式的輸出。',
   'audio.sourceMicLabel': '麥克風',
   'audio.sourceMicDescription': '只轉寫麥克風輸入，不處理播放器聲音。',
   'audio.sourceMixLabel': '麥克風 + 系統聲音',

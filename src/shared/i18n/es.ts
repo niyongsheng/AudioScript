@@ -133,7 +133,7 @@ export const es: Partial<Messages> = {
   'audio.sourceLoopbackLabel': 'Audio del sistema',
   'audio.sourceLoopbackDescription': 'Transcribe lo que reproduce el reproductor.',
   'audio.sourceAppLabel': 'Audio de una aplicación',
-  'audio.sourceAppDescription': 'Transcribe solo la salida de una aplicación.',
+  'audio.sourceAppDescription': 'Transcribe solo la salida de las aplicaciones elegidas.',
   'audio.sourceMicLabel': 'Micrófono',
   'audio.sourceMicDescription': 'Transcribe solo la entrada del micrófono; el audio del reproductor no se toca.',
   'audio.sourceMixLabel': 'Micrófono + audio del sistema',

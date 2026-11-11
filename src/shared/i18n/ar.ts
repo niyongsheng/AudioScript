@@ -129,7 +129,7 @@ export const ar: Partial<Messages> = {
   'audio.sourceLoopbackLabel': 'صوت النظام',
   'audio.sourceLoopbackDescription': 'ينسخ ما يخرجه المشغل.',
   'audio.sourceAppLabel': 'صوت التطبيق',
-  'audio.sourceAppDescription': 'ينسخ إخراج تطبيق واحد فقط.',
+  'audio.sourceAppDescription': 'ينسخ إخراج التطبيقات المحددة فقط.',
   'audio.sourceMicLabel': 'الميكروفون',
   'audio.sourceMicDescription': 'ينسخ إدخال الميكروفون فقط؛ لا يتأثر صوت المشغل.',
   'audio.sourceMixLabel': 'الميكروفون + صوت النظام',

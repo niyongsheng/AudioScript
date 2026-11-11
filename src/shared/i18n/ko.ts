@@ -130,7 +130,7 @@ export const ko: Partial<Messages> = {
   'audio.sourceLoopbackLabel': '시스템 오디오',
   'audio.sourceLoopbackDescription': '플레이어가 출력하는 소리를 전사합니다.',
   'audio.sourceAppLabel': '앱 소리',
-  'audio.sourceAppDescription': '지정한 앱의 출력만 전사합니다.',
+  'audio.sourceAppDescription': '선택한 앱의 출력만 전사합니다.',
   'audio.sourceMicLabel': '마이크',
   'audio.sourceMicDescription': '마이크 입력만 전사하며 플레이어 소리는 건드리지 않습니다.',
   'audio.sourceMixLabel': '마이크 + 시스템 오디오',

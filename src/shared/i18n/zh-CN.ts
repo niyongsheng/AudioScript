@@ -123,7 +123,7 @@ export const zhCN = {
   'audio.sourceLoopbackLabel': '系统声音',
   'audio.sourceLoopbackDescription': '转写播放器输出的声音。',
   'audio.sourceAppLabel': '应用声音',
-  'audio.sourceAppDescription': '只转写指定应用的输出。',
+  'audio.sourceAppDescription': '只转写所选应用的输出。',
   'audio.sourceMicLabel': '麦克风',
   'audio.sourceMicDescription': '只转写麦克风输入，不碰播放器。',
   'audio.sourceMixLabel': '麦克风 + 系统声音',

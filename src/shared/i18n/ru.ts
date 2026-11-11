@@ -133,7 +133,7 @@ export const ru: Partial<Messages> = {
   'audio.sourceLoopbackLabel': 'Системный звук',
   'audio.sourceLoopbackDescription': 'Транскрибирует звук плеера.',
   'audio.sourceAppLabel': 'Звук приложения',
-  'audio.sourceAppDescription': 'Транскрибирует вывод только выбранного приложения.',
+  'audio.sourceAppDescription': 'Транскрибирует вывод только выбранных приложений.',
   'audio.sourceMicLabel': 'Микрофон',
   'audio.sourceMicDescription': 'Транскрибирует только микрофон; звук плеера не затрагивается.',
   'audio.sourceMixLabel': 'Микрофон + системный звук',

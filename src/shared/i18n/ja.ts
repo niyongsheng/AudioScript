@@ -130,7 +130,7 @@ export const ja: Partial<Messages> = {
   'audio.sourceLoopbackLabel': 'システム音声',
   'audio.sourceLoopbackDescription': 'プレーヤーの出力音声を文字起こしします。',
   'audio.sourceAppLabel': 'アプリの音声',
-  'audio.sourceAppDescription': '指定したアプリの出力だけを文字起こしします。',
+  'audio.sourceAppDescription': '選択したアプリの出力だけを文字起こしします。',
   'audio.sourceMicLabel': 'マイク',
   'audio.sourceMicDescription': 'マイク入力のみを文字起こしし、プレーヤーの音声には触れません。',
   'audio.sourceMixLabel': 'マイク + システム音声',

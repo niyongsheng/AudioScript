@@ -130,7 +130,7 @@ export const en: Messages = {
   'audio.sourceLoopbackLabel': 'System audio',
   'audio.sourceLoopbackDescription': 'Transcribes what your player outputs.',
   'audio.sourceAppLabel': 'Application audio',
-  'audio.sourceAppDescription': 'Transcribes one application only.',
+  'audio.sourceAppDescription': 'Transcribes only the selected applications’ output.',
   'audio.sourceMicLabel': 'Microphone',
   'audio.sourceMicDescription': 'Transcribes microphone input only; player audio is untouched.',
   'audio.sourceMixLabel': 'Microphone + system audio',

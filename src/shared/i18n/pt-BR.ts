@@ -132,7 +132,7 @@ export const ptBR: Partial<Messages> = {
   'audio.sourceLoopbackLabel': 'Áudio do sistema',
   'audio.sourceLoopbackDescription': 'Transcreve o que o player reproduz.',
   'audio.sourceAppLabel': 'Áudio de um aplicativo',
-  'audio.sourceAppDescription': 'Transcreve apenas a saída de um aplicativo.',
+  'audio.sourceAppDescription': 'Transcreve apenas a saída dos aplicativos escolhidos.',
   'audio.sourceMicLabel': 'Microfone',
   'audio.sourceMicDescription': 'Transcreve apenas a entrada do microfone; o áudio do player não é afetado.',
   'audio.sourceMixLabel': 'Microfone + áudio do sistema',

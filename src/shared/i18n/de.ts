@@ -134,7 +134,7 @@ export const de: Partial<Messages> = {
   'audio.sourceLoopbackLabel': 'Systemaudio',
   'audio.sourceLoopbackDescription': 'Transkribiert, was der Player ausgibt.',
   'audio.sourceAppLabel': 'App-Audio',
-  'audio.sourceAppDescription': 'Transkribiert nur die Ausgabe einer App.',
+  'audio.sourceAppDescription': 'Transkribiert nur die Ausgabe der ausgewählten Apps.',
   'audio.sourceMicLabel': 'Mikrofon',
   'audio.sourceMicDescription': 'Transkribiert nur die Mikrofoneingabe; Player-Audio bleibt unberührt.',
   'audio.sourceMixLabel': 'Mikrofon + Systemaudio',
