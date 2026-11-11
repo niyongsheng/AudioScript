@@ -44,7 +44,10 @@ export function AboutPage() {
   const [eggTaps, setEggTaps] = useState(0)
   const [versionPulse, setVersionPulse] = useState(0)
   const lastEggTap = useRef(0)
-  const closeEgg = useCallback(() => setEggOpen(false), [])
+  const closeEgg = useCallback(() => {
+    setEggOpen(false)
+    setVersionPulse(0)
+  }, [])
   const run = useCallback(
     (action: () => Promise<unknown>) => {
       void action().catch((e) => setError(formatCmdError(e)))
@@ -122,7 +125,11 @@ export function AboutPage() {
             <Mono>
               <span
                 key={versionPulse}
-                className={versionPulse > 0 ? 'inline-block animate-[egg-tap_260ms_ease-out]' : 'inline-block'}
+                className={
+                  versionPulse > 0
+                    ? 'inline-block animate-[egg-tap_420ms_cubic-bezier(0.34,1.56,0.64,1)] motion-reduce:animate-none'
+                    : 'inline-block'
+                }
                 style={versionPulse > 0 ? { color: VERSION_COLORS[versionPulse % VERSION_COLORS.length] } : undefined}
               >
                 {info?.version ?? '—'}

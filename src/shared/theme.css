@@ -177,8 +177,24 @@ html:has(.overlay-body) body,
 }
 
 @keyframes egg-tap {
-  40% {
-    transform: scale(1.18);
+  0% {
+    filter: brightness(1);
+    transform: scale(1);
+  }
+
+  35% {
+    filter: brightness(1.45) saturate(1.5);
+    transform: scale(1.5);
+  }
+
+  68% {
+    filter: brightness(1.2) saturate(1.2);
+    transform: scale(1.16);
+  }
+
+  100% {
+    filter: brightness(1);
+    transform: scale(1);
   }
 }
 

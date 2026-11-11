@@ -10,7 +10,7 @@ import { LogoMark } from './Brand'
 const BURST = 140
 const RAIN = 48
 const GRAVITY = 1500
-const AUTO_CLOSE_MS = 5000
+const AUTO_CLOSE_MS = 7000
 const COUNTDOWN_RADIUS = 14
 const COUNTDOWN_LENGTH = 2 * Math.PI * COUNTDOWN_RADIUS
 
@@ -236,7 +236,7 @@ export function EasterEgg({ name, version, platform, arch, onClose, onContact }:
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeDasharray={COUNTDOWN_LENGTH}
-                    className="animate-[egg-countdown_5s_linear_forwards] text-[var(--color-accent)] opacity-40 motion-reduce:animate-none"
+                    className="animate-[egg-countdown_7s_linear_forwards] text-[var(--color-accent)] opacity-40 motion-reduce:animate-none"
                     style={{ '--egg-countdown-length': COUNTDOWN_LENGTH } as CSSProperties}
                   />
                 </svg>
