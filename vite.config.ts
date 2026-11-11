@@ -12,8 +12,8 @@ export default defineConfig({
 
   clearScreen: false,
   server: {
-    port: 5173,
-    // ⚠️ 端口被占用时直接失败，不要静默换端口：tauri.conf.json 的 devUrl 写死 5173，
+    port: 5183,
+    // ⚠️ 端口被占用时直接失败，不要静默换端口：tauri.conf.json 的 devUrl 写死 5183，
     // 换端口会连到别的进程上，表现为白屏且无报错。
     strictPort: true,
   },
