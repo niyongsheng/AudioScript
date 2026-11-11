@@ -129,7 +129,7 @@ type EngineType = "local-streaming"   // sherpa-onnx 流式（默认）
                 | "mac-native"        // macOS 26+ 系统语音
                 | "remote-api"        // V0.2
 
-type AudioSource = "mic" | "loopback" | "mix"
+type AudioSource = "mic" | "loopback" | "mix" | "app"
 
 interface EndpointConfig {          // 不自研 VAD，直接映射引擎端点检测
   trailingSilenceMs: number
@@ -365,6 +365,7 @@ pub trait Translator: Send {
 | 音源 | 状态 | 后端 |
 |---|---|---|
 | **系统声音输出（回环）** | ✅ | macOS: Core Audio Process Tap ／ Windows: WASAPI loopback |
+| **应用声音（指定应用）** | ✅ | macOS: Core Audio Process Tap ／ Windows: WASAPI process loopback ／ Linux: PipeWire 应用输出节点 |
 | 麦克风 | ✅ | 同上 |
 | 麦克风 + 系统声混流 | ✅ | 库内完成混音 |
 | 音频文件 | V0.2 | 批量转写走离线引擎 |
@@ -400,9 +401,19 @@ TranscriptStore ← 状态机在此
    - 「麦克风 + 系统声音」下 MUST 提供两个独立选择器，分别写入 `mixMicDeviceId` / `mixSystemDeviceId`，MUST NOT 复用单设备 `deviceId`——flexaudio 对 Mix 会忽略它。
 2. **MUST 有音频心跳**：每 5 秒统计最近窗口的 RMS，`rms < 1e-4`（约 -80 dBFS）判为静音并记 **WARN**，日志文案 MUST 明确写出「电平接近零」。阈值刻意留低：宁可漏报，也不要把很安静的房间误报成故障。
 3. **静音状态变化时 MUST 广播**（`transcript://audio`）。只在状态变化时播报，每 5 秒弹一次会变成骚扰。
-4. **电平表心跳**：会话采集中 MUST 广播 `transcript://level`（裸 RMS，200ms）；「音频」设置页打开期间广播 `transcript://device-level`（`{ source, device, rms }`，200ms，`device` 为 `null` 表示系统默认）。
-   - 预览 MUST 在进入页面时开始，音源或设备变化时重启，离开页面 / 开始转写 / 主窗口隐藏时停止，MUST NOT 后台常驻。
-   - 预览目标以 `(source, device)` 唯一标识；Mix 下 MUST 同时覆盖两侧。任一下拉展开期间 MUST 额外预览该侧全部设备。
+4. **电平表心跳**：会话采集中 MUST 广播 `transcript://level`（裸 RMS，200ms）；「音频」设置页打开期间广播 `transcript://device-level`（`{ source, device, app, rms }`，200ms，`device` 为 `null` 表示系统默认，`app` 为 `null` 表示全部应用）。
+   - 预览 MUST 在进入页面时开始，音源、设备或应用变化时重启，离开页面 / 开始转写 / 主窗口隐藏时停止，MUST NOT 后台常驻。
+   - 预览目标以 `(source, device, app)` 唯一标识；Mix 下 MUST 同时覆盖两侧。任一下拉展开期间 MUST 额外预览该侧全部设备。
+5. **MUST 提供独立的「应用声音」音源**。
+   - 「音源」MUST 与「系统声音」并列提供「应用声音」；MUST NOT 把应用选择做成「系统声音」的子选项。
+   - 应用声音 MUST 要求选择目标应用；未选择时 MUST NOT 开始会话。
+   - 应用声音 MUST 支持同时选择 1–4 个应用；多路 MUST 在应用层混音成一路，MUST NOT 依赖单路进程回环支持多目标。
+   - 应用选择 MUST 默认只列当前正在输出声音的应用，并 MUST 提供「显示全部应用」入口；系统 daemon / helper MUST NOT 作为可选项。
+   - 应用选择 MUST 持久化稳定身份（macOS bundle id；其他平台可执行文件名），MUST NOT 持久化 PID。
+   - 会话启动 MUST 用当前进程列表重新解析目标；目标不存在或系统不支持时 MUST 报错并提示重新选择，MUST NOT 静默回退到系统声音。
+   - 应用声音 MUST NOT 提供输出设备选择：Windows / Linux 的进程回环不支持按设备限定。
+   - 「麦克风 + 系统声音」MUST NOT 提供按应用采集：flexaudio 的 Mix 不支持进程目标。
+   - 平台门槛：macOS 14.4+、Windows build 20348+、Linux PipeWire；不满足时应用选择 MUST 为空并说明原因，不允许开始。
    - 预览与转写 MUST NOT 同时持有采集设备：转写前 MUST 先停预览，失败或结束后按页面状态恢复。
    - 它与静音判定 MUST NOT 共用累加窗口：判定要 5 秒均值，表要 200ms 快照。
    - **没有「归零」事件**——广播停止时 UI MUST 自己把表清零。
@@ -542,11 +553,16 @@ Remote API 密钥 MUST 存入系统密钥链（Keychain / Credential Manager / S
 
 ## 12. 匿名使用统计
 
-统计与错误上报默认开启，可在「通用 → 隐私 → 匿名使用统计」关闭；关闭后 Rust 与前端都 MUST NOT 再入队新事件或错误报告。
+统计与错误上报默认开启，可在「通用 → 隐私 → 匿名使用统计」关闭；关闭后 Rust 与前端都 MUST NOT 再发送新事件或错误报告。
 
-- 事件：`app_started` / `app_exited`、`session_started` / `session_stopped` / `session_start_failed` / `first_transcript`、`model_download`、`overlay_toggled`、`setting_changed`、`onboarding_completed`、`permission_result` / `permission_settings_opened`、`update_checked` / `update_prompt` / `update_install`。
+- 档位是项目级配置（`telemetry::ANALYTICS_TIER`），MUST NOT 向用户暴露档位选择；当前默认「基础」。档位决定事件范围：
+  - 极简：只发送 `app_started` / `app_exited`（启动/退出心跳），不发送其他事件。
+  - 基础：增加 `session_started` / `session_stopped` / `session_start_failed` / `first_transcript`。
+  - 标准：增加 `model_download`、`onboarding_completed`、`permission_result`、`update_checked` / `update_prompt` / `update_install`、`setting_changed`（前端对相同事件与属性每次运行只报一次）。
+  - 完整：不再去重，并增加 `overlay_toggled`、`permission_settings_opened`、`easter_egg_opened`。
+- 每次运行的事件预算：Rust 端为极简 4 / 基础 30 / 标准 150 / 完整 1000，前端为极简 0 / 基础 20 / 标准 80 / 完整 500；超出后 MUST 丢弃新事件。
 - `model_download` 记录 `phase`、`error_code`、`http_status`；`session_stopped` 记录停止来源、音源、模型档位与是否出字；`first_transcript` 使用延迟分档；退出事件记录原因、运行时长分档与是否仍在转写。
 - 属性只允许枚举值与分档（音源、翻译引擎、源语言、模型档位、时长分档、结果状态、错误码）。
 - 事件属性 MUST NOT 包含转写文本、设备名称或 ID、文件路径、错误原文。
-- 错误报告来自 panic 与 WebView 未捕获错误，含错误类型、消息、堆栈（可能含源码路径）与系统属性；MUST NOT 包含音频或转写文本。
-- 传输由 `tauri-plugin-aptabase` 完成；上报在后台线程，MUST NOT 阻塞启动或转写；崩溃退出前最多等待 3 秒发送。
+- 错误报告由 Sentry 采集：Rust panic 自动上报，WebView 未捕获错误经 `frontend_error` 命令转发；含错误类型、消息、堆栈（可能含源码路径）与系统属性；MUST NOT 包含音频或转写文本。
+- 传输：使用统计由 `tauri-plugin-aptabase` 完成，错误报告由 `sentry` crate 完成；均在后台线程，MUST NOT 阻塞启动或转写；退出时各 flush 一次。

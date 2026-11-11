@@ -33,7 +33,7 @@ pub(super) fn probe(kind: AudioSourceKind, selection: &DeviceSelection) -> Optio
     let wanted = match kind {
         AudioSourceKind::Mic => selection.device.as_deref(),
         AudioSourceKind::Mix => selection.mix_mic.as_deref(),
-        AudioSourceKind::Loopback => return None,
+        AudioSourceKind::Loopback | AudioSourceKind::App => return None,
     };
 
     let host = cpal::default_host();

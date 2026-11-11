@@ -3,7 +3,7 @@ use tauri::{AppHandle, Manager};
 use tauri_plugin_autostart::ManagerExt;
 
 use crate::config::{
-    direction_label, effective_target_lang, EndpointConfig, EndpointProfile, OverlayConfig,
+    direction_label, effective_target_lang, AppRef, EndpointConfig, EndpointProfile, OverlayConfig,
     OverlayMode, Preferences, PrefsPatch, SessionConfig, TranslateEngine,
 };
 pub use crate::error::CmdError;
@@ -152,6 +152,7 @@ pub async fn route_async(app: &AppHandle, name: &str, args: &Value) -> Result<Va
         "mac_speech_request" => Some((Lane::Quick, std::time::Duration::from_secs(30))),
         "model_remove" => Some((Lane::Quick, std::time::Duration::from_secs(60))),
         "model_dir_set" => Some((Lane::Quick, std::time::Duration::from_secs(20))),
+        "audio_processes" => Some((Lane::Quick, std::time::Duration::from_secs(5))),
         _ => None,
     };
 
@@ -166,6 +167,11 @@ pub async fn route_async(app: &AppHandle, name: &str, args: &Value) -> Result<Va
 pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdError> {
     match name {
         "app_info" => Ok(app_info()),
+        "frontend_error" => {
+            let report: crate::telemetry::FrontendError = json_arg(args, "report")?;
+            crate::telemetry::capture_frontend_error(app, report);
+            Ok(json!(null))
+        }
         "mac_translation_languages" => mac_translation_languages(),
         "mac_speech_status" => {
             let status = crate::asr::mac_native::status();
@@ -389,6 +395,10 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
                 .map_err(|e| CmdError::Failed(e.to_string()))
         }
 
+        "audio_processes" => audio::list_processes()
+            .map(|p| json!(p))
+            .map_err(|e| CmdError::Failed(e.to_string())),
+
         "monitor_start" => {
             let targets = args
                 .get("targets")
@@ -402,7 +412,11 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
                                 .and_then(Value::as_str)
                                 .and_then(audio::AudioSourceKind::parse)?;
                             let device = item.get("device").and_then(Value::as_str);
-                            Some(monitor::Target::new(source, device))
+                            let apps = match item.get("apps") {
+                                None | Some(Value::Null) => Vec::new(),
+                                Some(v) => serde_json::from_value::<Vec<AppRef>>(v.clone()).ok()?,
+                            };
+                            Some(monitor::Target::new(source, device, apps))
                         })
                         .collect::<Vec<_>>()
                 })
@@ -460,10 +474,22 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
                 .get("mixSystemDeviceId")
                 .and_then(Value::as_str)
                 .map(str::to_owned);
+            let app_targets: Vec<AppRef> = args
+                .get("appTargets")
+                .filter(|v| !v.is_null())
+                .map(|v| serde_json::from_value(v.clone()))
+                .transpose()
+                .map_err(|e| CmdError::BadArgs(tf(Key::CmdConfigParseFailed, &[&e.to_string()])))?
+                .unwrap_or_default();
             let devices = if source == audio::AudioSourceKind::Mix {
                 audio::DeviceSelection::mix(mix_mic, mix_system)
             } else {
-                audio::DeviceSelection::single(device)
+                let apps = if source == audio::AudioSourceKind::App {
+                    app_targets
+                } else {
+                    Vec::new()
+                };
+                audio::DeviceSelection::single(device).with_apps(apps)
             };
 
             let mut cfg = cfg;
@@ -500,7 +526,11 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
             match session::start(app, cfg, source, devices.clone()) {
                 Ok(()) => {
                     let saved = prefs::update(app, |p| {
-                        p.apply_session(source.as_str(), devices.device.clone());
+                        p.apply_session(
+                            source.as_str(),
+                            devices.device.clone(),
+                            devices.apps.clone(),
+                        );
                         if source == audio::AudioSourceKind::Mix {
                             p.apply_mix_devices(
                                 devices.mix_mic.clone(),
@@ -578,6 +608,7 @@ fn app_info() -> Value {
         "arch": std::env::consts::ARCH,
         "osVersion": crate::env_info::os_version(),
         "macSpeechSupported": crate::asr::mac_native::available() == crate::asr::mac_native::AVAILABLE,
+        "analyticsTier": crate::telemetry::ANALYTICS_TIER.as_str(),
         "builtAtMs": exe_mtime_ms(),
     })
 }

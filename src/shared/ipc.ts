@@ -3,6 +3,9 @@ import { listen, type UnlistenFn } from '@tauri-apps/api/event'
 import { t } from './i18n'
 import { withTimeout } from './timeout'
 import type {
+  AnalyticsTier,
+  AppRef,
+  AudioProcessInfo,
   AudioStatus,
   EndpointConfig,
   InputDevice,
@@ -34,6 +37,8 @@ import {
 } from './types'
 
 export type {
+  AppRef,
+  AudioProcessInfo,
   AudioStatus,
   InputDevice,
   MacSpeechStatus,
@@ -87,6 +92,7 @@ export interface AppInfo {
   arch: string
   osVersion?: string | null
   macSpeechSupported: boolean
+  analyticsTier: AnalyticsTier
   builtAtMs: number | null
 }
 
@@ -148,6 +154,7 @@ export interface SessionDevices {
   device?: string
   mixMicDeviceId?: string
   mixSystemDeviceId?: string
+  appTargets?: AppRef[]
 }
 
 export function sessionStart(
@@ -159,9 +166,10 @@ export function sessionStart(
   source: AudioSourceKind = AudioSourceKind.Loopback,
 ): Promise<TaskStatus> {
   return call<TaskStatus>('session_start', {
-    device: devices.device || null,
+    device: devices.appTargets?.length ? null : devices.device || null,
     mixMicDeviceId: devices.mixMicDeviceId || null,
     mixSystemDeviceId: devices.mixSystemDeviceId || null,
+    appTargets: devices.appTargets ?? [],
     source,
     config: { translate: { engine: translate, sourceLang, targetLang, zhScript } },
   })
@@ -171,20 +179,30 @@ export function audioDevices(source: AudioSourceKind = AudioSourceKind.Loopback)
   return call<InputDevice[]>('audio_devices', { source })
 }
 
+export function audioProcesses(): Promise<AudioProcessInfo[]> {
+  return call<AudioProcessInfo[]>('audio_processes')
+}
+
 export interface DeviceLevelEvent {
   source: AudioSourceKind
   device: string | null
+  apps: string[]
   rms: number
 }
 
 export interface MonitorTarget {
   source: AudioSourceKind
   device: string | null
+  apps?: AppRef[]
 }
 
 export function monitorStart(targets: MonitorTarget[]): Promise<null> {
   return call<null>('monitor_start', {
-    targets: targets.map((target) => ({ source: target.source, device: target.device || null })),
+    targets: targets.map((target) => ({
+      source: target.source,
+      device: target.device || null,
+      apps: target.apps ?? [],
+    })),
   })
 }
 

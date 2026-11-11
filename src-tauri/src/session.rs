@@ -826,7 +826,9 @@ pub fn start(
                     "已转出过文字，多半只是暂时没有音频（暂停或静音段落），不一定是故障"
                 } else if matches!(
                     source,
-                    audio::AudioSourceKind::Loopback | audio::AudioSourceKind::Mix
+                    audio::AudioSourceKind::Loopback
+                        | audio::AudioSourceKind::Mix
+                        | audio::AudioSourceKind::App
                 ) {
                     "还没转出任何文字。确认播放器在出声；若确实在播，检查「屏幕与系统音频录制」权限"
                 } else {

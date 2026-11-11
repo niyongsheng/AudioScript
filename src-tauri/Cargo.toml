@@ -83,6 +83,8 @@ flate2 = "1"
 bzip2 = "0.5"
 sha2 = "0.10"
 zhconv = { version = "0.4", features = ["opencc"] }
+# 错误上报（Sentry）：只用 rustls，Linux 构建不额外依赖 OpenSSL。
+sentry = { version = "0.49", default-features = false, features = ["backtrace", "contexts", "panic", "reqwest", "rustls"] }
 
 [target.'cfg(target_os = "macos")'.dependencies]
 # macOS 26+ 的系统翻译（Translation.framework）；语言包由系统管理，应用不下载。
@@ -116,6 +118,13 @@ system-configuration = "0.7"
 # 拿不到，而它公开的 preflight() 在授权未决时会弹窗并阻塞最多 30 秒，不能当查询用。
 objc2-foundation = "0.3"
 block2 = "0.6"
+# ⚠️ 应用下拉不能直接用 flexaudio 的 ProcessInfo.name：macOS 上那是可执行文件名（英文），
+# 本地化显示名必须走 NSRunningApplication.localizedName。
+objc2-app-kit = { version = "0.3", default-features = false, features = [
+    "NSRunningApplication",
+    "NSWorkspace",
+    "libc",
+] }
 
 [target.'cfg(not(target_os = "macos"))'.dependencies]
 # mkl 只在 GenuineIntel CPU 上启用（CTranslate2 的 cpu_is_genuine_intel 检查）。

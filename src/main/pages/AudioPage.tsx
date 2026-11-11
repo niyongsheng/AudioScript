@@ -13,12 +13,15 @@ import {
 } from '@/shared/ipc'
 import { TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
+import { AppPicker, type AppPickerOption } from '@/ui/AppPicker'
 import { Button } from '@/ui/Button'
 import { ChoiceCard, ChoiceGroup } from '@/ui/ChoiceCard'
 import { DeviceSelect, describeDevice } from '@/ui/DeviceSelect'
 import { DeviceLevelMeter, LevelMeter } from '@/ui/LevelMeter'
 import { Page } from '@/ui/Page'
 import { SectionLabel, SettingsGroup, SettingsRow } from '@/ui/Settings'
+
+const MAX_APP_TARGETS = 4
 
 export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void }) {
   const {
@@ -33,8 +36,14 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
     mixSystemDevice,
     setMixMicDevice,
     setMixSystemDevice,
+    appTargets,
+    setAppTargets,
+    audioProcesses,
+    processesLoading,
+    processError,
     deviceError,
     refreshDevices,
+    refreshProcesses,
     audio,
     status,
     pending,
@@ -50,6 +59,11 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
       description: t('audio.sourceLoopbackDescription'),
     },
     {
+      value: AudioSourceKind.App,
+      label: t('audio.sourceAppLabel'),
+      description: t('audio.sourceAppDescription'),
+    },
+    {
       value: AudioSourceKind.Mic,
       label: t('audio.sourceMicLabel'),
       description: t('audio.sourceMicDescription'),
@@ -63,7 +77,9 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
 
   const capturing = status === TaskStatus.Capturing
   const isMix = audioSource === AudioSourceKind.Mix
+  const isApp = audioSource === AudioSourceKind.App
 
+  const [showAllApps, setShowAllApps] = useState(false)
   const [previewOn, setPreviewOn] = useState(false)
   const [openMenu, setOpenMenu] = useState<'single' | 'mic' | 'system' | null>(null)
   const [monitorError, setMonitorError] = useState<{ message: string; permission: boolean } | null>(null)
@@ -88,6 +104,9 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
       }
       return out
     }
+    if (isApp) {
+      return appTargets.length > 0 ? [{ source: AudioSourceKind.App, device: null, apps: appTargets }] : []
+    }
     if (openMenu === 'single') {
       for (const d of devices) out.push({ source: audioSource, device: d.id })
       if (!device) out.push({ source: audioSource, device: null })
@@ -96,7 +115,76 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
     }
     out.push({ source: audioSource, device })
     return out
-  }, [isMix, mixMicDevice, mixSystemDevice, openMenu, mixMicDevices, mixSystemDevices, devices, device, audioSource])
+  }, [
+    isMix,
+    isApp,
+    appTargets,
+    mixMicDevice,
+    mixSystemDevice,
+    openMenu,
+    mixMicDevices,
+    mixSystemDevices,
+    devices,
+    device,
+    audioSource,
+  ])
+
+  const visibleProcesses = useMemo(
+    () => (showAllApps ? audioProcesses : audioProcesses.filter((p) => p.isOutputActive === true)),
+    [audioProcesses, showAllApps],
+  )
+
+  const selectedProcesses = useMemo(
+    () =>
+      appTargets.map((app) => ({
+        app,
+        process: visibleProcesses.find((p) => p.key === app.key || p.name === app.name),
+      })),
+    [appTargets, visibleProcesses],
+  )
+  const selectedKeys = selectedProcesses.map(({ app, process }) => process?.key ?? app.key)
+
+  const appOptions = useMemo<AppPickerOption[]>(() => {
+    const options: AppPickerOption[] = visibleProcesses.map((p) => ({
+      value: p.key,
+      label: p.name,
+      subtitle: p.executable && p.executable !== p.name ? p.executable : undefined,
+      active: p.isOutputActive === true,
+      disabled: appTargets.length >= MAX_APP_TARGETS && !selectedKeys.includes(p.key),
+    }))
+    for (const { app, process } of selectedProcesses) {
+      if (process) continue
+      options.push({
+        value: app.key,
+        label: app.name,
+        subtitle: audioProcesses.some((p) => p.key === app.key || p.name === app.name)
+          ? t('audio.appIdle')
+          : t('audio.appNotRunning'),
+      })
+    }
+    return options
+  }, [visibleProcesses, selectedProcesses, selectedKeys, appTargets.length, audioProcesses, t])
+
+  const toggleApp = useCallback(
+    (key: string) => {
+      const selected = selectedProcesses.find(({ app, process }) => (process?.key ?? app.key) === key)
+      if (selected) {
+        setAppTargets(appTargets.filter((app) => app !== selected.app))
+        return
+      }
+      if (appTargets.length >= MAX_APP_TARGETS) return
+      const option = appOptions.find((o) => o.value === key)
+      if (!option) return
+      setAppTargets([...appTargets, { key, name: option.label }])
+    },
+    [appTargets, selectedProcesses, appOptions, setAppTargets],
+  )
+
+  const appPickerAction = {
+    label: showAllApps ? t('audio.appOnlyPlaying') : t('audio.appShowAll'),
+    subtitle: showAllApps ? undefined : t('audio.appShowAllHint'),
+    onClick: () => setShowAllApps((v) => !v),
+  }
 
   const startPreview = useCallback(() => {
     if (!prefsReady || devicesLoading || capturing) return
@@ -180,7 +268,11 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
       )}
 
       {audio?.silent && audio.segments === 0 && (
-        <SilenceHelp audioSource={audioSource} onOpenPermissions={onOpenPermissions} />
+        <SilenceHelp
+          audioSource={audioSource}
+          appName={isApp && appTargets.length > 0 ? appTargets.map((a) => a.name).join(' + ') : undefined}
+          onOpenPermissions={onOpenPermissions}
+        />
       )}
 
       <section className="space-y-2">
@@ -193,14 +285,17 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
               description={o.description}
               selected={audioSource === o.value}
               disabled={capturing}
-              onSelect={() => setAudioSource(o.value)}
+              onSelect={() => {
+                setOpenMenu(null)
+                setAudioSource(o.value)
+              }}
             />
           ))}
         </ChoiceGroup>
         <p className="px-1 text-[var(--color-ink-2)] text-[0.7rem] leading-relaxed">{t('audio.sourceHint')}</p>
       </section>
 
-      <SettingsGroup title={t('audio.inputDevice')}>
+      <SettingsGroup title={isApp ? t('audio.appSection') : t('audio.inputDevice')}>
         {isMix ? (
           <>
             <DeviceRow
@@ -212,6 +307,7 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
               source={AudioSourceKind.Mic}
               capturing={capturing}
               previewing={previewing}
+              loading={devicesLoading}
               onChange={setMixMicDevice}
               onOpenChange={(open) => setOpenMenu(open ? 'mic' : null)}
               onRefresh={() => void refreshDevices()}
@@ -225,11 +321,51 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
               source={AudioSourceKind.Loopback}
               capturing={capturing}
               previewing={previewing}
+              loading={devicesLoading}
               onChange={setMixSystemDevice}
               onOpenChange={(open) => setOpenMenu(open ? 'system' : null)}
               onRefresh={() => void refreshDevices()}
             />
           </>
+        ) : isApp ? (
+          <SettingsRow
+            icon="overlay"
+            title={t('audio.app')}
+            description={
+              processError ??
+              (processesLoading && audioProcesses.length === 0
+                ? t('audio.appLoading')
+                : audioProcesses.length === 0
+                  ? t('audio.appEmpty')
+                  : !showAllApps && visibleProcesses.length === 0
+                    ? t('audio.appNoPlaying')
+                    : appTargets.length === 0
+                      ? t('audio.appPickHint')
+                      : t('audio.appHint'))
+            }
+            control={
+              <div className="flex items-center gap-1.5">
+                {capturing ? (
+                  <LevelMeter active />
+                ) : previewing ? (
+                  <DeviceLevelMeter device={null} source={AudioSourceKind.App} apps={selectedKeys} active />
+                ) : null}
+                <AppPicker
+                  label={t('audio.app')}
+                  placeholder={t('audio.appSelectPlaceholder')}
+                  options={appOptions}
+                  selected={selectedKeys}
+                  onToggle={toggleApp}
+                  action={appPickerAction}
+                  disabled={capturing || audioProcesses.length === 0}
+                  className="w-[15rem]"
+                />
+                <Button icon="refresh" size="sm" spinning={processesLoading} onClick={() => void refreshProcesses()}>
+                  {t('common.refresh')}
+                </Button>
+              </div>
+            }
+          />
         ) : (
           <DeviceRow
             icon="waveform"
@@ -240,6 +376,7 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
             source={audioSource}
             capturing={capturing}
             previewing={previewing}
+            loading={devicesLoading}
             onChange={setDevice}
             onOpenChange={(open) => setOpenMenu(open ? 'single' : null)}
             onRefresh={() => void refreshDevices()}
@@ -261,6 +398,7 @@ function DeviceRow({
   source,
   capturing,
   previewing,
+  loading,
   onChange,
   onOpenChange,
   onRefresh,
@@ -273,6 +411,7 @@ function DeviceRow({
   source: AudioSourceKind
   capturing: boolean
   previewing: boolean
+  loading?: boolean
   onChange: (id: string) => void
   onOpenChange: (open: boolean) => void
   onRefresh: () => void
@@ -306,7 +445,7 @@ function DeviceRow({
             disabled={capturing}
             className="w-[15rem]"
           />
-          <Button icon="refresh" size="sm" onClick={onRefresh}>
+          <Button icon="refresh" size="sm" spinning={loading} onClick={onRefresh}>
             {t('common.refresh')}
           </Button>
         </div>
@@ -317,15 +456,17 @@ function DeviceRow({
 
 function SilenceHelp({
   audioSource,
+  appName,
   onOpenPermissions,
 }: {
   audioSource: AudioSourceKind
+  appName?: string
   onOpenPermissions: () => void
 }) {
   const { t } = useI18n()
   const [dismissed, setDismissed] = useState(false)
   const systemAudio = audioSource !== AudioSourceKind.Mic
-  const mic = audioSource !== AudioSourceKind.Loopback
+  const mic = audioSource === AudioSourceKind.Mic || audioSource === AudioSourceKind.Mix
 
   if (dismissed) return null
 
@@ -354,6 +495,7 @@ function SilenceHelp({
       <ul className="list-inside list-disc space-y-1">
         {systemAudio && (
           <>
+            {appName && <li>{t('audio.silenceCheckApp', { app: appName })}</li>}
             <li>{t('audio.silenceCheckPlayer')}</li>
             <li>
               {t('audio.silenceCheckPermission')}

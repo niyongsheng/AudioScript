@@ -2890,6 +2890,26 @@ messages! {
         ar: "(افتراضي النظام)"
     },
 
+    AudioProcessUnsupported {
+        zh_cn: "当前系统不支持按应用采集系统声音：{0}",
+        en: "Per-app system audio capture is not supported on this system: {0}"
+    },
+
+    AudioProcessNotFound {
+        zh_cn: "未找到应用「{0}」的音频输出。请先让它播放声音，然后重新选择应用",
+        en: "No audio output found for \"{0}\". Start playback in that app, then select it again"
+    },
+
+    AudioAppNotSelected {
+        zh_cn: "请选择要采集的应用",
+        en: "Select an application to capture"
+    },
+
+    AudioAppDefault {
+        zh_cn: "应用声音",
+        en: "Application audio"
+    },
+
     AudioAccumulatorBusy {
         zh_cn: "检测累加器仍被占用",
         en: "The probe accumulator is still in use",

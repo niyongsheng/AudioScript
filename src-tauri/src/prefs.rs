@@ -185,6 +185,7 @@ mod tests {
             device_id: Some("device-7".into()),
             mix_mic_device_id: Some("mic-3".into()),
             mix_system_device_id: Some("out-4".into()),
+            app_targets: Vec::new(),
             translate_engine: TranslateEngine::Off,
             asr_engine: crate::config::EngineType::LocalStreaming,
             mt_model_tier: crate::config::MtModelTier::default(),

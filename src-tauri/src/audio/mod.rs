@@ -1,11 +1,9 @@
+use std::collections::{HashSet, VecDeque};
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::sync::{Arc, Mutex};
-use std::time::Duration;
+use std::time::{Duration, Instant};
 
-#[cfg(any(target_os = "windows", test))]
-use std::collections::VecDeque;
-
-use crate::config::normalize_device;
+use crate::config::{normalize_device, sanitize_apps, AppRef};
 use crate::i18n::{tf, tr, Key};
 use flexaudio::{DeviceInfo, OutputFormat, SourceKind, StreamConfig};
 use typeshare::typeshare;
@@ -40,6 +38,7 @@ pub enum AudioSourceKind {
     Mic,
     Loopback,
     Mix,
+    App,
 }
 
 impl AudioSourceKind {
@@ -48,6 +47,7 @@ impl AudioSourceKind {
             Self::Mic => "mic",
             Self::Loopback => "loopback",
             Self::Mix => "mix",
+            Self::App => "app",
         }
     }
 
@@ -56,6 +56,7 @@ impl AudioSourceKind {
             "mic" => Some(Self::Mic),
             "loopback" => Some(Self::Loopback),
             "mix" => Some(Self::Mix),
+            "app" => Some(Self::App),
             _ => None,
         }
     }
@@ -65,6 +66,7 @@ impl AudioSourceKind {
             Self::Mic => SourceKind::Mic,
             Self::Loopback => SourceKind::SystemLoopback,
             Self::Mix => SourceKind::Mix,
+            Self::App => SourceKind::ProcessLoopback,
         }
     }
 }
@@ -82,6 +84,15 @@ pub enum AudioError {
 
     #[error("{}", tf(Key::AudioEnumerateFailed, &[.0.as_str()]))]
     Enumerate(String),
+
+    #[error("{}", tf(Key::AudioProcessUnsupported, &[.0.as_str()]))]
+    ProcessUnsupported(String),
+
+    #[error("{}", tf(Key::AudioProcessNotFound, &[.0.as_str()]))]
+    ProcessNotFound(String),
+
+    #[error("{}", tr(Key::AudioAppNotSelected))]
+    AppNotSelected,
 
     #[error("{message}")]
     Permission {
@@ -145,6 +156,9 @@ pub fn list_devices(kind: AudioSourceKind) -> Result<Vec<InputDevice>, AudioErro
 }
 
 fn devices_for(kind: AudioSourceKind) -> Result<Vec<DeviceInfo>, AudioError> {
+    if kind == AudioSourceKind::App {
+        return Ok(Vec::new());
+    }
     let want = kind.to_flexaudio();
 
     #[cfg(target_os = "macos")]
@@ -175,6 +189,239 @@ fn to_input_device(d: DeviceInfo) -> InputDevice {
     }
 }
 
+#[typeshare]
+#[derive(Debug, Clone, PartialEq, Eq, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AudioProcessInfo {
+    pub key: String,
+    pub pid: u32,
+    pub name: String,
+    pub executable: Option<String>,
+    pub bundle_id: Option<String>,
+    pub is_output_active: Option<bool>,
+}
+
+static PROCESS_ENUM_LOCK: Mutex<()> = Mutex::new(());
+
+fn enumerate_processes() -> Result<Vec<flexaudio::ProcessInfo>, flexaudio::Error> {
+    let _guard = PROCESS_ENUM_LOCK.lock().unwrap_or_else(|e| e.into_inner());
+    flexaudio::processes()
+}
+
+pub fn list_processes() -> Result<Vec<AudioProcessInfo>, AudioError> {
+    let list = enumerate_processes().map_err(classify_process_error)?;
+    #[cfg(target_os = "macos")]
+    let own_name = own_app_name();
+    let mut out = Vec::new();
+    for p in list {
+        if !is_app_process(&p) {
+            continue;
+        }
+        let name = process_display_name(&p);
+        #[cfg(target_os = "macos")]
+        if own_name.as_deref() == Some(name.as_str()) {
+            continue;
+        }
+        let Some(key) = process_key_with_name(&p, &name) else {
+            continue;
+        };
+        push_process(
+            &mut out,
+            AudioProcessInfo {
+                key,
+                pid: p.pid,
+                name,
+                executable: p.executable,
+                bundle_id: p.bundle_id,
+                is_output_active: p.is_output_active,
+            },
+        );
+    }
+    Ok(out)
+}
+
+fn push_process(out: &mut Vec<AudioProcessInfo>, info: AudioProcessInfo) {
+    if let Some(existing) = out.iter_mut().find(|e| e.name == info.name) {
+        if info.is_output_active == Some(true) && existing.is_output_active != Some(true) {
+            *existing = info;
+        }
+        return;
+    }
+    out.push(info);
+}
+
+fn is_app_process(p: &flexaudio::ProcessInfo) -> bool {
+    #[cfg(target_os = "macos")]
+    {
+        let Some(app) =
+            objc2_app_kit::NSRunningApplication::runningApplicationWithProcessIdentifier(
+                p.pid as i32,
+            )
+        else {
+            return false;
+        };
+        if app.activationPolicy() == objc2_app_kit::NSApplicationActivationPolicy::Regular {
+            return true;
+        }
+        let Some(name) = app.localizedName().map(|name| name.to_string()) else {
+            return false;
+        };
+        return regular_app_names()
+            .iter()
+            .any(|host| name.starts_with(host.as_str()));
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        let _ = p;
+        true
+    }
+}
+
+fn classify_process_error(e: flexaudio::Error) -> AudioError {
+    if let Some(permission) = e.permission() {
+        return AudioError::Permission {
+            permission: permission.as_str(),
+            message: e.to_string(),
+        };
+    }
+    AudioError::ProcessUnsupported(e.to_string())
+}
+
+fn process_display_name(p: &flexaudio::ProcessInfo) -> String {
+    #[cfg(target_os = "macos")]
+    if let Some(raw) = localized_process_name(p.pid) {
+        let hosts = regular_app_names();
+        if let Some(host) = hosts
+            .iter()
+            .filter(|host| raw.starts_with(host.as_str()))
+            .max_by_key(|host| host.len())
+        {
+            return host.clone();
+        }
+        return raw;
+    }
+    p.name.clone()
+}
+
+#[cfg(target_os = "macos")]
+fn regular_app_names() -> Vec<String> {
+    let workspace = objc2_app_kit::NSWorkspace::sharedWorkspace();
+    workspace
+        .runningApplications()
+        .iter()
+        .filter(|app| {
+            app.activationPolicy() == objc2_app_kit::NSApplicationActivationPolicy::Regular
+        })
+        .filter_map(|app| app.localizedName().map(|name| name.to_string()))
+        .collect()
+}
+
+#[cfg(target_os = "macos")]
+fn own_app_name() -> Option<String> {
+    let app = objc2_app_kit::NSRunningApplication::currentApplication();
+    app.localizedName().map(|name| name.to_string())
+}
+
+#[cfg(target_os = "macos")]
+fn localized_process_name(pid: u32) -> Option<String> {
+    let app =
+        objc2_app_kit::NSRunningApplication::runningApplicationWithProcessIdentifier(pid as i32)?;
+    let name = app.localizedName()?;
+    let name = name.to_string();
+    let trimmed = name.trim();
+    (!trimmed.is_empty()).then(|| trimmed.to_owned())
+}
+
+fn process_key(p: &flexaudio::ProcessInfo) -> Option<String> {
+    process_key_with_name(p, &process_display_name(p))
+}
+
+fn process_key_with_name(p: &flexaudio::ProcessInfo, name: &str) -> Option<String> {
+    #[cfg(not(target_os = "macos"))]
+    let _ = name;
+
+    #[cfg(target_os = "macos")]
+    if let Some(bundle) = p
+        .bundle_id
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())
+    {
+        if bundle.starts_with("com.apple.WebKit.") || bundle.contains(".helper") {
+            return Some(format!("bundle:{bundle}|name:{name}"));
+        }
+        return Some(format!("bundle:{bundle}"));
+    }
+
+    let exe = p
+        .executable
+        .as_deref()
+        .map(str::trim)
+        .filter(|s| !s.is_empty())?;
+    #[cfg(target_os = "windows")]
+    {
+        return Some(format!("exe:{}", exe.to_ascii_lowercase()));
+    }
+    #[cfg(not(target_os = "windows"))]
+    {
+        Some(format!("exe:{exe}"))
+    }
+}
+
+fn pick_process<'a>(
+    list: &'a [flexaudio::ProcessInfo],
+    key: &str,
+) -> Option<&'a flexaudio::ProcessInfo> {
+    let mut found: Option<&flexaudio::ProcessInfo> = None;
+    for p in list {
+        if process_key(p).as_deref() != Some(key) {
+            continue;
+        }
+        let active = p.is_output_active == Some(true);
+        match found {
+            None => found = Some(p),
+            Some(best) if active && best.is_output_active != Some(true) => found = Some(p),
+            _ => {}
+        }
+    }
+    found
+}
+
+fn pick_process_by_name<'a>(
+    list: &'a [flexaudio::ProcessInfo],
+    name: &str,
+) -> Option<&'a flexaudio::ProcessInfo> {
+    let mut found: Option<&flexaudio::ProcessInfo> = None;
+    for p in list {
+        if process_display_name(p) != name {
+            continue;
+        }
+        let active = p.is_output_active == Some(true);
+        match found {
+            None => found = Some(p),
+            Some(best) if active && best.is_output_active != Some(true) => found = Some(p),
+            _ => {}
+        }
+    }
+    found
+}
+
+fn resolve_apps(apps: &[AppRef]) -> Result<Vec<(AppRef, u32)>, AudioError> {
+    let list = enumerate_processes().map_err(classify_process_error)?;
+    let mut out = Vec::new();
+    let mut seen = HashSet::new();
+    for app in apps {
+        let pid = pick_process(&list, &app.key)
+            .or_else(|| pick_process_by_name(&list, &app.name))
+            .map(|p| p.pid)
+            .ok_or_else(|| AudioError::ProcessNotFound(app.name.clone()))?;
+        if seen.insert(pid) {
+            out.push((app.clone(), pid));
+        }
+    }
+    Ok(out)
+}
+
 fn resolve_device_name(kind: AudioSourceKind, wanted: Option<&str>) -> String {
     let Ok(devices) = devices_for(kind) else {
         return wanted.unwrap_or(tr(Key::AudioDefaultDevice)).to_string();
@@ -199,6 +446,7 @@ pub struct DeviceSelection {
     pub device: Option<String>,
     pub mix_mic: Option<String>,
     pub mix_system: Option<String>,
+    pub apps: Vec<AppRef>,
 }
 
 impl DeviceSelection {
@@ -214,11 +462,28 @@ impl DeviceSelection {
             device: None,
             mix_mic: normalize_device(mic),
             mix_system: normalize_device(system),
+            ..Self::default()
         }
+    }
+
+    pub fn with_apps(mut self, apps: Vec<AppRef>) -> Self {
+        self.apps = sanitize_apps(apps);
+        self
     }
 }
 
 fn display_name(kind: AudioSourceKind, selection: &DeviceSelection) -> String {
+    if kind == AudioSourceKind::App {
+        if selection.apps.is_empty() {
+            return tr(Key::AudioAppDefault).to_string();
+        }
+        return selection
+            .apps
+            .iter()
+            .map(|a| a.name.as_str())
+            .collect::<Vec<_>>()
+            .join(" + ");
+    }
     if kind == AudioSourceKind::Mix {
         return format!(
             "{} + {}",
@@ -248,6 +513,10 @@ where
             "采集已启动"
         );
         return Ok(handle);
+    }
+
+    if kind == AudioSourceKind::App {
+        return start_apps(selection, sink);
     }
 
     let config = StreamConfig {
@@ -288,11 +557,88 @@ where
     })
 }
 
+fn start_apps<S>(selection: &DeviceSelection, sink: S) -> Result<CaptureHandle, AudioError>
+where
+    S: FnMut(&[f32]) + Send + 'static,
+{
+    if selection.apps.is_empty() {
+        return Err(AudioError::AppNotSelected);
+    }
+    let resolved = resolve_apps(&selection.apps)?;
+    let mut streams: Vec<flexaudio::Stream> = Vec::new();
+    let mut names = Vec::new();
+    let mut native_rate = 0;
+    for (app, pid) in resolved {
+        match open_started(&app_stream_config(pid)) {
+            Ok(stream) => {
+                if native_rate == 0 {
+                    native_rate = stream.native_format().0;
+                }
+                tracing::info!(app = %app.name, key = %app.key, pid, "目标应用已解析");
+                names.push(app.name);
+                streams.push(stream);
+            }
+            Err(AudioError::DeviceNotFound(_)) => {
+                for stream in &mut streams {
+                    stream.stop();
+                }
+                return Err(AudioError::ProcessNotFound(app.name));
+            }
+            Err(e) => {
+                for stream in &mut streams {
+                    stream.stop();
+                }
+                return Err(e);
+            }
+        }
+    }
+    if streams.is_empty() {
+        return Err(AudioError::AppNotSelected);
+    }
+
+    let device_name = names.join(" + ");
+    tracing::info!(
+        source = AudioSourceKind::App.as_str(),
+        device = %device_name,
+        streams = streams.len(),
+        native_rate,
+        target_rate = TARGET_SAMPLE_RATE,
+        "采集已启动"
+    );
+
+    let stop = Arc::new(AtomicBool::new(false));
+    let thread = spawn_mixer(streams, Arc::clone(&stop), sink)?;
+
+    Ok(CaptureHandle {
+        stop,
+        thread: Some(thread),
+        device_sample_rate: native_rate,
+        device_name,
+    })
+}
+
+fn app_stream_config(pid: u32) -> StreamConfig {
+    StreamConfig {
+        kind: SourceKind::ProcessLoopback,
+        target_pid: Some(pid),
+        exclude_self: true,
+        output: OutputFormat {
+            sample_rate: TARGET_SAMPLE_RATE,
+            channels: 1,
+        },
+        ..Default::default()
+    }
+}
+
 fn open_started(config: &StreamConfig) -> Result<flexaudio::Stream, AudioError> {
     match open_and_start(config) {
         Ok(stream) => Ok(stream),
         #[cfg(target_os = "windows")]
-        Err(e) if config.exclude_self && e.kind() == flexaudio::ErrorKind::UnsupportedOsVersion => {
+        Err(e)
+            if config.exclude_self
+                && config.kind != SourceKind::ProcessLoopback
+                && e.kind() == flexaudio::ErrorKind::UnsupportedOsVersion =>
+        {
             tracing::warn!("当前 Windows 版本不支持进程回环，改为采集整设备音频");
             let mut fallback = config.clone();
             fallback.exclude_self = false;
@@ -363,6 +709,97 @@ where
 
             stream.stop();
             tracing::info!("采集工作线程退出");
+        })
+        .map_err(|e| AudioError::Start(e.to_string()))
+}
+
+const MIX_TICK: Duration = Duration::from_millis(20);
+
+const MIX_QUEUE_CHUNKS: usize = 10;
+
+const MIX_FRAMES: usize = (TARGET_SAMPLE_RATE as usize) / 50;
+
+struct MixInput {
+    stream: flexaudio::Stream,
+    queue: VecDeque<f32>,
+    dead: bool,
+}
+
+fn spawn_mixer<S>(
+    streams: Vec<flexaudio::Stream>,
+    stop: Arc<AtomicBool>,
+    mut sink: S,
+) -> Result<std::thread::JoinHandle<()>, AudioError>
+where
+    S: FnMut(&[f32]) + Send + 'static,
+{
+    std::thread::Builder::new()
+        .name("audio-mixer".into())
+        .spawn(move || {
+            let mut inputs: Vec<MixInput> = streams
+                .into_iter()
+                .map(|stream| MixInput {
+                    stream,
+                    queue: VecDeque::new(),
+                    dead: false,
+                })
+                .collect();
+            let mut out: Vec<f32> = Vec::with_capacity(CHUNK_SAMPLES);
+            let mut next_tick = Instant::now();
+
+            while !stop.load(Ordering::SeqCst) {
+                let mut alive = false;
+                for input in &mut inputs {
+                    if input.dead {
+                        continue;
+                    }
+                    while let Some(chunk) = input.stream.poll_chunk() {
+                        input.queue.extend(chunk.data);
+                    }
+                    let limit = MIX_QUEUE_CHUNKS * MIX_FRAMES;
+                    if input.queue.len() > limit {
+                        let excess = input.queue.len() - limit;
+                        input.queue.drain(..excess);
+                    }
+                    if let Some(e) = input.stream.terminal_error() {
+                        tracing::error!("多路采集中的一路终止：{e}");
+                        input.dead = true;
+                        input.queue.clear();
+                        continue;
+                    }
+                    alive = true;
+                }
+                if !alive {
+                    break;
+                }
+
+                for _ in 0..MIX_FRAMES {
+                    let mut sample = 0.0f32;
+                    for input in &mut inputs {
+                        if let Some(s) = input.queue.pop_front() {
+                            sample += s;
+                        }
+                    }
+                    out.push(sample.clamp(-1.0, 1.0));
+                    if out.len() == CHUNK_SAMPLES {
+                        sink(&out);
+                        out.clear();
+                    }
+                }
+
+                next_tick += MIX_TICK;
+                let now = Instant::now();
+                if next_tick > now {
+                    std::thread::sleep(next_tick - now);
+                } else {
+                    next_tick = now;
+                }
+            }
+
+            for input in &mut inputs {
+                input.stream.stop();
+            }
+            tracing::info!("多路采集工作线程退出");
         })
         .map_err(|e| AudioError::Start(e.to_string()))
 }
@@ -483,7 +920,7 @@ where
 }
 
 pub fn any_output_active() -> Result<u32, AudioError> {
-    let list = flexaudio::processes().map_err(classify_open_error)?;
+    let list = enumerate_processes().map_err(classify_open_error)?;
     Ok(list
         .iter()
         .filter(|p| p.is_output_active == Some(true))
@@ -514,6 +951,7 @@ mod tests {
         assert_eq!(AudioSourceKind::Mic.as_str(), "mic");
         assert_eq!(AudioSourceKind::Loopback.as_str(), "loopback");
         assert_eq!(AudioSourceKind::Mix.as_str(), "mix");
+        assert_eq!(AudioSourceKind::App.as_str(), "app");
     }
 
     #[test]
@@ -524,6 +962,10 @@ mod tests {
             SourceKind::SystemLoopback
         );
         assert_eq!(AudioSourceKind::Mix.to_flexaudio(), SourceKind::Mix);
+        assert_eq!(
+            AudioSourceKind::App.to_flexaudio(),
+            SourceKind::ProcessLoopback
+        );
     }
 
     #[test]
@@ -536,6 +978,94 @@ mod tests {
         assert_eq!(mix.device, None);
         assert_eq!(mix.mix_mic.as_deref(), Some("mic-1"));
         assert_eq!(mix.mix_system, None);
+    }
+
+    #[test]
+    fn device_selection_drops_invalid_app_key() {
+        let app = AppRef {
+            key: "pid:42".into(),
+            name: "App".into(),
+        };
+        assert!(
+            DeviceSelection::single(None)
+                .with_apps(vec![app])
+                .apps
+                .is_empty(),
+            "非法身份必须被丢弃，不能拿去匹配"
+        );
+    }
+
+    #[test]
+    fn process_key_is_stable() {
+        let p = flexaudio::ProcessInfo {
+            pid: 42,
+            name: "App".into(),
+            executable: Some("app.exe".into()),
+            bundle_id: Some("com.example.app".into()),
+            is_output_active: None,
+        };
+        #[cfg(target_os = "macos")]
+        assert_eq!(process_key(&p).as_deref(), Some("bundle:com.example.app"));
+        #[cfg(not(target_os = "macos"))]
+        assert_eq!(process_key(&p).as_deref(), Some("exe:app.exe"));
+    }
+
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn webkit_helper_keys_include_host_name() {
+        let p = flexaudio::ProcessInfo {
+            pid: 42,
+            name: "com.apple.WebKit.GPU".into(),
+            executable: Some("com.apple.WebKit.GPU".into()),
+            bundle_id: Some("com.apple.WebKit.GPU".into()),
+            is_output_active: Some(true),
+        };
+        assert_eq!(
+            process_key_with_name(&p, "Safari浏览器").as_deref(),
+            Some("bundle:com.apple.WebKit.GPU|name:Safari浏览器")
+        );
+    }
+
+    #[test]
+    fn duplicate_app_names_prefer_active_entry() {
+        let idle = AudioProcessInfo {
+            key: "bundle:com.example.app".into(),
+            pid: 1,
+            name: "App".into(),
+            executable: None,
+            bundle_id: Some("com.example.app".into()),
+            is_output_active: Some(false),
+        };
+        let active = AudioProcessInfo {
+            key: "bundle:com.example.app.helper".into(),
+            pid: 2,
+            is_output_active: Some(true),
+            ..idle.clone()
+        };
+        let mut out = Vec::new();
+        push_process(&mut out, idle);
+        push_process(&mut out, active);
+        assert_eq!(out.len(), 1, "同名应用只能保留一条");
+        assert_eq!(out[0].key, "bundle:com.example.app.helper");
+    }
+
+    #[test]
+    fn pick_process_prefers_active_process() {
+        let idle = flexaudio::ProcessInfo {
+            pid: 1,
+            name: "App".into(),
+            executable: Some("app.exe".into()),
+            bundle_id: None,
+            is_output_active: Some(false),
+        };
+        let active = flexaudio::ProcessInfo {
+            pid: 2,
+            is_output_active: Some(true),
+            ..idle.clone()
+        };
+        let list = vec![idle, active];
+        assert_eq!(pick_process(&list, "exe:app.exe").map(|p| p.pid), Some(2));
+        assert!(pick_process(&list, "exe:missing").is_none());
     }
 
     #[test]

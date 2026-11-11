@@ -3,6 +3,7 @@ import { useCallback, useEffect, useId, useLayoutEffect, useRef, useState } from
 import { createPortal } from 'react-dom'
 import { cn } from './cn'
 import { Icon } from './Icon'
+import { PlayingBars } from './LevelMeter'
 
 const EDGE = 8
 const GAP = 6
@@ -19,6 +20,7 @@ interface SelectOption<T extends string> {
   label: string
   subtitle?: string
   disabled?: boolean
+  active?: boolean
 }
 
 interface Props<T extends string> {
@@ -233,7 +235,10 @@ export function Select<T extends string>({
         <span className={cn('min-w-0 flex-1', variant === 'compact' && 'truncate text-start')}>
           {variant === 'rich' ? (
             <>
-              <span className="block truncate">{selected?.label ?? value}</span>
+              <span className="flex min-w-0 items-center gap-1.5">
+                {selected?.active && <PlayingBars className="shrink-0" />}
+                <span className="truncate">{selected?.label ?? value}</span>
+              </span>
               <span className="mt-0.5 block truncate font-mono text-[0.6rem] text-[var(--color-ink-2)]">
                 {selected?.subtitle ?? ''}
               </span>
@@ -299,7 +304,10 @@ export function Select<T extends string>({
                 >
                   {variant === 'rich' ? (
                     <div className="min-w-0 flex-1">
-                      <div className="truncate">{option.label}</div>
+                      <div className="flex min-w-0 items-center gap-1.5">
+                        {option.active && <PlayingBars className="shrink-0" />}
+                        <span className="truncate">{option.label}</span>
+                      </div>
                       {option.subtitle && (
                         <div className="mt-0.5 whitespace-normal font-mono text-[0.6rem] text-[var(--color-ink-2)] leading-snug">
                           {option.subtitle}

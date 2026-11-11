@@ -456,6 +456,46 @@ impl Default for WindowGeometry {
     }
 }
 
+pub const MAX_APP_TARGETS: usize = 4;
+
+#[typeshare]
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct AppRef {
+    pub key: String,
+    pub name: String,
+}
+
+pub fn sanitize_apps(apps: Vec<AppRef>) -> Vec<AppRef> {
+    let mut out: Vec<AppRef> = Vec::new();
+    for app in apps.into_iter().filter_map(AppRef::sanitized) {
+        if out.iter().any(|existing| existing.key == app.key) {
+            continue;
+        }
+        out.push(app);
+        if out.len() == MAX_APP_TARGETS {
+            break;
+        }
+    }
+    out
+}
+
+impl AppRef {
+    pub fn sanitized(mut self) -> Option<Self> {
+        self.key = self.key.trim().to_owned();
+        if !(self.key.starts_with("bundle:") || self.key.starts_with("exe:"))
+            || self.key.len() > 512
+        {
+            return None;
+        }
+        self.name = self.name.trim().chars().take(128).collect();
+        if self.name.is_empty() {
+            self.name = self.key.clone();
+        }
+        Some(self)
+    }
+}
+
 impl OverlayConfig {
     pub fn sanitized(mut self) -> Self {
         let d = Self::default();
@@ -493,6 +533,28 @@ fn normalize_color(raw: &str, fallback: &str) -> String {
 }
 
 #[typeshare]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
+#[serde(rename_all = "kebab-case")]
+pub enum AnalyticsTier {
+    UltraMinimal,
+    #[default]
+    Minimal,
+    Standard,
+    Full,
+}
+
+impl AnalyticsTier {
+    pub fn as_str(self) -> &'static str {
+        match self {
+            Self::UltraMinimal => "ultra-minimal",
+            Self::Minimal => "minimal",
+            Self::Standard => "standard",
+            Self::Full => "full",
+        }
+    }
+}
+
+#[typeshare]
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 #[serde(default)]
@@ -501,6 +563,7 @@ pub struct Preferences {
     pub device_id: Option<String>,
     pub mix_mic_device_id: Option<String>,
     pub mix_system_device_id: Option<String>,
+    pub app_targets: Vec<AppRef>,
     pub translate_engine: TranslateEngine,
     pub asr_engine: EngineType,
     pub source_lang: String,
@@ -527,6 +590,7 @@ impl Default for Preferences {
             device_id: None,
             mix_mic_device_id: None,
             mix_system_device_id: None,
+            app_targets: Vec::new(),
             translate_engine: TranslateEngine::default(),
             asr_engine: EngineType::default(),
             source_lang: "en".into(),
@@ -556,6 +620,7 @@ pub struct PrefsPatch {
     pub device_id: Option<String>,
     pub mix_mic_device_id: Option<String>,
     pub mix_system_device_id: Option<String>,
+    pub app_targets: Option<Vec<AppRef>>,
     pub translate_engine: Option<TranslateEngine>,
     pub asr_engine: Option<EngineType>,
     pub source_lang: Option<String>,
@@ -573,7 +638,7 @@ pub struct PrefsPatch {
 impl PrefsPatch {
     pub fn validate(&self) -> Result<(), String> {
         if let Some(s) = &self.audio_source {
-            if !matches!(s.as_str(), "mic" | "loopback" | "mix") {
+            if !matches!(s.as_str(), "mic" | "loopback" | "mix" | "app") {
                 return Err(crate::i18n::tf(
                     crate::i18n::Key::PrefsUnknownAudioSource,
                     &[s],
@@ -620,6 +685,9 @@ impl PrefsPatch {
         if let Some(v) = self.mix_system_device_id {
             p.mix_system_device_id = normalize_device(Some(v));
         }
+        if let Some(v) = self.app_targets {
+            p.app_targets = sanitize_apps(v);
+        }
         if let Some(v) = self.translate_engine {
             p.translate_engine = v;
         }
@@ -663,7 +731,10 @@ impl Preferences {
     pub fn sanitized(mut self) -> Self {
         let d = Self::default();
 
-        if !matches!(self.audio_source.as_str(), "mic" | "loopback" | "mix") {
+        if !matches!(
+            self.audio_source.as_str(),
+            "mic" | "loopback" | "mix" | "app"
+        ) {
             self.audio_source = d.audio_source;
         }
         if !self.asr_engine.is_wired() {
@@ -689,6 +760,7 @@ impl Preferences {
         self.device_id = normalize_device(self.device_id.take());
         self.mix_mic_device_id = normalize_device(self.mix_mic_device_id.take());
         self.mix_system_device_id = normalize_device(self.mix_system_device_id.take());
+        self.app_targets = sanitize_apps(std::mem::take(&mut self.app_targets));
         self.models_dir = self
             .models_dir
             .take()
@@ -705,9 +777,12 @@ impl Preferences {
         self
     }
 
-    pub fn apply_session(&mut self, source: &str, device: Option<String>) {
+    pub fn apply_session(&mut self, source: &str, device: Option<String>, apps: Vec<AppRef>) {
         self.audio_source = source.to_owned();
         self.device_id = normalize_device(device);
+        if source == "app" {
+            self.app_targets = sanitize_apps(apps);
+        }
     }
 
     pub fn apply_mix_devices(&mut self, mic: Option<String>, system: Option<String>) {
@@ -1420,7 +1495,7 @@ mod tests {
             ..Default::default()
         };
 
-        p.apply_session("mic", Some("dev-9".into()));
+        p.apply_session("mic", Some("dev-9".into()), Vec::new());
 
         assert_eq!(p.audio_source, "mic");
         assert_eq!(p.device_id.as_deref(), Some("dev-9"));
@@ -1434,7 +1509,7 @@ mod tests {
     #[test]
     fn apply_session_drops_empty_device_id() {
         let mut p = Preferences::default();
-        p.apply_session("loopback", Some(String::new()));
+        p.apply_session("loopback", Some(String::new()), Vec::new());
         assert_eq!(p.device_id, None);
     }
 
@@ -1730,6 +1805,13 @@ mod tests {
         }
         .validate()
         .is_ok());
+
+        assert!(PrefsPatch {
+            audio_source: Some("app".into()),
+            ..Default::default()
+        }
+        .validate()
+        .is_ok());
     }
 
     #[test]
@@ -1750,6 +1832,102 @@ mod tests {
             r#""system""#
         );
         assert_eq!(serde_json::to_string(&Theme::Dark).unwrap(), r#""dark""#);
+    }
+
+    #[test]
+    fn app_ref_requires_known_prefix() {
+        let valid = AppRef {
+            key: " bundle:com.apple.Music ".into(),
+            name: " Music ".into(),
+        }
+        .sanitized()
+        .expect("bundle 身份应保留");
+        assert_eq!(valid.key, "bundle:com.apple.Music");
+        assert_eq!(valid.name, "Music");
+
+        for key in ["", "pid:42", "com.apple.Music"] {
+            assert!(
+                AppRef {
+                    key: key.into(),
+                    name: "App".into(),
+                }
+                .sanitized()
+                .is_none(),
+                "非法身份 {key:?} 必须被丢弃"
+            );
+        }
+    }
+
+    #[test]
+    fn app_targets_roundtrip_in_camel_case() {
+        let raw = r#"{"appTargets":[{"key":"exe:firefox","name":"Firefox"}]}"#;
+        let p = parse_prefs(raw);
+        assert_eq!(
+            p.app_targets,
+            vec![AppRef {
+                key: "exe:firefox".into(),
+                name: "Firefox".into(),
+            }]
+        );
+        let json = serde_json::to_string(&p).unwrap();
+        assert!(json.contains("\"appTargets\""), "{json}");
+        assert_eq!(serde_json::from_str::<Preferences>(&json).unwrap(), p);
+    }
+
+    #[test]
+    fn empty_app_targets_patch_clears_selection() {
+        let mut p = Preferences {
+            app_targets: vec![AppRef {
+                key: "exe:firefox".into(),
+                name: "Firefox".into(),
+            }],
+            ..Default::default()
+        };
+        let patch: PrefsPatch = serde_json::from_str(r#"{"appTargets":[]}"#).unwrap();
+        patch.apply_to(&mut p);
+        assert!(p.app_targets.is_empty());
+    }
+
+    #[test]
+    fn app_targets_are_deduped_and_capped() {
+        let apps: Vec<AppRef> = (0..MAX_APP_TARGETS + 2)
+            .map(|i| AppRef {
+                key: format!("exe:app-{i}"),
+                name: format!("App {i}"),
+            })
+            .collect();
+        let mut with_dupe = apps.clone();
+        with_dupe.push(apps[0].clone());
+        let sanitized = sanitize_apps(with_dupe);
+        assert_eq!(sanitized.len(), MAX_APP_TARGETS);
+        assert_eq!(sanitized[0].key, "exe:app-0");
+    }
+
+    #[test]
+    fn apply_session_keeps_apps_only_for_app_source() {
+        let app = AppRef {
+            key: "exe:firefox".into(),
+            name: "Firefox".into(),
+        };
+        let mut p = Preferences::default();
+        p.apply_session("loopback", None, vec![app.clone()]);
+        assert!(p.app_targets.is_empty(), "系统声音不得写入应用选择");
+
+        p.apply_session("app", None, vec![app.clone()]);
+        assert_eq!(p.app_targets, vec![app.clone()]);
+
+        p.apply_session("mic", None, Vec::new());
+        assert_eq!(
+            p.app_targets,
+            vec![app],
+            "切到麦克风不应清掉下次要用的应用选择"
+        );
+    }
+
+    fn parse_prefs(raw: &str) -> Preferences {
+        serde_json::from_str::<Preferences>(raw)
+            .expect("应能解析")
+            .sanitized()
     }
 
     #[test]

@@ -37,6 +37,25 @@ export function LevelBars({ level }: { level: number }) {
   return <Dots dots={Math.ceil(levelRatio(level) * SEGMENTS.length)} />
 }
 
+export function PlayingBars({ className }: { className?: string }) {
+  const { t } = useI18n()
+  return (
+    <span
+      className={cn('inline-flex h-2.5 items-end gap-[2px]', className)}
+      role="img"
+      aria-label={t('audio.appPlaying')}
+    >
+      {[0, 1, 2].map((i) => (
+        <span
+          key={i}
+          className="level-bar w-[2px] rounded-full bg-[var(--color-success)]"
+          style={{ animationDelay: `${i * 140}ms`, animationDuration: `${760 + i * 90}ms` }}
+        />
+      ))}
+    </span>
+  )
+}
+
 function usePeakDots<T>(event: string, active: boolean, select: (payload: T) => number | null): number {
   const [dots, setDots] = useState(0)
   const peak = useRef(0)
@@ -77,14 +96,17 @@ function usePeakDots<T>(event: string, active: boolean, select: (payload: T) => 
 export function DeviceLevelMeter({
   device,
   source,
+  apps,
   active,
 }: {
   device: string | null
   source: AudioSourceKind
+  apps?: string[]
   active: boolean
 }) {
+  const expected = (apps ?? []).join('\u0000')
   const dots = usePeakDots<DeviceLevelEvent>(EVENT.deviceLevel, active, (e) =>
-    e.source === source && (e.device ?? null) === device ? e.rms : null,
+    e.source === source && (e.device ?? null) === device && (e.apps ?? []).join('\u0000') === expected ? e.rms : null,
   )
   return <Dots dots={dots} animated />
 }

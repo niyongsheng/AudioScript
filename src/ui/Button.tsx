@@ -13,6 +13,7 @@ interface Props {
   icon?: IconName
   disabled?: boolean
   pending?: boolean
+  spinning?: boolean
   className?: string
 }
 
@@ -24,6 +25,7 @@ export function Button({
   icon,
   disabled,
   pending,
+  spinning,
   className,
 }: Props) {
   return (
@@ -43,7 +45,7 @@ export function Button({
         <Icon
           name={icon}
           size={size === 'md' ? 14 : 12}
-          className={cn(pending && icon === 'refresh' && 'animate-spin')}
+          className={cn((pending || spinning) && icon === 'refresh' && 'animate-spin')}
         />
       )}
       {children}

@@ -5,6 +5,7 @@ use tauri::{AppHandle, Emitter, Manager};
 
 use crate::audio::{self, AudioError, AudioSourceKind, CaptureHandle};
 use crate::commands;
+use crate::config::{sanitize_apps, AppRef};
 use crate::session::SessionState;
 
 pub const EVENT_DEVICE_LEVEL: &str = "transcript://device-level";
@@ -15,13 +16,19 @@ const LEVEL_CHUNKS: u32 = 2;
 pub struct Target {
     pub source: AudioSourceKind,
     pub device: Option<String>,
+    pub apps: Vec<AppRef>,
 }
 
 impl Target {
-    pub fn new(source: AudioSourceKind, device: Option<&str>) -> Self {
+    pub fn new(source: AudioSourceKind, device: Option<&str>, apps: Vec<AppRef>) -> Self {
         Self {
             source,
             device: crate::config::normalize_device(device.map(str::to_owned)),
+            apps: if source == AudioSourceKind::App {
+                sanitize_apps(apps)
+            } else {
+                Vec::new()
+            },
         }
     }
 }
@@ -31,6 +38,7 @@ impl Target {
 struct DeviceLevel {
     source: AudioSourceKind,
     device: Option<String>,
+    apps: Vec<String>,
     rms: f64,
 }
 
@@ -107,10 +115,17 @@ impl LevelWindow {
     }
 }
 
+fn app_names(apps: &[AppRef]) -> String {
+    apps.iter()
+        .map(|a| a.name.as_str())
+        .collect::<Vec<_>>()
+        .join(" + ")
+}
+
 fn normalize_targets(targets: &[Target]) -> Vec<Target> {
     let mut out: Vec<Target> = Vec::with_capacity(targets.len());
     for target in targets {
-        let normalized = Target::new(target.source, target.device.as_deref());
+        let normalized = Target::new(target.source, target.device.as_deref(), target.apps.clone());
         if !out.contains(&normalized) {
             out.push(normalized);
         }
@@ -234,12 +249,14 @@ fn reconcile(app: &AppHandle) -> Result<(), MonitorError> {
         let level_app = app.clone();
         let level_target = target.clone();
         let mut window = LevelWindow::default();
-        let selection = audio::DeviceSelection::single(target.device.clone());
+        let selection =
+            audio::DeviceSelection::single(target.device.clone()).with_apps(target.apps.clone());
         let started = audio::start(target.source, &selection, move |chunk| {
             if let Some(rms) = window.observe(chunk) {
                 let level = DeviceLevel {
                     source: level_target.source,
                     device: level_target.device.clone(),
+                    apps: level_target.apps.iter().map(|a| a.key.clone()).collect(),
                     rms,
                 };
                 if let Err(e) = level_app.emit(EVENT_DEVICE_LEVEL, level) {
@@ -259,6 +276,7 @@ fn reconcile(app: &AppHandle) -> Result<(), MonitorError> {
                     tracing::info!(
                         source = target.source.as_str(),
                         device = target.device.as_deref().unwrap_or("(系统默认)"),
+                        apps = %app_names(&target.apps),
                         "音频预览已启动"
                     );
                     inner.running.push(Running { target, capture });
@@ -268,6 +286,7 @@ fn reconcile(app: &AppHandle) -> Result<(), MonitorError> {
                 tracing::warn!(
                     source = target.source.as_str(),
                     device = target.device.as_deref().unwrap_or("(系统默认)"),
+                    apps = %app_names(&target.apps),
                     "启动音频预览失败：{e}"
                 );
                 failures.push(e);
@@ -293,14 +312,15 @@ mod tests {
     #[test]
     fn target_normalizes_empty_device() {
         assert_eq!(
-            Target::new(AudioSourceKind::Mic, Some("")),
+            Target::new(AudioSourceKind::Mic, Some(""), Vec::new()),
             Target {
                 source: AudioSourceKind::Mic,
                 device: None,
+                apps: Vec::new(),
             }
         );
         assert_eq!(
-            Target::new(AudioSourceKind::Loopback, Some("dev-1")).device,
+            Target::new(AudioSourceKind::Loopback, Some("dev-1"), Vec::new()).device,
             Some("dev-1".into())
         );
     }
@@ -308,29 +328,32 @@ mod tests {
     #[test]
     fn targets_dedupe_and_keep_order() {
         let list = vec![
-            Target::new(AudioSourceKind::Mic, Some("dev-1")),
-            Target::new(AudioSourceKind::Mic, Some("dev-2")),
-            Target::new(AudioSourceKind::Mic, Some("dev-1")),
+            Target::new(AudioSourceKind::Mic, Some("dev-1"), Vec::new()),
+            Target::new(AudioSourceKind::Mic, Some("dev-2"), Vec::new()),
+            Target::new(AudioSourceKind::Mic, Some("dev-1"), Vec::new()),
         ];
         assert_eq!(
             normalize_targets(&list),
             vec![
                 Target {
                     source: AudioSourceKind::Mic,
-                    device: Some("dev-1".into())
+                    device: Some("dev-1".into()),
+                    apps: Vec::new(),
                 },
                 Target {
                     source: AudioSourceKind::Mic,
-                    device: Some("dev-2".into())
+                    device: Some("dev-2".into()),
+                    apps: Vec::new(),
                 },
             ]
         );
         assert!(normalize_targets(&[]).is_empty());
         assert_eq!(
-            normalize_targets(&[Target::new(AudioSourceKind::Mic, Some(""))]),
+            normalize_targets(&[Target::new(AudioSourceKind::Mic, Some(""), Vec::new())]),
             vec![Target {
                 source: AudioSourceKind::Mic,
-                device: None
+                device: None,
+                apps: Vec::new(),
             }]
         );
     }
@@ -338,10 +361,38 @@ mod tests {
     #[test]
     fn targets_keep_the_same_device_id_per_source() {
         let list = vec![
-            Target::new(AudioSourceKind::Mic, Some("dev-1")),
-            Target::new(AudioSourceKind::Loopback, Some("dev-1")),
+            Target::new(AudioSourceKind::Mic, Some("dev-1"), Vec::new()),
+            Target::new(AudioSourceKind::Loopback, Some("dev-1"), Vec::new()),
         ];
         assert_eq!(normalize_targets(&list).len(), 2);
+    }
+
+    #[test]
+    fn app_targets_are_distinct_from_system_audio() {
+        let app = AppRef {
+            key: "exe:firefox".into(),
+            name: "Firefox".into(),
+        };
+        let list = vec![
+            Target::new(AudioSourceKind::Loopback, None, Vec::new()),
+            Target::new(AudioSourceKind::App, None, vec![app]),
+        ];
+        assert_eq!(normalize_targets(&list).len(), 2);
+    }
+
+    #[test]
+    fn app_is_ignored_outside_app_source() {
+        let app = AppRef {
+            key: "exe:firefox".into(),
+            name: "Firefox".into(),
+        };
+        for source in [
+            AudioSourceKind::Mic,
+            AudioSourceKind::Loopback,
+            AudioSourceKind::Mix,
+        ] {
+            assert!(Target::new(source, None, vec![app.clone()]).apps.is_empty());
+        }
     }
 
     #[test]

@@ -181,3 +181,30 @@ html:has(.overlay-body) body,
     transform: scale(1.18);
   }
 }
+
+@keyframes egg-countdown {
+  from {
+    stroke-dashoffset: 0;
+  }
+
+  to {
+    stroke-dashoffset: var(--egg-countdown-length);
+  }
+}
+
+@keyframes level-bar {
+  0%,
+  100% {
+    transform: scaleY(0.3);
+  }
+
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.level-bar {
+  height: 100%;
+  transform-origin: bottom;
+  animation: level-bar 900ms ease-in-out infinite;
+}
