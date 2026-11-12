@@ -52,6 +52,42 @@ pub fn os_version() -> Option<String> {
     (!version.is_empty() && version != "Unknown").then_some(version)
 }
 
+pub fn app_audio_supported() -> bool {
+    #[cfg(target_os = "windows")]
+    {
+        matches!(
+            os_info::get().version(),
+            os_info::Version::Semantic(_, _, build) if *build >= 20_348
+        )
+    }
+    #[cfg(target_os = "macos")]
+    {
+        matches!(
+            os_info::get().version(),
+            os_info::Version::Semantic(major, minor, _) if *major > 14 || (*major == 14 && *minor >= 4)
+        )
+    }
+    #[cfg(target_os = "linux")]
+    {
+        pipewire_available()
+    }
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    {
+        false
+    }
+}
+
+#[cfg(target_os = "linux")]
+fn pipewire_available() -> bool {
+    if std::env::var_os("PIPEWIRE_REMOTE").is_some() {
+        return true;
+    }
+    let dir =
+        std::env::var_os("PIPEWIRE_RUNTIME_DIR").or_else(|| std::env::var_os("XDG_RUNTIME_DIR"));
+    dir.map(|dir| std::path::Path::new(&dir).join("pipewire-0").exists())
+        .unwrap_or(false)
+}
+
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
 fn cpu_features() -> String {
     let mut flags = Vec::new();

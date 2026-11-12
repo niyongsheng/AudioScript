@@ -113,6 +113,18 @@ export const id: Partial<Messages> = {
     'Array seperti Intel Smart Sound kini dapat ditangkap dan dicampur dengan benar, bukan gagal saat memulai.',
   'whatsNew.appAudioTitle': 'Tangkap audio satu aplikasi',
   'whatsNew.appAudioBody': 'Pilih hingga empat aplikasi (browser, aplikasi rapat) dan transkripsi hanya suaranya.',
+  'whatsNew.unsupportedAppTitle': 'Audio aplikasi disembunyikan jika tidak didukung',
+  'whatsNew.unsupportedAppBody':
+    'Sistem yang tidak mendukung penangkapan per aplikasi kini menyembunyikan sumber ini, bukan gagal saat mulai menangkap.',
+  'whatsNew.appLiveStateTitle': 'Status pemutaran langsung di daftar aplikasi',
+  'whatsNew.appLiveStateBody':
+    'Batang hijau berarti aplikasi mengeluarkan suara, abu-abu berarti senyap. Daftar diperbarui setiap 2 detik.',
+  'whatsNew.windowsAppNamesTitle': 'Nama aplikasi dilokalkan di Windows',
+  'whatsNew.windowsAppNamesBody':
+    'Di Windows berbahasa Tionghoa, aplikasi menampilkan nama lokalnya (misalnya 网易云音乐), bukan hanya nama executable.',
+  'whatsNew.windowsSilenceHelpTitle': 'Petunjuk hening di Windows diperbaiki',
+  'whatsNew.windowsSilenceHelpBody':
+    'Petunjuk khusus macOS tentang izin dan perangkat virtual tidak lagi ditampilkan; “Buka pengaturan sistem secara langsung” kini membuka halaman volume aplikasi Windows.',
   'whatsNew.crashReportsTitle': 'Laporan kerusakan via Sentry',
   'whatsNew.crashReportsBody':
     'Kerusakan terkirim otomatis melalui Sentry, tanpa audio atau teks transkripsi. Dapat dimatikan di Umum → Privasi.',
@@ -170,8 +182,10 @@ export const id: Partial<Messages> = {
   'audio.silenceCheckPermission': 'Periksa izin macOS Perekaman Layar dan Audio Sistem.',
   'audio.silencePermissionDeniedNote':
     'Jika izin ditolak, perekaman tetap dimulai tetapi selalu menghasilkan senyap digital.',
-  'audio.silenceVirtualDevice':
-    'Untuk perangkat audio virtual (mis. BlackHole), arahkan audio ke perangkat itu terlebih dahulu.',
+  'audio.silenceCheckDeviceWindows':
+    'Di Windows, periksa di Pengaturan → Sistem → Suara → Pengaturan volume bahwa aplikasi keluar ke perangkat yang dipilih dan perangkat komunikasi defaultnya sama.',
+  'audio.silenceCheckDeviceLinux': 'Pastikan PipeWire merutekan suara aplikasi ke perangkat yang dipilih.',
+  'audio.silenceVirtualDevice': 'Untuk perangkat audio virtual, arahkan audio ke perangkat itu terlebih dahulu.',
   'audio.silenceMic': 'Periksa izin mikrofon; ganti perangkat loopback virtual dengan mikrofon sungguhan.',
   'audio.silenceGoPermissions': 'Uji di Umum → Izin',
   'audio.silenceOpenSettings': 'Buka Pengaturan Sistem',

@@ -11,6 +11,9 @@ use typeshare::typeshare;
 use crate::asr::TARGET_SAMPLE_RATE;
 
 #[cfg(target_os = "windows")]
+mod windows_app_names;
+
+#[cfg(target_os = "windows")]
 mod windows_mic;
 
 pub const CHUNK_SAMPLES: usize = 1600;
@@ -299,6 +302,10 @@ fn process_display_name(p: &flexaudio::ProcessInfo) -> String {
             return host.clone();
         }
         return raw;
+    }
+    #[cfg(target_os = "windows")]
+    if let Some(name) = windows_app_names::description(p.pid) {
+        return name;
     }
     p.name.clone()
 }

@@ -97,6 +97,7 @@ export interface AppInfo {
   arch: string
   osVersion?: string | null
   macSpeechSupported: boolean
+  appAudioSupported: boolean
   analyticsTier: AnalyticsTier
   builtAtMs: number | null
 }

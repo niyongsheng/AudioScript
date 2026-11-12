@@ -112,6 +112,18 @@ export const ar: Partial<Messages> = {
     'أصبحت المصفوفات متعددة القنوات مثل Intel Smart Sound تُلتقط وتُدمج بشكل صحيح بدلاً من فشل البدء.',
   'whatsNew.appAudioTitle': 'التقاط صوت تطبيق واحد',
   'whatsNew.appAudioBody': 'اختر حتى أربعة تطبيقات (متصفح، تطبيق اجتماعات…) وانسخ صوتها فقط.',
+  'whatsNew.unsupportedAppTitle': 'إخفاء صوت التطبيق عند عدم الدعم',
+  'whatsNew.unsupportedAppBody':
+    'الأنظمة التي لا تدعم التقاط الصوت لكل تطبيق تخفي هذا المصدر الآن بدلًا من إظهار خطأ عند بدء الالتقاط.',
+  'whatsNew.appLiveStateTitle': 'عرض حالة التشغيل في قائمة التطبيقات مباشرةً',
+  'whatsNew.appLiveStateBody':
+    'الأشرطة الخضراء تعني أن التطبيق يُخرج صوتًا، والرمادية تعني الصمت. تُحدَّث القائمة كل ثانيتين.',
+  'whatsNew.windowsAppNamesTitle': 'أسماء التطبيقات مترجمة على Windows',
+  'whatsNew.windowsAppNamesBody':
+    'في Windows الصينية تعرض التطبيقات اسمها المترجم (مثل 网易云音乐) بدلًا من اسم الملف التنفيذي فقط.',
+  'whatsNew.windowsSilenceHelpTitle': 'إصلاح إرشادات الصمت على Windows',
+  'whatsNew.windowsSilenceHelpBody':
+    'لم تعد إرشادات macOS الخاصة بالأذونات والأجهزة الافتراضية تظهر؛ «فتح إعدادات النظام مباشرةً» يفتح الآن صفحة مستوى صوت التطبيقات في Windows.',
   'whatsNew.crashReportsTitle': 'تقارير الأعطال عبر Sentry',
   'whatsNew.crashReportsBody':
     'تُرسل الأعطال تلقائيًا عبر Sentry من دون صوت أو نص منسوخ. يمكن إيقافها من عام → الخصوصية.',
@@ -166,7 +178,10 @@ export const ar: Partial<Messages> = {
   'audio.silenceCheckPlayer': 'تأكد من أن المشغل ينتج صوتًا وأن مستوى صوت النظام ليس صفرًا.',
   'audio.silenceCheckPermission': 'تحقق من إذن macOS «تسجيل الشاشة وصوت النظام».',
   'audio.silencePermissionDeniedNote': 'عند رفض الإذن يبدأ التسجيل طبيعيًا لكنه يعيد صمتًا رقميًا دائمًا.',
-  'audio.silenceVirtualDevice': 'بالنسبة لأجهزة الصوت الافتراضية (مثل BlackHole)، وجّه الصوت إليها أولاً.',
+  'audio.silenceCheckDeviceWindows':
+    'في Windows تحقق من «الإعدادات → النظام → الصوت → خلاط مستوى الصوت» من أن التطبيق يخرج على الجهاز المحدد وأن جهاز الاتصال الافتراضي مطابق.',
+  'audio.silenceCheckDeviceLinux': 'تأكد من أن PipeWire يوجّه صوت التطبيق إلى الجهاز المحدد.',
+  'audio.silenceVirtualDevice': 'بالنسبة لأجهزة الصوت الافتراضية، وجّه الصوت إليها أولاً.',
   'audio.silenceMic': 'تحقق من إذن الميكروفون؛ استبدل أجهزة الاسترجاع الافتراضية بميكروفون حقيقي.',
   'audio.silenceGoPermissions': 'اختبار في عام → الأذونات',
   'audio.silenceOpenSettings': 'فتح إعدادات النظام',

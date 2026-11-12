@@ -112,6 +112,18 @@ export const fr: Partial<Messages> = {
   'whatsNew.appAudioTitle': 'Capter l’audio d’une application',
   'whatsNew.appAudioBody':
     'Choisissez jusqu’à quatre applications (navigateur, visioconférence…) et transcrivez uniquement leur son.',
+  'whatsNew.unsupportedAppTitle': 'Audio par application masqué si non pris en charge',
+  'whatsNew.unsupportedAppBody':
+    'Les systèmes qui ne peuvent pas capturer le son par application masquent désormais cette source au lieu d’échouer au démarrage.',
+  'whatsNew.appLiveStateTitle': 'État de lecture en direct dans la liste des applications',
+  'whatsNew.appLiveStateBody':
+    'Une barre verte indique que l’application émet du son, une barre grise qu’elle est silencieuse. La liste s’actualise toutes les 2 secondes.',
+  'whatsNew.windowsAppNamesTitle': 'Noms d’applications localisés sous Windows',
+  'whatsNew.windowsAppNamesBody':
+    'Sous Windows en chinois, les applications affichent leur nom localisé (par exemple 网易云音乐) au lieu du seul nom d’exécutable.',
+  'whatsNew.windowsSilenceHelpTitle': 'Aide au dépannage du silence corrigée sous Windows',
+  'whatsNew.windowsSilenceHelpBody':
+    'Les conseils macOS sur les autorisations et les périphériques virtuels ne s’affichent plus ; « Ouvrir directement les paramètres système » ouvre la page de volume des applications de Windows.',
   'whatsNew.crashReportsTitle': 'Rapports de plantage via Sentry',
   'whatsNew.crashReportsBody':
     'Les plantages nous parviennent via Sentry, sans audio ni texte transcrit. Désactivable dans Général → Confidentialité.',
@@ -175,8 +187,11 @@ export const fr: Partial<Messages> = {
   'audio.silenceCheckPermission': 'Vérifiez l’autorisation d’enregistrement de l’écran et de l’audio système de macOS.',
   'audio.silencePermissionDeniedNote':
     'Si l’autorisation est refusée, la capture démarre normalement mais renvoie toujours du silence numérique.',
-  'audio.silenceVirtualDevice':
-    'Pour les périphériques audio virtuels (par ex. BlackHole), acheminez d’abord l’audio vers eux.',
+  'audio.silenceCheckDeviceWindows':
+    'Dans Windows, vérifiez dans Paramètres → Système → Son → Mixeur de volume que l’application sort sur le périphérique sélectionné et que le périphérique de communication par défaut correspond.',
+  'audio.silenceCheckDeviceLinux':
+    'Vérifiez que PipeWire route le son de l’application vers le périphérique sélectionné.',
+  'audio.silenceVirtualDevice': 'Pour les périphériques audio virtuels, acheminez d’abord l’audio vers eux.',
   'audio.silenceMic':
     'Vérifiez l’autorisation du microphone ; remplacez les périphériques de bouclage virtuels par un vrai microphone.',
   'audio.silenceGoPermissions': 'Tester dans Général → Autorisations',

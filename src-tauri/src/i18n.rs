@@ -2891,7 +2891,7 @@ messages! {
     },
 
     AudioProcessUnsupported {
-        zh_cn: "当前系统不支持按应用采集系统声音：{0}",
+        zh_cn: "当前系统不支持按软件采集系统声音：{0}",
         en: "Per-app system audio capture is not supported on this system: {0}",
         zh_tw: "目前系統不支援按應用程式擷取系統聲音：{0}",
         ja: "このシステムはアプリごとのシステム音声キャプチャに対応していません：{0}",
@@ -2907,7 +2907,7 @@ messages! {
     },
 
     AudioProcessNotFound {
-        zh_cn: "未找到应用「{0}」的音频输出。请先让它播放声音，然后重新选择应用",
+        zh_cn: "未找到软件「{0}」的音频输出。请先让它播放声音，然后重新选择软件",
         en: "No audio output found for \"{0}\". Start playback in that app, then select it again",
         zh_tw: "找不到應用程式「{0}」的音訊輸出。請先讓它播放聲音，然後重新選擇應用程式",
         ja: "「{0}」の音声出力が見つかりません。先に再生してから、もう一度アプリを選択してください",
@@ -2923,7 +2923,7 @@ messages! {
     },
 
     AudioAppNotSelected {
-        zh_cn: "请选择要采集的应用",
+        zh_cn: "请选择要采集的软件",
         en: "Select an application to capture",
         zh_tw: "請選擇要擷取的應用程式",
         ja: "キャプチャするアプリを選択してください",
@@ -2939,7 +2939,7 @@ messages! {
     },
 
     AudioAppDefault {
-        zh_cn: "应用声音",
+        zh_cn: "软件声音",
         en: "Application audio",
         zh_tw: "應用程式聲音",
         ja: "アプリの音声",

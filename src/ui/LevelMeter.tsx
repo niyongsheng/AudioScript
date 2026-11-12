@@ -37,19 +37,26 @@ export function LevelBars({ level }: { level: number }) {
   return <Dots dots={Math.ceil(levelRatio(level) * SEGMENTS.length)} />
 }
 
-export function PlayingBars({ className }: { className?: string }) {
+export function PlayingBars({ className, active = true }: { className?: string; active?: boolean }) {
   const { t } = useI18n()
   return (
     <span
       className={cn('inline-flex h-2.5 items-end gap-[2px]', className)}
       role="img"
-      aria-label={t('audio.appPlaying')}
+      aria-label={t(active ? 'audio.appPlaying' : 'audio.appIdle')}
     >
       {[0, 1, 2].map((i) => (
         <span
           key={i}
-          className="level-bar w-[2px] rounded-full bg-[var(--color-success)]"
-          style={{ animationDelay: `${i * 140}ms`, animationDuration: `${760 + i * 90}ms` }}
+          className={cn(
+            'w-[2px] rounded-full',
+            active ? 'level-bar bg-[var(--color-success)]' : 'bg-[var(--color-ink-2)] opacity-40',
+          )}
+          style={
+            active
+              ? { animationDelay: `${i * 140}ms`, animationDuration: `${760 + i * 90}ms` }
+              : { height: `${[35, 55, 35][i]}%` }
+          }
         />
       ))}
     </span>

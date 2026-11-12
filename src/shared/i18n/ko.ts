@@ -107,6 +107,17 @@ export const ko: Partial<Messages> = {
     'Intel Smart Sound 같은 다채널 어레이도 이제 시작 실패 없이 정상적으로 캡처 및 믹스됩니다.',
   'whatsNew.appAudioTitle': '앱 소리 캡처',
   'whatsNew.appAudioBody': '브라우저와 회의 앱 등 최대 4개 앱을 선택해 그 소리만 전사합니다.',
+  'whatsNew.unsupportedAppTitle': '지원되지 않는 시스템에서는 앱 소리 숨김',
+  'whatsNew.unsupportedAppBody':
+    '앱별 캡처를 지원하지 않는 시스템에서는 캡처 시작 시 오류를 내는 대신 해당 음원을 표시하지 않습니다.',
+  'whatsNew.appLiveStateTitle': '앱 목록에 재생 상태 실시간 표시',
+  'whatsNew.appLiveStateBody': '녹색 막대는 소리 출력 중, 회색은 출력 없음을 뜻합니다. 목록은 2초마다 새로 고쳐집니다.',
+  'whatsNew.windowsAppNamesTitle': 'Windows에서 앱 이름 현지화',
+  'whatsNew.windowsAppNamesBody':
+    '중국어 Windows에서는 실행 파일 이름 대신 앱 자체의 표시 이름(예: 网易云音乐)을 표시합니다.',
+  'whatsNew.windowsSilenceHelpTitle': 'Windows 무음 안내 수정',
+  'whatsNew.windowsSilenceHelpBody':
+    'macOS 전용 권한·가상 장치 안내를 더 이상 표시하지 않으며, “시스템 설정 직접 열기”가 Windows 앱 볼륨 페이지를 엽니다.',
   'whatsNew.crashReportsTitle': 'Sentry 충돌 보고',
   'whatsNew.crashReportsBody':
     '충돌 시 자동으로 보고하여 문제를 파악합니다. 오디오와 전사 텍스트는 포함되지 않으며 일반 → 개인정보에서 끌 수 있습니다.',
@@ -167,8 +178,10 @@ export const ko: Partial<Messages> = {
   'audio.silenceCheckPlayer': '플레이어가 소리를 내고 있고 시스템 볼륨이 0이 아닌지 확인하세요.',
   'audio.silenceCheckPermission': 'macOS 화면 및 시스템 오디오 녹음 권한을 확인하세요.',
   'audio.silencePermissionDeniedNote': '권한이 거부되면 캡처는 정상적으로 시작되지만 항상 디지털 무음이 반환됩니다.',
-  'audio.silenceVirtualDevice':
-    '가상 오디오 장치(예: BlackHole)를 사용하는 경우 먼저 오디오를 해당 장치로 라우팅하세요.',
+  'audio.silenceCheckDeviceWindows':
+    'Windows “설정 → 시스템 → 소리 → 볼륨 믹서”에서 앱이 선택한 장치로 출력되는지, 기본 통신 장치와 일치하는지 확인하세요.',
+  'audio.silenceCheckDeviceLinux': 'PipeWire가 앱 소리를 선택한 장치로 라우팅하는지 확인하세요.',
+  'audio.silenceVirtualDevice': '가상 오디오 장치를 사용하는 경우 먼저 오디오를 해당 장치로 라우팅하세요.',
   'audio.silenceMic': '마이크 권한을 확인하고 가상 루프백 장치를 실제 마이크로 교체하세요.',
   'audio.silenceGoPermissions': '일반 → 권한에서 검사',
   'audio.silenceOpenSettings': '시스템 설정 직접 열기',

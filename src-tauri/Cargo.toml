@@ -144,8 +144,10 @@ libc = "0.2"
 [target.'cfg(windows)'.dependencies]
 windows-sys = { version = "0.59", features = [
     "Win32_Foundation",
+    "Win32_Globalization",
     "Win32_Storage_FileSystem",
     "Win32_System_SystemInformation",
+    "Win32_System_Threading",
 ] }
 # flexaudio 的麦克风后端只接受 1~2 声道；多声道阵列（如 Intel 智音）由 audio/windows_mic.rs
 # 用 cpal 按原生格式采集后自己下混，因此这里需要直接依赖 cpal / rubato / rtrb。

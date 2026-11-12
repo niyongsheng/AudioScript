@@ -113,6 +113,18 @@ export const en: Messages = {
   'whatsNew.appAudioTitle': 'Capture one app’s audio',
   'whatsNew.appAudioBody':
     'Pick up to four applications, such as a browser and a meeting app, and transcribe only their sound.',
+  'whatsNew.unsupportedAppTitle': 'App audio hidden when unsupported',
+  'whatsNew.unsupportedAppBody':
+    'Systems that cannot capture per-app audio now hide the source instead of failing when capture starts.',
+  'whatsNew.appLiveStateTitle': 'Live playback state in the app list',
+  'whatsNew.appLiveStateBody':
+    'Green bars mean the app is producing sound; gray means it is silent. The list refreshes every 2 seconds.',
+  'whatsNew.windowsAppNamesTitle': 'Localized app names on Windows',
+  'whatsNew.windowsAppNamesBody':
+    'On Chinese Windows, apps show their own display names (for example 网易云音乐) instead of only the executable name.',
+  'whatsNew.windowsSilenceHelpTitle': 'Fixed silence tips on Windows',
+  'whatsNew.windowsSilenceHelpBody':
+    'macOS-only permission and virtual-device hints are gone; “Open System Settings directly” now opens the Windows app volume page.',
   'whatsNew.crashReportsTitle': 'Crash reports via Sentry',
   'whatsNew.crashReportsBody':
     'Crashes reach us through Sentry with no audio or transcript text; disable it under General → Privacy.',
@@ -168,7 +180,10 @@ export const en: Messages = {
   'audio.silenceCheckPermission': 'Check macOS Screen & System Audio Recording permission.',
   'audio.silencePermissionDeniedNote':
     'When permission is denied, capture starts normally but always returns digital silence.',
-  'audio.silenceVirtualDevice': 'For virtual audio devices (e.g. BlackHole), route audio to it first.',
+  'audio.silenceCheckDeviceWindows':
+    'In Windows Settings → System → Sound → Volume mixer, make sure the app outputs to the selected device, and check whether the default communication device differs.',
+  'audio.silenceCheckDeviceLinux': 'Make sure PipeWire routes the app’s sound to the selected device.',
+  'audio.silenceVirtualDevice': 'For virtual audio devices, route audio to it first.',
   'audio.silenceMic': 'Check microphone permission; replace virtual loopback devices with a real microphone.',
   'audio.silenceGoPermissions': 'Probe in General → Permissions',
   'audio.silenceOpenSettings': 'Open System Settings directly',

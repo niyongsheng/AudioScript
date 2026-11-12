@@ -258,12 +258,23 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
                 .get("pane")
                 .and_then(Value::as_str)
                 .unwrap_or("systemAudio");
-            let url = permission::settings_url(pane)
-                .ok_or_else(|| CmdError::BadArgs(tf(Key::CmdUnknownPane, &[pane])))?;
             #[cfg(target_os = "macos")]
-            if let Err(e) = std::process::Command::new("open").arg(url).spawn() {
-                tracing::warn!(pane, "无法直接打开系统设置页（URI scheme 可能已变更）：{e}");
+            {
+                let url = permission::settings_url(pane)
+                    .ok_or_else(|| CmdError::BadArgs(tf(Key::CmdUnknownPane, &[pane])))?;
+                if let Err(e) = std::process::Command::new("open").arg(url).spawn() {
+                    tracing::warn!(pane, "无法直接打开系统设置页（URI scheme 可能已变更）：{e}");
+                }
             }
+            #[cfg(target_os = "windows")]
+            if let Err(e) = std::process::Command::new("explorer.exe")
+                .arg(permission::windows_settings_uri(pane))
+                .spawn()
+            {
+                tracing::warn!(pane, "无法打开系统设置页：{e}");
+            }
+            #[cfg(not(any(target_os = "macos", target_os = "windows")))]
+            let _ = pane;
             Ok(json!(null))
         }
 
@@ -619,6 +630,7 @@ fn app_info() -> Value {
         "arch": std::env::consts::ARCH,
         "osVersion": crate::env_info::os_version(),
         "macSpeechSupported": crate::asr::mac_native::available() == crate::asr::mac_native::AVAILABLE,
+        "appAudioSupported": crate::env_info::app_audio_supported(),
         "analyticsTier": crate::telemetry::ANALYTICS_TIER.as_str(),
         "builtAtMs": exe_mtime_ms(),
     })

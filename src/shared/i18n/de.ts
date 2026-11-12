@@ -111,6 +111,18 @@ export const de: Partial<Messages> = {
   'whatsNew.appAudioTitle': 'Audio einer App aufnehmen',
   'whatsNew.appAudioBody':
     'Wählen Sie bis zu vier Apps (z. B. Browser und Meeting-App) und transkribieren Sie nur deren Ton.',
+  'whatsNew.unsupportedAppTitle': 'App-Audio wird auf nicht unterstützten Systemen ausgeblendet',
+  'whatsNew.unsupportedAppBody':
+    'Systeme ohne App-Audio-Aufnahme blenden die Quelle jetzt aus, statt erst beim Start einen Fehler zu melden.',
+  'whatsNew.appLiveStateTitle': 'Live-Wiedergabestatus in der App-Liste',
+  'whatsNew.appLiveStateBody':
+    'Grüne Balken bedeuten Tonausgabe, graue Balken Stille. Die Liste wird alle 2 Sekunden aktualisiert.',
+  'whatsNew.windowsAppNamesTitle': 'Lokalisierte App-Namen unter Windows',
+  'whatsNew.windowsAppNamesBody':
+    'Unter chinesischem Windows zeigen Apps ihren eigenen Anzeigenamen (z. B. 网易云音乐) statt nur des Dateinamens.',
+  'whatsNew.windowsSilenceHelpTitle': 'Hinweise bei fehlendem Ton unter Windows korrigiert',
+  'whatsNew.windowsSilenceHelpBody':
+    'macOS-spezifische Hinweise zu Berechtigungen und virtuellen Geräten werden nicht mehr angezeigt; „Systemeinstellungen direkt öffnen“ öffnet jetzt die App-Lautstärkeseite von Windows.',
   'whatsNew.crashReportsTitle': 'Absturzberichte über Sentry',
   'whatsNew.crashReportsBody':
     'Abstürze erreichen uns über Sentry, ohne Audio oder Transkripttext. Unter Allgemein → Datenschutz abschaltbar.',
@@ -173,7 +185,11 @@ export const de: Partial<Messages> = {
   'audio.silenceCheckPermission': 'Prüfen Sie die macOS-Berechtigung „Bildschirm- und Systemaudioaufnahme“.',
   'audio.silencePermissionDeniedNote':
     'Bei verweigerter Berechtigung startet die Aufnahme normal, liefert aber immer digitales Schweigen.',
-  'audio.silenceVirtualDevice': 'Leiten Sie bei virtuellen Audiogeräten (z. B. BlackHole) den Ton zuerst dorthin.',
+  'audio.silenceCheckDeviceWindows':
+    'Prüfen Sie unter Windows in Einstellungen → System → Sound → Lautstärkemixer, ob die App auf das ausgewählte Gerät ausgibt und ob das Standard-Kommunikationsgerät übereinstimmt.',
+  'audio.silenceCheckDeviceLinux':
+    'Stellen Sie sicher, dass PipeWire den Ton der App an das ausgewählte Gerät weiterleitet.',
+  'audio.silenceVirtualDevice': 'Leiten Sie bei virtuellen Audiogeräten den Ton zuerst dorthin.',
   'audio.silenceMic':
     'Prüfen Sie die Mikrofonberechtigung; ersetzen Sie virtuelle Loopback-Geräte durch ein echtes Mikrofon.',
   'audio.silenceGoPermissions': 'Unter Allgemein → Berechtigungen testen',

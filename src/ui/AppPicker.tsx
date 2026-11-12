@@ -189,7 +189,7 @@ export function AppPicker({ label, placeholder, options, selected, onToggle, act
       >
         <span className="min-w-0 flex-1">
           <span className="flex items-center gap-1.5">
-            {anyActive && <PlayingBars className="shrink-0" />}
+            {selectedOptions.length > 0 && <PlayingBars active={anyActive} className="shrink-0" />}
             <span className="truncate">
               {selectedOptions.length > 0 ? selectedOptions.map((option) => option.label).join(' + ') : placeholder}
             </span>
@@ -252,7 +252,7 @@ export function AppPicker({ label, placeholder, options, selected, onToggle, act
                     !option.disabled && index === activeIndex && 'bg-[var(--color-surface-2)]',
                   )}
                 >
-                  {option.active && <PlayingBars className="shrink-0" />}
+                  <PlayingBars active={option.active === true} className="shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="truncate">{option.label}</div>
                     {option.subtitle && (

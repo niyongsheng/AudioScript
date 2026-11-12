@@ -365,7 +365,7 @@ pub trait Translator: Send {
 | 音源 | 状态 | 后端 |
 |---|---|---|
 | **系统声音输出（回环）** | ✅ | macOS: Core Audio Process Tap ／ Windows: WASAPI loopback |
-| **应用声音（指定应用）** | ✅ | macOS: Core Audio Process Tap ／ Windows: WASAPI process loopback ／ Linux: PipeWire 应用输出节点 |
+| **软件声音（指定软件）** | ✅ | macOS: Core Audio Process Tap ／ Windows: WASAPI process loopback ／ Linux: PipeWire 应用输出节点 |
 | 麦克风 | ✅ | 同上 |
 | 麦克风 + 系统声混流 | ✅ | 库内完成混音 |
 | 音频文件 | V0.2 | 批量转写走离线引擎 |
@@ -401,19 +401,19 @@ TranscriptStore ← 状态机在此
    - 「麦克风 + 系统声音」下 MUST 提供两个独立选择器，分别写入 `mixMicDeviceId` / `mixSystemDeviceId`，MUST NOT 复用单设备 `deviceId`——flexaudio 对 Mix 会忽略它。
 2. **MUST 有音频心跳**：每 5 秒统计最近窗口的 RMS，`rms < 1e-4`（约 -80 dBFS）判为静音并记 **WARN**，日志文案 MUST 明确写出「电平接近零」。阈值刻意留低：宁可漏报，也不要把很安静的房间误报成故障。
 3. **静音状态变化时 MUST 广播**（`transcript://audio`）。只在状态变化时播报，每 5 秒弹一次会变成骚扰。
-4. **电平表心跳**：会话采集中 MUST 广播 `transcript://level`（裸 RMS，200ms）；「音频」设置页打开期间广播 `transcript://device-level`（`{ source, device, app, rms }`，200ms，`device` 为 `null` 表示系统默认，`app` 为 `null` 表示全部应用）。
-   - 预览 MUST 在进入页面时开始，音源、设备或应用变化时重启，离开页面 / 开始转写 / 主窗口隐藏时停止，MUST NOT 后台常驻。
+4. **电平表心跳**：会话采集中 MUST 广播 `transcript://level`（裸 RMS，200ms）；「音频」设置页打开期间广播 `transcript://device-level`（`{ source, device, app, rms }`，200ms，`device` 为 `null` 表示系统默认，`app` 为 `null` 表示全部软件）。
+   - 预览 MUST 在进入页面时开始，音源、设备或软件变化时重启，离开页面 / 开始转写 / 主窗口隐藏时停止，MUST NOT 后台常驻。
    - 预览目标以 `(source, device, app)` 唯一标识；Mix 下 MUST 同时覆盖两侧。任一下拉展开期间 MUST 额外预览该侧全部设备。
-5. **MUST 提供独立的「应用声音」音源**。
-   - 「音源」MUST 与「系统声音」并列提供「应用声音」；MUST NOT 把应用选择做成「系统声音」的子选项。
-   - 应用声音 MUST 要求选择目标应用；未选择时 MUST NOT 开始会话。
-   - 应用声音 MUST 支持同时选择 1–4 个应用；多路 MUST 在应用层混音成一路，MUST NOT 依赖单路进程回环支持多目标。
-   - 应用选择 MUST 默认只列当前正在输出声音的应用，并 MUST 提供「显示全部应用」入口；系统 daemon / helper MUST NOT 作为可选项。
-   - 应用选择 MUST 持久化稳定身份（macOS bundle id；其他平台可执行文件名），MUST NOT 持久化 PID。
+5. **MUST 提供独立的「软件声音」音源**。
+   - 「音源」MUST 与「系统声音」并列提供「软件声音」；MUST NOT 把软件选择做成「系统声音」的子选项。
+   - 软件声音 MUST 要求选择目标软件；未选择时 MUST NOT 开始会话。
+   - 软件声音 MUST 支持同时选择 1–4 个软件；多路 MUST 在应用层混音成一路，MUST NOT 依赖单路进程回环支持多目标。
+   - 软件选择 MUST 默认只列当前正在输出声音的软件，并 MUST 提供「显示全部软件」入口；系统 daemon / helper MUST NOT 作为可选项。
+   - 软件选择 MUST 持久化稳定身份（macOS bundle id；其他平台可执行文件名），MUST NOT 持久化 PID。
    - 会话启动 MUST 用当前进程列表重新解析目标；目标不存在或系统不支持时 MUST 报错并提示重新选择，MUST NOT 静默回退到系统声音。
-   - 应用声音 MUST NOT 提供输出设备选择：Windows / Linux 的进程回环不支持按设备限定。
-   - 「麦克风 + 系统声音」MUST NOT 提供按应用采集：flexaudio 的 Mix 不支持进程目标。
-   - 平台门槛：macOS 14.4+、Windows build 20348+、Linux PipeWire；不满足时应用选择 MUST 为空并说明原因，不允许开始。
+   - 软件声音 MUST NOT 提供输出设备选择：Windows / Linux 的进程回环不支持按设备限定。
+   - 「麦克风 + 系统声音」MUST NOT 提供按软件采集：flexaudio 的 Mix 不支持进程目标。
+   - 平台门槛：macOS 14.4+、Windows build 20348+、Linux PipeWire；不满足时 MUST NOT 展示「软件声音」音源。
    - 预览与转写 MUST NOT 同时持有采集设备：转写前 MUST 先停预览，失败或结束后按页面状态恢复。
    - 它与静音判定 MUST NOT 共用累加窗口：判定要 5 秒均值，表要 200ms 快照。
    - **没有「归零」事件**——广播停止时 UI MUST 自己把表清零。

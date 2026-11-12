@@ -11,6 +11,7 @@ import {
   openSystemSettings,
   permissionOf,
 } from '@/shared/ipc'
+import { isMacOS, isWindows } from '@/shared/platform'
 import { TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
 import { AppPicker, type AppPickerOption } from '@/ui/AppPicker'
@@ -49,35 +50,41 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
     pending,
     prefsReady,
     devicesLoading,
+    info,
   } = useStore()
   const { t } = useI18n()
 
-  const sourceOptions = [
-    {
-      value: AudioSourceKind.Loopback,
-      label: t('audio.sourceLoopbackLabel'),
-      description: t('audio.sourceLoopbackDescription'),
-    },
-    {
-      value: AudioSourceKind.App,
-      label: t('audio.sourceAppLabel'),
-      description: t('audio.sourceAppDescription'),
-    },
-    {
-      value: AudioSourceKind.Mic,
-      label: t('audio.sourceMicLabel'),
-      description: t('audio.sourceMicDescription'),
-    },
-    {
-      value: AudioSourceKind.Mix,
-      label: t('audio.sourceMixLabel'),
-      description: t('audio.sourceMixDescription'),
-    },
-  ]
+  const appSupported = info?.appAudioSupported !== false
+  const sourceOptions = useMemo(
+    () =>
+      [
+        {
+          value: AudioSourceKind.Loopback,
+          label: t('audio.sourceLoopbackLabel'),
+          description: t('audio.sourceLoopbackDescription'),
+        },
+        {
+          value: AudioSourceKind.App,
+          label: t('audio.sourceAppLabel'),
+          description: t('audio.sourceAppDescription'),
+        },
+        {
+          value: AudioSourceKind.Mic,
+          label: t('audio.sourceMicLabel'),
+          description: t('audio.sourceMicDescription'),
+        },
+        {
+          value: AudioSourceKind.Mix,
+          label: t('audio.sourceMixLabel'),
+          description: t('audio.sourceMixDescription'),
+        },
+      ].filter((option) => option.value !== AudioSourceKind.App || appSupported),
+    [t, appSupported],
+  )
 
   const capturing = status === TaskStatus.Capturing
   const isMix = audioSource === AudioSourceKind.Mix
-  const isApp = audioSource === AudioSourceKind.App
+  const isApp = audioSource === AudioSourceKind.App && appSupported
 
   const [showAllApps, setShowAllApps] = useState(false)
   const [previewOn, setPreviewOn] = useState(false)
@@ -90,6 +97,14 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
     if (!deviceError) setDismissedDeviceError(null)
   }, [deviceError])
   const previewing = previewOn && !pending && !capturing
+
+  useEffect(() => {
+    if (!isApp || !prefsReady) return
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') void refreshProcesses(true)
+    }, 2000)
+    return () => window.clearInterval(timer)
+  }, [isApp, prefsReady, refreshProcesses])
 
   const targets = useMemo<MonitorTarget[]>(() => {
     const out: MonitorTarget[] = []
@@ -477,18 +492,22 @@ function SilenceHelp({
       onDismiss={() => setDismissed(true)}
       actions={
         <>
-          <Button size="sm" onClick={onOpenPermissions}>
-            {t('audio.silenceGoPermissions')}
-          </Button>
-          <Button
-            size="sm"
-            variant="ghost"
-            onClick={() => {
-              openSystemSettings().catch(() => {})
-            }}
-          >
-            {t('audio.silenceOpenSettings')}
-          </Button>
+          {isMacOS && (
+            <Button size="sm" onClick={onOpenPermissions}>
+              {t('audio.silenceGoPermissions')}
+            </Button>
+          )}
+          {(isMacOS || isWindows) && (
+            <Button
+              size="sm"
+              variant={isMacOS ? 'ghost' : 'secondary'}
+              onClick={() => {
+                openSystemSettings().catch(() => {})
+              }}
+            >
+              {t('audio.silenceOpenSettings')}
+            </Button>
+          )}
         </>
       }
     >
@@ -497,10 +516,14 @@ function SilenceHelp({
           <>
             {appName && <li>{t('audio.silenceCheckApp', { app: appName })}</li>}
             <li>{t('audio.silenceCheckPlayer')}</li>
-            <li>
-              {t('audio.silenceCheckPermission')}
-              <span className="font-medium">{t('audio.silencePermissionDeniedNote')}</span>
-            </li>
+            {isMacOS ? (
+              <li>
+                {t('audio.silenceCheckPermission')}
+                <span className="font-medium">{t('audio.silencePermissionDeniedNote')}</span>
+              </li>
+            ) : (
+              <li>{t(isWindows ? 'audio.silenceCheckDeviceWindows' : 'audio.silenceCheckDeviceLinux')}</li>
+            )}
             <li>{t('audio.silenceVirtualDevice')}</li>
           </>
         )}

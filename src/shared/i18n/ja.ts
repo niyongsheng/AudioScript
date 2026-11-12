@@ -113,6 +113,17 @@ export const ja: Partial<Messages> = {
     'Intel Smart Sound などのマルチチャンネルアレイでも、起動に失敗せず正常にキャプチャ・ミックスできます。',
   'whatsNew.appAudioTitle': 'アプリの音声をキャプチャ',
   'whatsNew.appAudioBody': '最大 4 つのアプリ（ブラウザーと会議アプリなど）を選び、その音声だけを文字起こしできます。',
+  'whatsNew.unsupportedAppTitle': '非対応システムではアプリ音声を非表示に',
+  'whatsNew.unsupportedAppBody':
+    'アプリごとのキャプチャに対応していないシステムでは、キャプチャ開始時にエラーになる代わりに音源自体を表示しません。',
+  'whatsNew.appLiveStateTitle': 'アプリ一覧に再生状態をリアルタイム表示',
+  'whatsNew.appLiveStateBody': '緑のバーは音声出力中、灰色は出力なしを表します。一覧は 2 秒ごとに更新されます。',
+  'whatsNew.windowsAppNamesTitle': 'Windows でアプリの表示名をローカライズ',
+  'whatsNew.windowsAppNamesBody':
+    '中国語版 Windows では、実行ファイル名だけでなくアプリ自身の表示名（例：网易云音乐）を表示します。',
+  'whatsNew.windowsSilenceHelpTitle': 'Windows の無音トラブルシュート表示を修正',
+  'whatsNew.windowsSilenceHelpBody':
+    'macOS 専用の権限・仮想デバイスのヒントを表示しないようにし、「システム設定を直接開く」で Windows のアプリ音量ページを開くようにしました。',
   'whatsNew.crashReportsTitle': 'クラッシュレポートを Sentry に送信',
   'whatsNew.crashReportsBody':
     'クラッシュ時に自動で報告し、問題の特定に役立てます。音声と文字起こしテキストは含まれません。「一般 → プライバシー」で無効にできます。',
@@ -171,8 +182,11 @@ export const ja: Partial<Messages> = {
   'audio.silenceCheckPermission': 'macOS の「画面とシステム音声の録音」権限を確認してください。',
   'audio.silencePermissionDeniedNote':
     '権限が拒否されている場合、キャプチャは正常に開始しますが、常にデジタル無音が返ります。',
-  'audio.silenceVirtualDevice':
-    '仮想オーディオデバイス（BlackHole など）を選んだ場合は、先に音声をそこへルーティングしてください。',
+  'audio.silenceCheckDeviceWindows':
+    'Windows の「設定 → システム → サウンド → 音量ミキサー」で、アプリが選択したデバイスに出力されているか、既定の通信デバイスと一致しているか確認してください。',
+  'audio.silenceCheckDeviceLinux':
+    'PipeWire がアプリの音声を選択したデバイスにルーティングしているか確認してください。',
+  'audio.silenceVirtualDevice': '仮想オーディオデバイスを選んだ場合は、先に音声をそこへルーティングしてください。',
   'audio.silenceMic': 'マイクの権限を確認してください。仮想ループバックデバイスは実際のマイクに変更してください。',
   'audio.silenceGoPermissions': '「一般 → 権限」で検出',
   'audio.silenceOpenSettings': 'システム設定を直接開く',

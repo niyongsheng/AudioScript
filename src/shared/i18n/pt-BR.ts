@@ -115,6 +115,18 @@ export const ptBR: Partial<Messages> = {
     'Matrizes multicanal como o Intel Smart Sound agora são capturadas e mixadas corretamente, em vez de falhar ao iniciar.',
   'whatsNew.appAudioTitle': 'Capture o áudio de um aplicativo',
   'whatsNew.appAudioBody': 'Escolha até quatro aplicativos (navegador, reunião…) e transcreva apenas o som deles.',
+  'whatsNew.unsupportedAppTitle': 'Áudio por aplicativo oculto quando não suportado',
+  'whatsNew.unsupportedAppBody':
+    'Sistemas que não conseguem capturar áudio por aplicativo agora ocultam essa fonte em vez de falhar ao iniciar a captura.',
+  'whatsNew.appLiveStateTitle': 'Estado de reprodução ao vivo na lista de aplicativos',
+  'whatsNew.appLiveStateBody':
+    'Barras verdes indicam que o aplicativo está emitindo som; cinzas indicam silêncio. A lista é atualizada a cada 2 segundos.',
+  'whatsNew.windowsAppNamesTitle': 'Nomes de aplicativos localizados no Windows',
+  'whatsNew.windowsAppNamesBody':
+    'No Windows em chinês, os aplicativos mostram o nome localizado (por exemplo, 网易云音乐) em vez de apenas o nome do executável.',
+  'whatsNew.windowsSilenceHelpTitle': 'Dicas de silêncio corrigidas no Windows',
+  'whatsNew.windowsSilenceHelpBody':
+    'As dicas exclusivas do macOS sobre permissões e dispositivos virtuais não aparecem mais; “Abrir configurações do sistema diretamente” agora abre a página de volume de aplicativos do Windows.',
   'whatsNew.crashReportsTitle': 'Relatórios de falha via Sentry',
   'whatsNew.crashReportsBody':
     'As falhas chegam até nós pelo Sentry, sem áudio nem texto transcrito. Pode ser desativado em Geral → Privacidade.',
@@ -172,8 +184,11 @@ export const ptBR: Partial<Messages> = {
   'audio.silenceCheckPermission': 'Verifique a permissão de Gravação de Tela e Áudio do Sistema do macOS.',
   'audio.silencePermissionDeniedNote':
     'Quando a permissão é negada, a captura inicia normalmente mas retorna sempre silêncio digital.',
-  'audio.silenceVirtualDevice':
-    'Para dispositivos de áudio virtuais (ex.: BlackHole), direcione o áudio para ele primeiro.',
+  'audio.silenceCheckDeviceWindows':
+    'No Windows, verifique em Configurações → Sistema → Som → Mixer de volume se o aplicativo está saindo no dispositivo selecionado e se o dispositivo de comunicação padrão coincide.',
+  'audio.silenceCheckDeviceLinux':
+    'Verifique se o PipeWire está roteando o som do aplicativo para o dispositivo selecionado.',
+  'audio.silenceVirtualDevice': 'Para dispositivos de áudio virtuais, direcione o áudio para eles primeiro.',
   'audio.silenceMic':
     'Verifique a permissão do microfone; substitua dispositivos de loopback virtuais por um microfone real.',
   'audio.silenceGoPermissions': 'Testar em Geral → Permissões',

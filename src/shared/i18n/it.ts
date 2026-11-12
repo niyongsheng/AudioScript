@@ -116,6 +116,18 @@ export const it: Partial<Messages> = {
     'Array come Intel Smart Sound ora vengono acquisiti e mixati correttamente invece di fallire all’avvio.',
   'whatsNew.appAudioTitle': 'Cattura l’audio di un’app',
   'whatsNew.appAudioBody': 'Scegli fino a quattro app (browser, riunioni…) e trascrivi solo il loro audio.',
+  'whatsNew.unsupportedAppTitle': 'Audio per app nascosto se non supportato',
+  'whatsNew.unsupportedAppBody':
+    'I sistemi che non supportano la cattura per app ora nascondono la sorgente invece di generare un errore all’avvio.',
+  'whatsNew.appLiveStateTitle': 'Stato di riproduzione in tempo reale nell’elenco app',
+  'whatsNew.appLiveStateBody':
+    'Le barre verdi indicano che l’app sta emettendo audio, quelle grigie che è silenziosa. L’elenco si aggiorna ogni 2 secondi.',
+  'whatsNew.windowsAppNamesTitle': 'Nomi delle app localizzati su Windows',
+  'whatsNew.windowsAppNamesBody':
+    'Su Windows in cinese le app mostrano il nome localizzato (ad esempio 网易云音乐) invece del solo nome dell’eseguibile.',
+  'whatsNew.windowsSilenceHelpTitle': 'Corretti i suggerimenti per l’assenza di audio su Windows',
+  'whatsNew.windowsSilenceHelpBody':
+    'I suggerimenti macOS su autorizzazioni e dispositivi virtuali non vengono più mostrati; “Apri direttamente le impostazioni di sistema” ora apre la pagina del volume delle app di Windows.',
   'whatsNew.crashReportsTitle': 'Segnalazioni di arresto anomalo con Sentry',
   'whatsNew.crashReportsBody':
     'Gli arresti anomali ci arrivano tramite Sentry, senza audio né testo trascritto. Disattivabile in Generale → Privacy.',
@@ -174,8 +186,10 @@ export const it: Partial<Messages> = {
   'audio.silenceCheckPermission': 'Controlla l’autorizzazione macOS Registrazione schermo e audio di sistema.',
   'audio.silencePermissionDeniedNote':
     'Se l’autorizzazione è negata, la cattura parte normalmente ma restituisce sempre silenzio digitale.',
-  'audio.silenceVirtualDevice':
-    'Per i dispositivi audio virtuali (es. BlackHole), instrada prima l’audio verso di essi.',
+  'audio.silenceCheckDeviceWindows':
+    'In Windows controlla in Impostazioni → Sistema → Audio → Mixer del volume che l’app esca sul dispositivo selezionato e che il dispositivo di comunicazione predefinito coincida.',
+  'audio.silenceCheckDeviceLinux': 'Verifica che PipeWire instradi l’audio dell’app al dispositivo selezionato.',
+  'audio.silenceVirtualDevice': 'Per i dispositivi audio virtuali, instrada prima l’audio verso di essi.',
   'audio.silenceMic':
     'Controlla l’autorizzazione al microfono; sostituisci i dispositivi loopback virtuali con un microfono reale.',
   'audio.silenceGoPermissions': 'Verifica in Generale → Autorizzazioni',

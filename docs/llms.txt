@@ -6,7 +6,7 @@ AudioScript is a free, MIT-licensed, offline-first desktop app that listens to s
 
 - 官网：[audioscript.looplooptech.com](https://audioscript.looplooptech.com/)
 - 源码：[niyongsheng/AudioScript](https://github.com/niyongsheng/AudioScript)
-- 最新版本：0.7.0（2026-11-11）
+- 最新版本：0.7.1（2026-11-12）
 - 下载：[GitHub Releases](https://github.com/niyongsheng/AudioScript/releases/latest)
 - 许可：MIT（应用本体）；可选模型许可见下表
 - 技术栈：Tauri 2 + Rust，sherpa-onnx 做语音识别，CTranslate2 做翻译

@@ -146,7 +146,7 @@ interface Store {
   updateOverlay: (patch: Partial<OverlayConfig>) => Promise<void>
   toggleOverlay: () => Promise<void>
   refreshDevices: () => Promise<void>
-  refreshProcesses: () => Promise<void>
+  refreshProcesses: (silent?: boolean) => Promise<void>
   refreshHotkeys: () => Promise<void>
 }
 
@@ -453,10 +453,10 @@ export function StoreProvider({ children }: { children: ReactNode }) {
   }, [audioSource])
 
   const processesLoadingRef = useRef(false)
-  const refreshProcesses = useCallback(async () => {
+  const refreshProcesses = useCallback(async (silent = false) => {
     if (processesLoadingRef.current) return
     processesLoadingRef.current = true
-    setProcessesLoading(true)
+    if (!silent) setProcessesLoading(true)
     const started = Date.now()
     let ok = false
     try {
@@ -464,15 +464,17 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setProcessError(null)
       ok = true
     } catch (e) {
-      setAudioProcesses([])
-      setProcessError(formatCmdError(e))
+      if (!silent) {
+        setAudioProcesses([])
+        setProcessError(formatCmdError(e))
+      }
     } finally {
       if (ok) {
         const remaining = PROCESS_REFRESH_MIN_MS - (Date.now() - started)
         if (remaining > 0) await new Promise((resolve) => setTimeout(resolve, remaining))
       }
       processesLoadingRef.current = false
-      setProcessesLoading(false)
+      if (!silent) setProcessesLoading(false)
     }
   }, [])
 
@@ -609,6 +611,12 @@ export function StoreProvider({ children }: { children: ReactNode }) {
     },
     [patchPrefs],
   )
+
+  useEffect(() => {
+    if (info?.appAudioSupported !== false || audioSource !== AudioSourceKind.App) return
+    setAudioSource(AudioSourceKind.Loopback)
+    void patchPrefs({ audioSource: AudioSourceKind.Loopback, deviceId: '' })
+  }, [info?.appAudioSupported, audioSource, patchPrefs])
 
   const changeDevice = useCallback(
     (v: string) => {

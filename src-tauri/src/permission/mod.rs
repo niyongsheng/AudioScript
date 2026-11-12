@@ -222,6 +222,17 @@ pub fn certain_denial(source: audio::AudioSourceKind) -> Option<&'static str> {
     }
 }
 
+#[cfg(target_os = "windows")]
+pub fn windows_settings_uri(pane: &str) -> &'static str {
+    match pane {
+        "microphone" => "ms-settings:privacy-microphone",
+        "systemAudio" => "ms-settings:apps-volume",
+        "speech" => "ms-settings:privacy-speech",
+        "translation" => "ms-settings:regionlanguage",
+        _ => "ms-settings:sound",
+    }
+}
+
 pub fn settings_url(pane: &str) -> Option<&'static str> {
     match pane {
         "microphone" => {
