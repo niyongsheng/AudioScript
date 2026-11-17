@@ -14,6 +14,9 @@ use crate::asr::TARGET_SAMPLE_RATE;
 mod windows_app_names;
 
 #[cfg(target_os = "windows")]
+mod windows_endpoint;
+
+#[cfg(target_os = "windows")]
 mod windows_mic;
 
 pub const CHUNK_SAMPLES: usize = 1600;
@@ -501,6 +504,26 @@ fn display_name(kind: AudioSourceKind, selection: &DeviceSelection) -> String {
     resolve_device_name(kind, selection.device.as_deref())
 }
 
+// Windows 系统声音走端点环回：进程回环（EXCLUDE）对 Teams 等通信音频返回静音。
+fn system_capture_exclude_self() -> bool {
+    !cfg!(target_os = "windows")
+}
+
+fn reconnect_config(_config: &StreamConfig) -> Option<StreamConfig> {
+    #[cfg(target_os = "windows")]
+    {
+        let tracks_default = match _config.kind {
+            SourceKind::SystemLoopback => _config.device_id.is_none(),
+            SourceKind::Mix => _config.mix_system_device_id.is_none(),
+            _ => false,
+        };
+        if tracks_default {
+            return Some(_config.clone());
+        }
+    }
+    None
+}
+
 pub fn start<S>(
     kind: AudioSourceKind,
     selection: &DeviceSelection,
@@ -531,7 +554,7 @@ where
         device_id: selection.device.clone(),
         mix_mic_device_id: selection.mix_mic.clone(),
         mix_system_device_id: selection.mix_system.clone(),
-        exclude_self: true,
+        exclude_self: system_capture_exclude_self(),
         output: OutputFormat {
             sample_rate: TARGET_SAMPLE_RATE,
             channels: 1,
@@ -554,7 +577,8 @@ where
 
     let stop = Arc::new(AtomicBool::new(false));
 
-    let thread = spawn_worker(stream, Arc::clone(&stop), sink, None)?;
+    let reconnect = reconnect_config(&config);
+    let thread = spawn_worker(stream, Arc::clone(&stop), sink, None, reconnect)?;
 
     Ok(CaptureHandle {
         stop,
@@ -651,6 +675,23 @@ fn open_started(config: &StreamConfig) -> Result<flexaudio::Stream, AudioError> 
             fallback.exclude_self = false;
             open_and_start(&fallback).map_err(classify_open_error)
         }
+        #[cfg(target_os = "windows")]
+        Err(e)
+            if !config.exclude_self
+                && matches!(config.kind, SourceKind::SystemLoopback | SourceKind::Mix)
+                && e.kind() == flexaudio::ErrorKind::UnsupportedFormat =>
+        {
+            tracing::warn!("系统声音格式不受支持（如超过两声道的输出端点），改为进程回环采集");
+            let mut fallback = config.clone();
+            fallback.exclude_self = true;
+            match open_and_start(&fallback) {
+                Ok(stream) => Ok(stream),
+                Err(fallback_error) => {
+                    tracing::warn!(error = %fallback_error, "进程回环回退失败");
+                    Err(classify_open_error(e))
+                }
+            }
+        }
         Err(e) => Err(classify_open_error(e)),
     }
 }
@@ -666,6 +707,7 @@ fn spawn_worker<S>(
     stop: Arc<AtomicBool>,
     mut sink: S,
     probe: Option<Arc<Mutex<ProbeAccum>>>,
+    reconnect: Option<StreamConfig>,
 ) -> Result<std::thread::JoinHandle<()>, AudioError>
 where
     S: FnMut(&[f32]) + Send + 'static,
@@ -674,8 +716,31 @@ where
         .name("audio-worker".into())
         .spawn(move || {
             let mut buf: Vec<f32> = Vec::with_capacity(CHUNK_SAMPLES * 2);
+            #[cfg(target_os = "windows")]
+            let mut follower = reconnect
+                .as_ref()
+                .map(|_| windows_endpoint::DefaultEndpointFollower::new());
+            #[cfg(not(target_os = "windows"))]
+            let _ = &reconnect;
 
             while !stop.load(Ordering::SeqCst) {
+                #[cfg(target_os = "windows")]
+                if let (Some(config), Some(follower)) = (&reconnect, follower.as_mut()) {
+                    if let Some(device) = follower.changed() {
+                        match open_started(config) {
+                            Ok(new_stream) => {
+                                tracing::info!(device = %device, "默认输出设备已切换，重新打开采集");
+                                stream.stop();
+                                stream = new_stream;
+                                follower.accept();
+                            }
+                            Err(e) => {
+                                tracing::warn!(device = %device, error = %e, "默认输出设备切换后重开失败");
+                            }
+                        }
+                    }
+                }
+
                 while let Some(event) = stream.poll_event() {
                     if let Some(acc) = &probe {
                         acc.lock()
@@ -893,7 +958,7 @@ where
     let config = StreamConfig {
         kind: SourceKind::SystemLoopback,
         device_id: None,
-        exclude_self: true,
+        exclude_self: system_capture_exclude_self(),
         output: OutputFormat {
             sample_rate: TARGET_SAMPLE_RATE,
             channels: 1,
@@ -906,7 +971,13 @@ where
     let acc = Arc::new(Mutex::new(ProbeAccum::default()));
     let stop = Arc::new(AtomicBool::new(false));
 
-    let thread = spawn_worker(stream, Arc::clone(&stop), sink, Some(Arc::clone(&acc)))?;
+    let thread = spawn_worker(
+        stream,
+        Arc::clone(&stop),
+        sink,
+        Some(Arc::clone(&acc)),
+        None,
+    )?;
 
     std::thread::sleep(window);
     stop.store(true, Ordering::SeqCst);

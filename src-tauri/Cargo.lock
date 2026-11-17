@@ -351,6 +351,7 @@ dependencies = [
  "flate2",
  "flexaudio",
  "flexaudio-os-macos",
+ "flexaudio-os-windows",
  "libc",
  "objc2",
  "objc2-app-kit",

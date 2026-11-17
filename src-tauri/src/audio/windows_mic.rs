@@ -18,9 +18,10 @@ use rubato::{
     SincInterpolationType, WindowFunction,
 };
 
+use super::windows_endpoint::DefaultEndpointFollower;
 use super::{
-    mix_mic_and_system, open_started, AudioError, AudioSourceKind, CaptureHandle, DeviceSelection,
-    CHUNK_SAMPLES, POLL_IDLE,
+    mix_mic_and_system, open_started, system_capture_exclude_self, AudioError, AudioSourceKind,
+    CaptureHandle, DeviceSelection, CHUNK_SAMPLES, POLL_IDLE,
 };
 use crate::asr::TARGET_SAMPLE_RATE;
 use crate::i18n::{tr, Key};
@@ -204,7 +205,7 @@ where
     let system_config = StreamConfig {
         kind: SourceKind::SystemLoopback,
         device_id: system_device.map(str::to_owned),
-        exclude_self: true,
+        exclude_self: system_capture_exclude_self(),
         output: OutputFormat {
             sample_rate: TARGET_SAMPLE_RATE,
             channels: 1,
@@ -213,6 +214,7 @@ where
     };
     let mut system = open_started(&system_config)?;
     let system_rate = system.native_format().0;
+    let mut follower = system_device.is_none().then(DefaultEndpointFollower::new);
 
     let mut resampler = make_resampler(capture.native_rate)?;
     let _ = ready.send(Ok(system_rate));
@@ -223,6 +225,22 @@ where
     let mut last_overflow = Instant::now();
 
     while !stop.load(Ordering::SeqCst) {
+        if let Some(follower) = follower.as_mut() {
+            if let Some(device) = follower.changed() {
+                match open_started(&system_config) {
+                    Ok(new_stream) => {
+                        tracing::info!(device = %device, "默认输出设备已切换，重新打开系统声音采集");
+                        system.stop();
+                        system = new_stream;
+                        follower.accept();
+                    }
+                    Err(e) => {
+                        tracing::warn!(device = %device, error = %e, "默认输出设备切换后重开失败");
+                    }
+                }
+            }
+        }
+
         let mut had_samples = false;
         while let Some(chunk) = system.poll_chunk() {
             system_buf.extend(chunk.data);

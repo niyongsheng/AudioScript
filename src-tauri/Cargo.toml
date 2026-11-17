@@ -142,6 +142,8 @@ ct2rs = { version = "0.10", default-features = false, features = [
 libc = "0.2"
 
 [target.'cfg(windows)'.dependencies]
+# 端点环回只在打开时解析默认设备；默认输出切换后需自己重开，故直接读输出端点列表。
+flexaudio-os-windows = "0.5.4"
 windows-sys = { version = "0.59", features = [
     "Win32_Foundation",
     "Win32_Globalization",

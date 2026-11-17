@@ -398,6 +398,7 @@ TranscriptStore ← 状态机在此
 
 1. **MUST 提供输入设备选择**，枚举时给出 `isDefault` 与 `isLoopback`（后者由 flexaudio 提供）。
    - **MUST NOT 自动切换设备**，只做视觉提示。
+   - 「系统默认」不是具体设备：Windows 系统声音选择「系统默认」时 MUST 跟随默认输出端点切换并重开采集；选择具体设备时 MUST NOT 因默认设备变化而切换。
    - 「麦克风 + 系统声音」下 MUST 提供两个独立选择器，分别写入 `mixMicDeviceId` / `mixSystemDeviceId`，MUST NOT 复用单设备 `deviceId`——flexaudio 对 Mix 会忽略它。
 2. **MUST 有音频心跳**：每 5 秒统计最近窗口的 RMS，`rms < 1e-4`（约 -80 dBFS）判为静音并记 **WARN**，日志文案 MUST 明确写出「电平接近零」。阈值刻意留低：宁可漏报，也不要把很安静的房间误报成故障。
 3. **静音状态变化时 MUST 广播**（`transcript://audio`）。只在状态变化时播报，每 5 秒弹一次会变成骚扰。
