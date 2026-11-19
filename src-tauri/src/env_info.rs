@@ -19,6 +19,7 @@ pub fn log_startup(prefs: &Preferences) {
         os = %os,
         cpu = %cpu,
         cpu_features = %cpu_features(),
+        ct2_mkl = if crate::cpu::ct2_mkl_disabled() { "off" } else { "auto" },
         cores,
         memory_mb,
         webview = %webview,
@@ -92,6 +93,7 @@ fn pipewire_available() -> bool {
 fn cpu_features() -> String {
     let mut flags = Vec::new();
     for (flag, enabled) in [
+        ("sse4.1", std::is_x86_feature_detected!("sse4.1")),
         ("sse4.2", std::is_x86_feature_detected!("sse4.2")),
         ("avx", std::is_x86_feature_detected!("avx")),
         ("avx2", std::is_x86_feature_detected!("avx2")),

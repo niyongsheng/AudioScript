@@ -2,6 +2,7 @@ pub mod asr;
 pub mod audio;
 pub mod commands;
 pub mod config;
+pub mod cpu;
 pub mod env_info;
 pub mod error;
 pub mod i18n;
@@ -88,6 +89,7 @@ fn spawn_main_thread_watchdog(app: &AppHandle) {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+    cpu::apply_ct2_backend_env();
     telemetry::mark_start();
     let mut builder = tauri::Builder::default();
 

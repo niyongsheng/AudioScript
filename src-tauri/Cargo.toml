@@ -132,6 +132,9 @@ objc2-app-kit = { version = "0.3", default-features = false, features = [
 # 加载时直接报「Requested int8_float32 compute type…」，fp32 引擎也会在推理时
 # 报「No SGEMM backend on CPU」。ruy 是 ct2rs 默认特性里的跨厂商 int8/fp32 回退，
 # 不能省。
+# ⚠️ oneMKL 2025 起要求 AVX，2026 只把 AVX2 及以上当作受支持分支：没有 AVX2 的
+# GenuineIntel（Pentium / Celeron / Atom）执行 MKL 权重打包会以 0xc000001d
+# 静默退出；crate::cpu 在启动时按 cpuid 设 CT2_USE_MKL=0，这批机器改走 ruy。
 ct2rs = { version = "0.10", default-features = false, features = [
     "tokenizers",
     "mkl",

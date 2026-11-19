@@ -1959,6 +1959,11 @@ messages! {
         ar: "الترجمة المحلية على macOS غير متاحة: {0}\n→ استخدم macOS 26+ وثبّت زوج اللغات في إعدادات النظام → عام → اللغة والمنطقة → لغات الترجمة"
     },
 
+    TranslateCpuUnsupported {
+        zh_cn: "当前 CPU 缺少 SSE4.1 指令集，无法运行本地翻译模型。\n→ 换用支持 SSE4.1 的 x86-64 处理器，或改用其他翻译引擎",
+        en: "This CPU lacks SSE4.1, which the on-device translation model requires.\n→ Use an x86-64 CPU with SSE4.1, or switch to another translation engine"
+    },
+
     TranslateUnsupportedPair {
         zh_cn: "语言对不支持：{0} → {1}",
         en: "Unsupported language pair: {0} → {1}",

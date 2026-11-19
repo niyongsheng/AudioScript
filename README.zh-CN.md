@@ -43,6 +43,11 @@ https://github.com/user-attachments/assets/b1f88a82-b3fe-4721-8736-af6a9e4d828e
 * 语音识别与翻译全部在本机完成，离线可用。
 * Aptabase 匿名使用统计与 Sentry 崩溃报告，可在「通用 → 隐私」中关闭。
 
+## 系统要求
+
+* macOS 14.2 及以上的 Apple Silicon、Windows 10 及以上、Ubuntu 24（x64）。
+* x86-64 CPU 需要 SSE4.1；没有 AVX2 的机型（Pentium / Celeron、部分虚拟机）会跳过 Intel MKL，改用可移植后端，翻译仍可用但更慢。
+
 ## 构建
 
 ```bash

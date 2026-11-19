@@ -622,6 +622,10 @@ pub fn start(
         return Err(tr(Key::SessionTeardownBusy).into());
     }
 
+    if cfg.translate.engine == TranslateEngine::LocalNmt && !crate::cpu::ct2_usable() {
+        return Err(tr(Key::TranslateCpuUnsupported).into());
+    }
+
     let t0 = Instant::now();
     *state
         .started_at

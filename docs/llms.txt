@@ -16,6 +16,7 @@ AudioScript is a free, MIT-licensed, offline-first desktop app that listens to s
 - macOS 14.2 及以上，仅 Apple Silicon（不提供 Intel Mac 版本）
 - Windows 10 及以上，x64
 - Ubuntu 24，x64（二等支持）
+- Windows / Linux 的 x86-64 CPU 需支持 SSE4.1；没有 AVX2 的机型（Pentium / Celeron、部分虚拟机）会自动改用可移植后端，翻译仍可用但更慢
 - macOS 26 及以上可额外使用系统语音识别与系统翻译，语言包由系统管理
 
 ## 功能

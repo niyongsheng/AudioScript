@@ -43,6 +43,11 @@ https://github.com/user-attachments/assets/b1f88a82-b3fe-4721-8736-af6a9e4d828e
 * Speech recognition and translation run entirely on-device and work offline.
 * Anonymous usage analytics via Aptabase and crash reports via Sentry; disable both under General → Privacy.
 
+## Requirements
+
+* macOS 14.2+ on Apple Silicon, Windows 10+, or Ubuntu 24 (x64).
+* x86-64 CPUs need SSE4.1. Without AVX2 (Pentium / Celeron, some VMs) the app skips Intel MKL and uses a portable backend, so translation still works but is slower.
+
 ## Build
 
 ```bash
