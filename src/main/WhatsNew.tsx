@@ -135,6 +135,30 @@ const FEATURES_V071: readonly WhatsNewFeature[] = [
   },
 ]
 
+const FEATURES_V072: readonly WhatsNewFeature[] = [
+  {
+    icon: 'speaker',
+    titleKey: 'whatsNew.teamsAudioTitle',
+    bodyKey: 'whatsNew.teamsAudioBody',
+    available: onWindows,
+  },
+  {
+    icon: 'chip',
+    titleKey: 'whatsNew.legacyCpuTitle',
+    bodyKey: 'whatsNew.legacyCpuBody',
+  },
+  {
+    icon: 'download',
+    titleKey: 'whatsNew.manualUpdateTitle',
+    bodyKey: 'whatsNew.manualUpdateBody',
+  },
+  {
+    icon: 'info',
+    titleKey: 'whatsNew.platformCleanupTitle',
+    bodyKey: 'whatsNew.platformCleanupBody',
+  },
+]
+
 const WHATS_NEW: Record<string, readonly WhatsNewFeature[]> = {
   '0.3.0': FEATURES_V030,
   '0.5.0': FEATURES_V050,
@@ -142,6 +166,7 @@ const WHATS_NEW: Record<string, readonly WhatsNewFeature[]> = {
   '0.6.2': FEATURES_V062,
   '0.7.0': FEATURES_V070,
   '0.7.1': FEATURES_V071,
+  '0.7.2': FEATURES_V072,
 }
 
 export function whatsNewFor(version: string, info: AppInfo): readonly WhatsNewFeature[] | undefined {

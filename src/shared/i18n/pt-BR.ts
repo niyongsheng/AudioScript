@@ -63,6 +63,7 @@ export const ptBR: Partial<Messages> = {
   'app.operationFailed': 'Falha na operação',
   'app.permissionMissing': 'Permissão do sistema ausente',
   'app.permissionGo': 'Abrir Geral → Permissões',
+  'app.audioSilentGo': 'Abrir a página Áudio',
   'app.hotkeyFailed': 'Falha ao registrar atalhos globais: {count}',
   'app.hotkeyFailedDetail': '. A sobreposição não pode ser controlada por atalho. Reassocie na página Sobreposição.',
   'app.languageMismatch': 'A direção da tradução não corresponde ao idioma falado',
@@ -126,6 +127,15 @@ export const ptBR: Partial<Messages> = {
   'whatsNew.crashReportsTitle': 'Relatórios de falha via Sentry',
   'whatsNew.crashReportsBody':
     'As falhas chegam até nós pelo Sentry, sem áudio nem texto transcrito. Pode ser desativado em Geral → Privacidade.',
+  'whatsNew.teamsAudioTitle': 'Áudio de chamadas do Windows corrigido',
+  'whatsNew.teamsAudioBody':
+    'O áudio do sistema agora é capturado na saída, então chamadas do Teams não chegam mais em silêncio.',
+  'whatsNew.legacyCpuTitle': 'CPUs antigas voltam a iniciar',
+  'whatsNew.legacyCpuBody':
+    'CPUs Intel sem AVX2 passam de MKL para ruy em vez de falhar na inicialização com 0xc000001d.',
+  'whatsNew.platformCleanupTitle': 'Recursos incompatíveis ficam ocultos',
+  'whatsNew.platformCleanupBody':
+    'O painel de permissões, a tela de boas-vindas, as notas da versão e o estado “sempre no topo” só aparecem onde se aplicam.',
   'whatsNew.viewNotes': 'Ver notas de versão completas',
   'whatsNew.continue': 'Continuar',
 

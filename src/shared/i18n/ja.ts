@@ -63,6 +63,7 @@ export const ja: Partial<Messages> = {
   'app.operationFailed': '操作に失敗しました',
   'app.permissionMissing': 'システム権限がありません',
   'app.permissionGo': '「一般 → 権限」で対処',
+  'app.audioSilentGo': '「オーディオ」ページを開く',
   'app.hotkeyFailed': '{count} 個のグローバルショートカットを登録できませんでした',
   'app.hotkeyFailedDetail':
     '。ショートカットでオーバーレイを操作できません。「オーバーレイ」ページで再割り当てしてください。',
@@ -123,6 +124,15 @@ export const ja: Partial<Messages> = {
   'whatsNew.crashReportsTitle': 'クラッシュレポートを Sentry に送信',
   'whatsNew.crashReportsBody':
     'クラッシュ時に自動で報告し、問題の特定に役立てます。音声と文字起こしテキストは含まれません。「一般 → プライバシー」で無効にできます。',
+  'whatsNew.teamsAudioTitle': 'Windows の通話音声を修正',
+  'whatsNew.teamsAudioBody':
+    'システム音声を出力エンドポイントから取得するようにし、Teams などの通話アプリで音声が欠けなくなりました。',
+  'whatsNew.legacyCpuTitle': '古い CPU でも起動可能',
+  'whatsNew.legacyCpuBody':
+    'AVX2 非対応の Intel CPU は MKL を無効化して ruy に切り替え、0xc000001d でクラッシュしなくなりました。',
+  'whatsNew.platformCleanupTitle': '非対応の機能を非表示に',
+  'whatsNew.platformCleanupBody':
+    '権限パネル、ウェルカム画面、更新情報、常に最前面の状態は、対応するシステムでのみ表示されます。',
   'whatsNew.viewNotes': '完全なリリースノートを見る',
   'whatsNew.continue': '続ける',
 

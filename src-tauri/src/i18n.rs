@@ -1961,7 +1961,18 @@ messages! {
 
     TranslateCpuUnsupported {
         zh_cn: "当前 CPU 缺少 SSE4.1 指令集，无法运行本地翻译模型。\n→ 换用支持 SSE4.1 的 x86-64 处理器，或改用其他翻译引擎",
-        en: "This CPU lacks SSE4.1, which the on-device translation model requires.\n→ Use an x86-64 CPU with SSE4.1, or switch to another translation engine"
+        en: "This CPU lacks SSE4.1, which the on-device translation model requires.\n→ Use an x86-64 CPU with SSE4.1, or switch to another translation engine",
+        zh_tw: "目前 CPU 缺少 SSE4.1 指令集，無法執行本機翻譯模型。\n→ 改用支援 SSE4.1 的 x86-64 處理器，或改用其他翻譯引擎",
+        ja: "この CPU には SSE4.1 がないため、オンデバイス翻訳モデルを実行できません。\n→ SSE4.1 対応の x86-64 CPU を使うか、別の翻訳エンジンに切り替えてください",
+        ko: "이 CPU에는 SSE4.1이 없어 온디바이스 번역 모델을 실행할 수 없습니다.\n→ SSE4.1을 지원하는 x86-64 CPU를 사용하거나 다른 번역 엔진으로 전환하세요",
+        fr: "Ce processeur n’a pas SSE4.1, requis par le modèle de traduction local.\n→ Utilisez un processeur x86-64 avec SSE4.1 ou changez de moteur de traduction",
+        de: "Dieser Prozessor unterstützt SSE4.1 nicht, das das lokale Übersetzungsmodell benötigt.\n→ Verwenden Sie eine x86-64-CPU mit SSE4.1 oder einen anderen Übersetzungsdienst",
+        es: "Esta CPU no tiene SSE4.1, que el modelo de traducción local necesita.\n→ Usa una CPU x86-64 con SSE4.1 o cambia a otro motor de traducción",
+        pt_br: "Esta CPU não tem SSE4.1, exigido pelo modelo de tradução local.\n→ Use uma CPU x86-64 com SSE4.1 ou troque para outro mecanismo de tradução",
+        ru: "В этом процессоре нет SSE4.1, необходимого локальной модели перевода.\n→ Используйте x86-64 CPU с SSE4.1 или другой механизм перевода",
+        it: "Questa CPU non dispone di SSE4.1, richiesto dal modello di traduzione locale.\n→ Usa una CPU x86-64 con SSE4.1 o passa a un altro motore di traduzione",
+        id: "CPU ini tidak memiliki SSE4.1 yang dibutuhkan model terjemahan lokal.\n→ Gunakan CPU x86-64 dengan SSE4.1 atau beralih ke mesin terjemahan lain",
+        ar: "لا يدعم هذا المعالج SSE4.1 المطلوب لنموذج الترجمة المحلي.\n→ استخدم معالج x86-64 يدعم SSE4.1 أو بدّل إلى محرك ترجمة آخر"
     },
 
     TranslateUnsupportedPair {

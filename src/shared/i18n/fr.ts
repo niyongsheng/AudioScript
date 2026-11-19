@@ -63,6 +63,7 @@ export const fr: Partial<Messages> = {
   'app.operationFailed': 'Échec de l’opération',
   'app.permissionMissing': 'Autorisation système manquante',
   'app.permissionGo': 'Ouvrir Général → Autorisations',
+  'app.audioSilentGo': 'Ouvrir la page Audio',
   'app.hotkeyFailed': 'Échec de l’enregistrement des raccourcis globaux : {count}',
   'app.hotkeyFailedDetail':
     '. La superposition ne peut pas être contrôlée par raccourci. Réattribuez-les sur la page Superposition.',
@@ -123,6 +124,15 @@ export const fr: Partial<Messages> = {
   'whatsNew.crashReportsTitle': 'Rapports de plantage via Sentry',
   'whatsNew.crashReportsBody':
     'Les plantages nous parviennent via Sentry, sans audio ni texte transcrit. Désactivable dans Général → Confidentialité.',
+  'whatsNew.teamsAudioTitle': 'Audio des appels Windows corrigé',
+  'whatsNew.teamsAudioBody':
+    'L’audio système est désormais capturé depuis la sortie audio : les appels Teams ne sont plus muets.',
+  'whatsNew.legacyCpuTitle': 'Les anciens CPU démarrent à nouveau',
+  'whatsNew.legacyCpuBody':
+    'Les processeurs Intel sans AVX2 passent de MKL à ruy au lieu de planter au démarrage avec 0xc000001d.',
+  'whatsNew.platformCleanupTitle': 'Masquage des fonctions non prises en charge',
+  'whatsNew.platformCleanupBody':
+    'Le panneau des autorisations, l’écran d’accueil, les notes de version et l’état « toujours au premier plan » n’apparaissent que sur les systèmes compatibles.',
   'whatsNew.viewNotes': 'Voir les notes de version complètes',
   'whatsNew.continue': 'Continuer',
 

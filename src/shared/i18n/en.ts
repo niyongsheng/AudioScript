@@ -125,6 +125,15 @@ export const en: Messages = {
   'whatsNew.crashReportsTitle': 'Crash reports via Sentry',
   'whatsNew.crashReportsBody':
     'Crashes reach us through Sentry with no audio or transcript text; disable it under General → Privacy.',
+  'whatsNew.teamsAudioTitle': 'Windows call audio fixed',
+  'whatsNew.teamsAudioBody':
+    'System audio now captures the output endpoint, so Teams and similar call apps no longer come through silent.',
+  'whatsNew.legacyCpuTitle': 'Older CPUs no longer crash',
+  'whatsNew.legacyCpuBody':
+    'Intel CPUs without AVX2 now fall back from MKL to ruy instead of dying at startup with 0xc000001d.',
+  'whatsNew.platformCleanupTitle': 'Unsupported features stay hidden',
+  'whatsNew.platformCleanupBody':
+    'The permissions panel, welcome gate, release notes, and always-on-top status now appear only where they apply.',
   'whatsNew.viewNotes': 'View full release notes',
   'whatsNew.continue': 'Continue',
 

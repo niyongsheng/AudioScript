@@ -63,6 +63,7 @@ export const de: Partial<Messages> = {
   'app.operationFailed': 'Vorgang fehlgeschlagen',
   'app.permissionMissing': 'Systemberechtigung fehlt',
   'app.permissionGo': 'Allgemein → Berechtigungen öffnen',
+  'app.audioSilentGo': 'Audio-Seite öffnen',
   'app.hotkeyFailed': 'Globale Tastenkürzel konnten nicht registriert werden: {count}',
   'app.hotkeyFailedDetail':
     '. Das Overlay kann nicht per Tastenkürzel gesteuert werden. Weisen Sie sie auf der Overlay-Seite neu zu.',
@@ -122,6 +123,15 @@ export const de: Partial<Messages> = {
   'whatsNew.crashReportsTitle': 'Absturzberichte über Sentry',
   'whatsNew.crashReportsBody':
     'Abstürze erreichen uns über Sentry, ohne Audio oder Transkripttext. Unter Allgemein → Datenschutz abschaltbar.',
+  'whatsNew.teamsAudioTitle': 'Windows-Anrufaudio behoben',
+  'whatsNew.teamsAudioBody':
+    'Systemaudio wird jetzt am Ausgang abgegriffen, sodass Teams-Anrufe nicht mehr stumm ankommen.',
+  'whatsNew.legacyCpuTitle': 'Ältere CPUs starten wieder',
+  'whatsNew.legacyCpuBody':
+    'Intel-CPUs ohne AVX2 wechseln von MKL zu ruy, statt beim Start mit 0xc000001d abzustürzen.',
+  'whatsNew.platformCleanupTitle': 'Nicht unterstützte Funktionen ausgeblendet',
+  'whatsNew.platformCleanupBody':
+    'Berechtigungsbereich, Willkommensbildschirm, Versionshinweise und der Status „Immer im Vordergrund“ erscheinen nur dort, wo sie gelten.',
   'whatsNew.viewNotes': 'Vollständige Versionshinweise ansehen',
   'whatsNew.continue': 'Weiter',
 

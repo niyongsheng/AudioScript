@@ -63,6 +63,7 @@ export const id: Partial<Messages> = {
   'app.operationFailed': 'Operasi gagal',
   'app.permissionMissing': 'Izin sistem belum ada',
   'app.permissionGo': 'Buka Umum → Izin',
+  'app.audioSilentGo': 'Buka halaman Audio',
   'app.hotkeyFailed': 'Gagal mendaftarkan pintasan global: {count}',
   'app.hotkeyFailedDetail': '. Overlay tidak dapat dikendalikan dengan pintasan. Atur ulang di halaman Overlay.',
   'app.languageMismatch': 'Arah terjemahan tidak cocok dengan bahasa ucapan',
@@ -124,6 +125,15 @@ export const id: Partial<Messages> = {
   'whatsNew.crashReportsTitle': 'Laporan kerusakan via Sentry',
   'whatsNew.crashReportsBody':
     'Kerusakan terkirim otomatis melalui Sentry, tanpa audio atau teks transkripsi. Dapat dimatikan di Umum → Privasi.',
+  'whatsNew.teamsAudioTitle': 'Audio panggilan Windows diperbaiki',
+  'whatsNew.teamsAudioBody':
+    'Audio sistem kini diambil dari endpoint keluaran, jadi panggilan Teams tidak lagi tanpa suara.',
+  'whatsNew.legacyCpuTitle': 'CPU lama kembali bisa dijalankan',
+  'whatsNew.legacyCpuBody':
+    'CPU Intel tanpa AVX2 beralih dari MKL ke ruy alih-alih gagal saat mulai dengan 0xc000001d.',
+  'whatsNew.platformCleanupTitle': 'Fitur yang tidak didukung disembunyikan',
+  'whatsNew.platformCleanupBody':
+    'Panel izin, layar selamat datang, catatan versi, dan status “selalu di atas” hanya muncul di sistem yang mendukungnya.',
   'whatsNew.viewNotes': 'Lihat catatan rilis lengkap',
   'whatsNew.continue': 'Lanjutkan',
 

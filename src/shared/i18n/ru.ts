@@ -63,6 +63,7 @@ export const ru: Partial<Messages> = {
   'app.operationFailed': 'Не удалось выполнить операцию',
   'app.permissionMissing': 'Нет системного разрешения',
   'app.permissionGo': 'Открыть «Общие → Разрешения»',
+  'app.audioSilentGo': 'Открыть страницу «Аудио»',
   'app.hotkeyFailed': 'Не удалось зарегистрировать глобальные сочетания: {count}',
   'app.hotkeyFailedDetail': '. Оверлеем нельзя управлять сочетанием клавиш. Задайте его заново на странице «Оверлей».',
   'app.languageMismatch': 'Направление перевода не совпадает с языком речи',
@@ -127,6 +128,15 @@ export const ru: Partial<Messages> = {
   'whatsNew.crashReportsTitle': 'Отчёты о сбоях через Sentry',
   'whatsNew.crashReportsBody':
     'Сбои автоматически отправляются через Sentry без аудио и текста транскрипции. Отключается в «Общие → Конфиденциальность».',
+  'whatsNew.teamsAudioTitle': 'Исправлен звук звонков в Windows',
+  'whatsNew.teamsAudioBody':
+    'Системный звук теперь захватывается с выходного устройства, поэтому звонки Teams больше не приходят без звука.',
+  'whatsNew.legacyCpuTitle': 'Старые CPU снова запускаются',
+  'whatsNew.legacyCpuBody':
+    'Процессоры Intel без AVX2 переключаются с MKL на ruy вместо падения при запуске с ошибкой 0xc000001d.',
+  'whatsNew.platformCleanupTitle': 'Неподдерживаемые функции скрыты',
+  'whatsNew.platformCleanupBody':
+    'Панель разрешений, экран приветствия, заметки о версии и статус «поверх всех окон» показываются только там, где применимы.',
   'whatsNew.viewNotes': 'Полные примечания к выпуску',
   'whatsNew.continue': 'Продолжить',
 

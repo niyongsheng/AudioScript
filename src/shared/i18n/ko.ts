@@ -63,6 +63,7 @@ export const ko: Partial<Messages> = {
   'app.operationFailed': '작업 실패',
   'app.permissionMissing': '시스템 권한이 없습니다',
   'app.permissionGo': '일반 → 권한에서 처리',
+  'app.audioSilentGo': '오디오 페이지 열기',
   'app.hotkeyFailed': '전역 단축키 등록 실패: {count}개',
   'app.hotkeyFailedDetail': '. 오버레이를 단축키로 제어할 수 없습니다. 오버레이 페이지에서 다시 지정하세요.',
   'app.languageMismatch': '번역 방향이 음성 언어와 일치하지 않습니다',
@@ -117,6 +118,14 @@ export const ko: Partial<Messages> = {
   'whatsNew.crashReportsTitle': 'Sentry 충돌 보고',
   'whatsNew.crashReportsBody':
     '충돌 시 자동으로 보고하여 문제를 파악합니다. 오디오와 전사 텍스트는 포함되지 않으며 일반 → 개인정보에서 끌 수 있습니다.',
+  'whatsNew.teamsAudioTitle': 'Windows 통화 오디오 수정',
+  'whatsNew.teamsAudioBody':
+    '시스템 오디오를 출력 엔드포인트에서 캡처하도록 변경해 Teams 같은 통화 앱의 소리가 누락되지 않습니다.',
+  'whatsNew.legacyCpuTitle': '구형 CPU에서도 실행 가능',
+  'whatsNew.legacyCpuBody': 'AVX2가 없는 Intel CPU는 MKL을 끄고 ruy로 전환해 0xc000001d로 충돌하지 않습니다.',
+  'whatsNew.platformCleanupTitle': '지원하지 않는 기능 숨김',
+  'whatsNew.platformCleanupBody':
+    '권한 패널, 시작 안내, 업데이트 안내, 항상 위 상태는 지원되는 시스템에서만 표시됩니다.',
   'whatsNew.viewNotes': '전체 릴리스 노트 보기',
   'whatsNew.continue': '계속',
 

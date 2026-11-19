@@ -63,6 +63,7 @@ export const it: Partial<Messages> = {
   'app.operationFailed': 'Operazione non riuscita',
   'app.permissionMissing': 'Autorizzazione di sistema mancante',
   'app.permissionGo': 'Apri Generale → Autorizzazioni',
+  'app.audioSilentGo': 'Apri la pagina Audio',
   'app.hotkeyFailed': 'Impossibile registrare le scorciatoie globali: {count}',
   'app.hotkeyFailedDetail':
     '. La sovrapposizione non può essere controllata con scorciatoie. Riassegnala nella pagina Sovrapposizione.',
@@ -127,6 +128,15 @@ export const it: Partial<Messages> = {
   'whatsNew.crashReportsTitle': 'Segnalazioni di arresto anomalo con Sentry',
   'whatsNew.crashReportsBody':
     'Gli arresti anomali ci arrivano tramite Sentry, senza audio né testo trascritto. Disattivabile in Generale → Privacy.',
+  'whatsNew.teamsAudioTitle': 'Audio delle chiamate Windows corretto',
+  'whatsNew.teamsAudioBody':
+    'L’audio di sistema ora viene catturato dall’uscita, quindi le chiamate Teams non arrivano più mute.',
+  'whatsNew.legacyCpuTitle': 'Le CPU più vecchie tornano ad avviarsi',
+  'whatsNew.legacyCpuBody':
+    'Le CPU Intel senza AVX2 passano da MKL a ruy invece di bloccarsi all’avvio con 0xc000001d.',
+  'whatsNew.platformCleanupTitle': 'Funzioni non supportate nascoste',
+  'whatsNew.platformCleanupBody':
+    'Il pannello dei permessi, la schermata di benvenuto, le note di versione e lo stato «sempre in primo piano» compaiono solo dove sono applicabili.',
   'whatsNew.viewNotes': 'Vedi le note di rilascio complete',
   'whatsNew.continue': 'Continua',
 

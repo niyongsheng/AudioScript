@@ -63,6 +63,7 @@ export const es: Partial<Messages> = {
   'app.operationFailed': 'La operación falló',
   'app.permissionMissing': 'Falta un permiso del sistema',
   'app.permissionGo': 'Abrir General → Permisos',
+  'app.audioSilentGo': 'Abrir la página Audio',
   'app.hotkeyFailed': 'No se pudieron registrar los atajos globales: {count}',
   'app.hotkeyFailedDetail':
     '. La superposición no se puede controlar con atajos. Vuelva a asignarlos en la página Superposición.',
@@ -121,6 +122,14 @@ export const es: Partial<Messages> = {
   'whatsNew.crashReportsTitle': 'Informes de fallos con Sentry',
   'whatsNew.crashReportsBody':
     'Los fallos nos llegan mediante Sentry, sin audio ni texto transcrito. Se puede desactivar en General → Privacidad.',
+  'whatsNew.teamsAudioTitle': 'Audio de llamadas de Windows corregido',
+  'whatsNew.teamsAudioBody':
+    'El audio del sistema ahora se captura desde la salida, así que las llamadas de Teams ya no llegan en silencio.',
+  'whatsNew.legacyCpuTitle': 'Las CPU antiguas vuelven a iniciar',
+  'whatsNew.legacyCpuBody': 'Las CPU Intel sin AVX2 pasan de MKL a ruy en lugar de fallar al iniciar con 0xc000001d.',
+  'whatsNew.platformCleanupTitle': 'Ocultar funciones no compatibles',
+  'whatsNew.platformCleanupBody':
+    'El panel de permisos, la bienvenida, las notas de versión y el estado «siempre encima» solo aparecen donde son aplicables.',
   'whatsNew.viewNotes': 'Ver notas de la versión completas',
   'whatsNew.continue': 'Continuar',
 

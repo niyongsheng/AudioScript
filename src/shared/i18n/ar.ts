@@ -63,6 +63,7 @@ export const ar: Partial<Messages> = {
   'app.operationFailed': 'فشلت العملية',
   'app.permissionMissing': 'إذن النظام مفقود',
   'app.permissionGo': 'فتح عام → الأذونات',
+  'app.audioSilentGo': 'فتح صفحة الصوت',
   'app.hotkeyFailed': 'فشل تسجيل الاختصارات العامة: {count}',
   'app.hotkeyFailedDetail': '. لا يمكن التحكم في التراكب بالاختصارات. أعد ربطها في صفحة «التراكب».',
   'app.languageMismatch': 'اتجاه الترجمة لا يتطابق مع لغة الكلام',
@@ -123,6 +124,14 @@ export const ar: Partial<Messages> = {
   'whatsNew.crashReportsTitle': 'تقارير الأعطال عبر Sentry',
   'whatsNew.crashReportsBody':
     'تُرسل الأعطال تلقائيًا عبر Sentry من دون صوت أو نص منسوخ. يمكن إيقافها من عام → الخصوصية.',
+  'whatsNew.teamsAudioTitle': 'إصلاح صوت المكالمات في Windows',
+  'whatsNew.teamsAudioBody': 'يُلتقط صوت النظام الآن من مخرج الصوت، لذا لم تعد مكالمات Teams صامتة.',
+  'whatsNew.legacyCpuTitle': 'معالجات CPU القديمة تعمل مجددًا',
+  'whatsNew.legacyCpuBody':
+    'تتحول معالجات Intel التي لا تدعم AVX2 من MKL إلى ruy بدلًا من التعطل عند بدء التشغيل بالخطأ 0xc000001d.',
+  'whatsNew.platformCleanupTitle': 'إخفاء الميزات غير المدعومة',
+  'whatsNew.platformCleanupBody':
+    'لوحة الأذونات وشاشة الترحيب وملاحظات الإصدار وحالة «دائمًا في المقدمة» تظهر فقط على الأنظمة التي تدعمها.',
   'whatsNew.viewNotes': 'عرض ملاحظات الإصدار الكاملة',
   'whatsNew.continue': 'متابعة',
 

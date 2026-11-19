@@ -115,6 +115,12 @@ export const zhCN = {
     '不再显示 macOS 专属的权限与虚拟声卡提示；「直接打开系统设置」会打开 Windows 应用音量页。',
   'whatsNew.crashReportsTitle': '崩溃报告接入 Sentry',
   'whatsNew.crashReportsBody': '崩溃会自动上报以便定位问题，不含音频与转写文本；可在「通用 → 隐私」关闭。',
+  'whatsNew.teamsAudioTitle': 'Windows 通话声音修复',
+  'whatsNew.teamsAudioBody': '系统声音改为从输出端点采集，Teams 等通话软件不再没有声音。',
+  'whatsNew.legacyCpuTitle': '老 CPU 不再启动失败',
+  'whatsNew.legacyCpuBody': '没有 AVX2 的 Intel 处理器会自动关闭 MKL、改用 ruy，不再以 0xc000001d 崩溃。',
+  'whatsNew.platformCleanupTitle': '按平台隐藏不适用功能',
+  'whatsNew.platformCleanupBody': '权限面板、欢迎引导、更新说明和「始终置顶」状态只在支持它们的系统上显示。',
   'whatsNew.viewNotes': '查看完整更新说明',
   'whatsNew.continue': '继续',
 
