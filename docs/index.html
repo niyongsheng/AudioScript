@@ -491,10 +491,18 @@
           },
           {
             "@type": "Question",
-            "name": "支持哪些系统和语言？音频会上传吗？",
+            "name": "音频会上传吗？",
             "acceptedAnswer": {
               "@type": "Answer",
-              "text": "macOS 14.2 及以上的 Apple Silicon、Windows 10 及以上、Ubuntu 24，不提供 Intel Mac 版本。Windows / Linux 的 x86-64 CPU 需支持 SSE4.1；没有 AVX2 的机型翻译仍可用，只是更慢。中英互译开箱即用，翻译方向需手动选择；多语言模型可选下载，macOS 26 及以上可用系统识别与翻译。识别与翻译都在本机完成，只有模型下载、更新检查与错误上报需要联网；Aptabase 匿名统计与 Sentry 崩溃报告不含音频与转写文本，可在「通用 → 隐私」关闭。"
+              "text": "识别与翻译都在本机完成，离线可用，只有模型下载、更新与错误上报需要联网；Aptabase 匿名统计与 Sentry 崩溃报告不含音频与转写文本，可在「通用 → 隐私」关闭。"
+            }
+          },
+          {
+            "@type": "Question",
+            "name": "按应用采集音源有什么系统要求？",
+            "acceptedAnswer": {
+              "@type": "Answer",
+              "text": "按软件采集需要 macOS 14.4+、Windows build 20348+ 或 Linux PipeWire。macOS 14.2–14.3、Windows 10 和没有 PipeWire 的 Linux 只能用系统声音或麦克风。"
             }
           },
           {
@@ -1175,10 +1183,17 @@
                 </p>
               </details>
               <details name="faq">
-                <summary><span class="zh" lang="zh-CN">支持哪些系统和语言？音频会上传吗？</span><span class="en" lang="en">Which systems and languages are supported? Is my audio uploaded?</span></summary>
+                <summary><span class="zh" lang="zh-CN">音频会上传吗？</span><span class="en" lang="en">Is my audio uploaded?</span></summary>
                 <p>
-                  <span class="zh" lang="zh-CN">macOS 14.2 及以上的 Apple Silicon、Windows 10 及以上、Ubuntu 24，不提供 Intel Mac 版本；按软件采集需要 macOS 14.4+、Windows build 20348+ 或 Linux PipeWire。Windows / Linux 的 x86-64 CPU 需支持 SSE4.1；没有 AVX2 的机型（Pentium / Celeron）翻译仍可用，只是更慢。中英互译开箱即用，翻译方向需手动选择；多语言模型可选下载，macOS 26 及以上可用系统识别与翻译。<br>识别与翻译都在本机完成，只有模型下载、更新检查与错误上报需要联网；<br>Aptabase 匿名统计与 Sentry 崩溃报告不含音频与转写文本，可在「通用 → 隐私」关闭。</span
-                  ><span class="en" lang="en">macOS 14.2+ on Apple Silicon, Windows 10+, Ubuntu 24; no Intel Mac build. Per-app capture needs macOS 14.4+, Windows build 20348+, or Linux PipeWire. Windows/Linux x86-64 needs SSE4.1; without AVX2 (Pentium, Celeron) translation still works but is slower. English ↔ Chinese works out of the box and you pick the translation direction; optional multilingual models are available, and macOS 26+ offers system recognition and translation.<br>Recognition and translation run locally; only model downloads, update checks, and error reports need the network.<br>Anonymous Aptabase stats and Sentry crash reports exclude audio and transcript text and can be disabled under General → Privacy.</span>
+                  <span class="zh" lang="zh-CN">识别与翻译都在本机完成，离线可用，只有模型下载、更新与错误上报需要联网；<br>Aptabase 匿名统计与 Sentry 崩溃报告不含音频与转写文本，可在「通用 → 隐私」关闭。</span
+                  ><span class="en" lang="en">Recognition and translation run locally and work offline; only model downloads, updates, and error reports need the network.<br>Anonymous Aptabase stats and Sentry crash reports exclude audio and transcript text and can be disabled under General → Privacy.</span>
+                </p>
+              </details>
+              <details name="faq">
+                <summary><span class="zh" lang="zh-CN">按应用采集音源有什么系统要求？</span><span class="en" lang="en">What do I need for per-app audio capture?</span></summary>
+                <p>
+                  <span class="zh" lang="zh-CN">按软件采集需要 macOS 14.4+、Windows build 20348+ 或 Linux PipeWire。macOS 14.2–14.3、Windows 10 和没有 PipeWire 的 Linux 只能用系统声音或麦克风。</span
+                  ><span class="en" lang="en">Per-app capture needs macOS 14.4+, Windows build 20348+, or Linux PipeWire. macOS 14.2–14.3, Windows 10, and Linux without PipeWire can only use system audio or the microphone.</span>
                 </p>
               </details>
               <details name="faq">
