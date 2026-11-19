@@ -98,6 +98,7 @@ export interface AppInfo {
   osVersion?: string | null
   macSpeechSupported: boolean
   appAudioSupported: boolean
+  overlayAlwaysOnTop: boolean
   analyticsTier: AnalyticsTier
   builtAtMs: number | null
 }

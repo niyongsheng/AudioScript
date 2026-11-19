@@ -269,7 +269,7 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
           onDismiss={() => setMonitorError(null)}
           actions={
             <>
-              {monitorError.permission && (
+              {isMacOS && monitorError.permission && (
                 <Button size="sm" onClick={onOpenPermissions}>
                   {t('audio.viewPermissions')}
                 </Button>

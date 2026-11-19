@@ -1,6 +1,6 @@
 import { useEffect, useId } from 'react'
 import { type MessageKey, useI18n } from '@/shared/i18n'
-import { openUrl } from '@/shared/ipc'
+import { type AppInfo, openUrl } from '@/shared/ipc'
 import { Button } from '@/ui/Button'
 import { Icon, type IconName } from '@/ui/Icon'
 import appIcon from './app-icon.png'
@@ -9,7 +9,15 @@ export interface WhatsNewFeature {
   icon: IconName
   titleKey: MessageKey
   bodyKey: MessageKey
+  available?: (info: AppInfo) => boolean
 }
+
+function macMajor(info: AppInfo): number {
+  return Number.parseInt(info.osVersion?.split('.')[0] ?? '', 10)
+}
+
+const onMac = (info: AppInfo) => info.platform === 'macos'
+const onWindows = (info: AppInfo) => info.platform === 'windows'
 
 export const SEEN_VERSION_KEY = 'audioscript.seen-version'
 
@@ -23,6 +31,7 @@ const FEATURES_V030: readonly WhatsNewFeature[] = [
     icon: 'translate',
     titleKey: 'whatsNew.macTranslateTitle',
     bodyKey: 'whatsNew.macTranslateBody',
+    available: (info) => onMac(info) && macMajor(info) >= 26,
   },
   {
     icon: 'sparkle',
@@ -82,6 +91,7 @@ const FEATURES_V062: readonly WhatsNewFeature[] = [
     icon: 'speaker',
     titleKey: 'whatsNew.multichannelMicTitle',
     bodyKey: 'whatsNew.multichannelMicBody',
+    available: onWindows,
   },
 ]
 
@@ -90,6 +100,7 @@ const FEATURES_V070: readonly WhatsNewFeature[] = [
     icon: 'overlay',
     titleKey: 'whatsNew.appAudioTitle',
     bodyKey: 'whatsNew.appAudioBody',
+    available: (info) => info.appAudioSupported,
   },
   {
     icon: 'shield',
@@ -108,16 +119,19 @@ const FEATURES_V071: readonly WhatsNewFeature[] = [
     icon: 'waveform',
     titleKey: 'whatsNew.appLiveStateTitle',
     bodyKey: 'whatsNew.appLiveStateBody',
+    available: (info) => info.appAudioSupported,
   },
   {
     icon: 'overlay',
     titleKey: 'whatsNew.windowsAppNamesTitle',
     bodyKey: 'whatsNew.windowsAppNamesBody',
+    available: onWindows,
   },
   {
     icon: 'info',
     titleKey: 'whatsNew.windowsSilenceHelpTitle',
     bodyKey: 'whatsNew.windowsSilenceHelpBody',
+    available: onWindows,
   },
 ]
 
@@ -130,8 +144,9 @@ const WHATS_NEW: Record<string, readonly WhatsNewFeature[]> = {
   '0.7.1': FEATURES_V071,
 }
 
-export function whatsNewFor(version: string): readonly WhatsNewFeature[] | undefined {
-  return WHATS_NEW[version]
+export function whatsNewFor(version: string, info: AppInfo): readonly WhatsNewFeature[] | undefined {
+  const features = WHATS_NEW[version]?.filter((feature) => !feature.available || feature.available(info))
+  return features && features.length > 0 ? features : undefined
 }
 
 interface Props {

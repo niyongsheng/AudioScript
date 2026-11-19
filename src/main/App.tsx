@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { hotkeyLabel } from '@/shared/hotkeys'
 import { useI18n } from '@/shared/i18n'
 import { openSystemSettings } from '@/shared/ipc'
+import { isMacOS } from '@/shared/platform'
 import { TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
 import { Button } from '@/ui/Button'
@@ -47,7 +48,7 @@ function Root() {
     const seen = localStorage.getItem(SEEN_VERSION_KEY)
     if (seen === info.version) return
 
-    const features = whatsNewFor(info.version)
+    const features = whatsNewFor(info.version, info)
     if (!seen && !onboardingDone) {
       localStorage.setItem(SEEN_VERSION_KEY, info.version)
       return
@@ -60,7 +61,7 @@ function Root() {
   }, [prefsReady, info, onboardingDone])
 
   if (!prefsReady) return <BootSplash />
-  if (!onboardingDone) return <WelcomeGate />
+  if (!onboardingDone && isMacOS) return <WelcomeGate />
 
   return (
     <>
@@ -238,9 +239,11 @@ function Alerts({ page, onOpenPermissions, onOpenTranslate, onOpenAudio }: Alert
           title={t('app.permissionMissing')}
           onDismiss={() => setPermissionError(null)}
           actions={
-            <Button size="sm" onClick={onOpenPermissions}>
-              {t('app.permissionGo')}
-            </Button>
+            isMacOS && (
+              <Button size="sm" onClick={onOpenPermissions}>
+                {t('app.permissionGo')}
+              </Button>
+            )
           }
         >
           <p>{permissionError.message}</p>

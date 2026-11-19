@@ -13,7 +13,7 @@ import {
   SystemAudioVerdict,
   type SystemSettingsPane,
 } from '@/shared/ipc'
-import { isMacOS, isWindows } from '@/shared/platform'
+import { isMacOS } from '@/shared/platform'
 import { TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
 import { Button } from '@/ui/Button'
@@ -284,50 +284,48 @@ export function PermissionPanel() {
           />
         )}
 
-        {!isWindows && (
-          <SettingsRow
-            icon="speaker"
-            title={t('permissions.systemAudio')}
-            description={
-              <>
-                {probing ? t('permissions.probing') : probeDescription(systemAudioProbe)}
-                {probing && (
-                  <span className="mt-1 flex items-center gap-2">
-                    <LevelMeter active />
-                    <span className="font-mono">{t('permissions.liveLevel')}</span>
+        <SettingsRow
+          icon="speaker"
+          title={t('permissions.systemAudio')}
+          description={
+            <>
+              {probing ? t('permissions.probing') : probeDescription(systemAudioProbe)}
+              {probing && (
+                <span className="mt-1 flex items-center gap-2">
+                  <LevelMeter active />
+                  <span className="font-mono">{t('permissions.liveLevel')}</span>
+                </span>
+              )}
+              {!probing && systemAudioProbe && (
+                <span className="mt-1 flex items-center gap-2">
+                  <LevelBars level={systemAudioProbe.peak} />
+                  <span className="font-mono">
+                    {t('permissions.peakRms', {
+                      peak: formatDbfs(systemAudioProbe.peak),
+                      rms: formatDbfs(systemAudioProbe.rms),
+                    })}
                   </span>
-                )}
-                {!probing && systemAudioProbe && (
-                  <span className="mt-1 flex items-center gap-2">
-                    <LevelBars level={systemAudioProbe.peak} />
-                    <span className="font-mono">
-                      {t('permissions.peakRms', {
-                        peak: formatDbfs(systemAudioProbe.peak),
-                        rms: formatDbfs(systemAudioProbe.rms),
-                      })}
-                    </span>
-                  </span>
-                )}
-              </>
-            }
-            control={
-              <div className="flex items-center gap-1.5">
-                <StatusBadge tone={systemAudioProbe ? PROBE_TONE[systemAudioProbe.verdict] : 'muted'}>
-                  {systemAudioProbe ? t(PROBE_TEXT[systemAudioProbe.verdict]) : t('permissions.notDetected')}
-                </StatusBadge>
-                {(systemAudioProbe?.verdict === SystemAudioVerdict.SilentWhilePlaying ||
-                  systemAudioProbe?.verdict === SystemAudioVerdict.TapRejected) && (
-                  <Button size="sm" onClick={() => void open('systemAudio')}>
-                    {t('permissions.openSettings')}
-                  </Button>
-                )}
-                <Button size="sm" pending={probing} disabled={capturing || probing} onClick={() => void runProbe()}>
-                  {t('permissions.detect')}
+                </span>
+              )}
+            </>
+          }
+          control={
+            <div className="flex items-center gap-1.5">
+              <StatusBadge tone={systemAudioProbe ? PROBE_TONE[systemAudioProbe.verdict] : 'muted'}>
+                {systemAudioProbe ? t(PROBE_TEXT[systemAudioProbe.verdict]) : t('permissions.notDetected')}
+              </StatusBadge>
+              {(systemAudioProbe?.verdict === SystemAudioVerdict.SilentWhilePlaying ||
+                systemAudioProbe?.verdict === SystemAudioVerdict.TapRejected) && (
+                <Button size="sm" onClick={() => void open('systemAudio')}>
+                  {t('permissions.openSettings')}
                 </Button>
-              </div>
-            }
-          />
-        )}
+              )}
+              <Button size="sm" pending={probing} disabled={capturing || probing} onClick={() => void runProbe()}>
+                {t('permissions.detect')}
+              </Button>
+            </div>
+          }
+        />
       </SettingsGroup>
     </div>
   )

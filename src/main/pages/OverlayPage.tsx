@@ -22,7 +22,8 @@ import { Slider } from '@/ui/Slider'
 import { Switch } from '@/ui/Switch'
 
 export function OverlayPage() {
-  const { overlayCfg, overlayVisible, toggleOverlay, updateOverlay, hotkeys, refreshHotkeys, setError } = useStore()
+  const { info, overlayCfg, overlayVisible, toggleOverlay, updateOverlay, hotkeys, refreshHotkeys, setError } =
+    useStore()
   const { t } = useI18n()
 
   const [draft, setDraft] = useState<OverlayConfig | null>(overlayCfg)
@@ -77,12 +78,13 @@ export function OverlayPage() {
             />
           }
         />
-        <SettingsRow
-          icon="check"
-          title={t('overlay.alwaysOnTop')}
-          unavailableReason={isMacOS ? t('overlay.alwaysOnTopMac') : undefined}
-          control={<span className="text-[var(--color-ink-2)] text-xs">{t('overlay.enabled')}</span>}
-        />
+        {!isMacOS && info?.overlayAlwaysOnTop === true && (
+          <SettingsRow
+            icon="check"
+            title={t('overlay.alwaysOnTop')}
+            control={<span className="text-[var(--color-ink-2)] text-xs">{t('overlay.enabled')}</span>}
+          />
+        )}
       </SettingsGroup>
 
       <SettingsGroup title={t('overlay.shortcutsGroup')} footer={t('overlay.shortcutsFooter')}>

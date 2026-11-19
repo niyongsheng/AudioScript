@@ -78,6 +78,30 @@ pub fn app_audio_supported() -> bool {
     }
 }
 
+pub fn overlay_always_on_top() -> bool {
+    #[cfg(target_os = "linux")]
+    {
+        let backend = std::env::var("GDK_BACKEND").unwrap_or_default();
+        if backend
+            .split(',')
+            .any(|b| b.trim().eq_ignore_ascii_case("x11"))
+        {
+            return true;
+        }
+        if backend
+            .split(',')
+            .any(|b| b.trim().eq_ignore_ascii_case("wayland"))
+        {
+            return false;
+        }
+        std::env::var_os("WAYLAND_DISPLAY").is_none()
+    }
+    #[cfg(not(target_os = "linux"))]
+    {
+        true
+    }
+}
+
 #[cfg(target_os = "linux")]
 fn pipewire_available() -> bool {
     if std::env::var_os("PIPEWIRE_REMOTE").is_some() {
