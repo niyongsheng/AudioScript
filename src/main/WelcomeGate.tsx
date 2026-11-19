@@ -1,6 +1,7 @@
 import { PermissionPanel } from '@/main/permissions/PermissionPanel'
 import { useStore } from '@/main/store'
 import { useI18n } from '@/shared/i18n'
+import { isMacOS } from '@/shared/platform'
 import { Button } from '@/ui/Button'
 import { TitleBarSpacer } from '@/ui/TitleBarSpacer'
 import { LogoMark } from './Brand'
@@ -20,7 +21,7 @@ export function WelcomeGate() {
             <h1 className="font-semibold text-[var(--color-ink-0)] text-xl">
               {t('welcome.title', { name: info?.name ?? 'AudioScript' })}
             </h1>
-            <p className="text-[var(--color-ink-1)] text-sm">{t('welcome.subtitle')}</p>
+            {isMacOS && <p className="text-[var(--color-ink-1)] text-sm">{t('welcome.subtitle')}</p>}
           </header>
 
           <PermissionPanel />
@@ -32,7 +33,7 @@ export function WelcomeGate() {
             </Button>
           </div>
 
-          <p className="text-center text-[var(--color-ink-2)] text-[0.7rem]">{t('welcome.skipHint')}</p>
+          {isMacOS && <p className="text-center text-[var(--color-ink-2)] text-[0.7rem]">{t('welcome.skipHint')}</p>}
         </div>
       </div>
     </main>

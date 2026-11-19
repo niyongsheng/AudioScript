@@ -13,6 +13,7 @@ import {
   revealPath,
   Theme,
 } from '@/shared/ipc'
+import { isMacOS } from '@/shared/platform'
 import { Alert } from '@/ui/Alert'
 import { Button } from '@/ui/Button'
 import { Page } from '@/ui/Page'
@@ -165,9 +166,11 @@ export function GeneralPage({ focusPermissions, onFocusPermissionsHandled }: Pro
         />
       </SettingsGroup>
 
-      <div ref={permissionsRef} className="scroll-mt-6">
-        <PermissionPanel />
-      </div>
+      {isMacOS && (
+        <div ref={permissionsRef} className="scroll-mt-6">
+          <PermissionPanel />
+        </div>
+      )}
 
       <SettingsGroup title={t('general.privacy')}>
         <SettingsRow

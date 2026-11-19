@@ -249,14 +249,16 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
           title={t('audio.enumerateFailed')}
           onDismiss={() => setDismissedDeviceError(deviceError)}
           actions={
-            <Button size="sm" onClick={onOpenPermissions}>
-              {t('audio.viewPermissions')}
-            </Button>
+            isMacOS && (
+              <Button size="sm" onClick={onOpenPermissions}>
+                {t('audio.viewPermissions')}
+              </Button>
+            )
           }
         >
           <p className="break-words font-mono text-[0.95em]">{deviceError}</p>
           <p className="mt-1">{t('audio.enumerateHintDefault')}</p>
-          <p className="mt-1">{t('audio.enumerateHintPermission')}</p>
+          {isMacOS && <p className="mt-1">{t('audio.enumerateHintPermission')}</p>}
         </Alert>
       )}
 

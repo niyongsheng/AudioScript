@@ -13,7 +13,7 @@ import {
   SystemAudioVerdict,
   type SystemSettingsPane,
 } from '@/shared/ipc'
-import { isWindows } from '@/shared/platform'
+import { isMacOS, isWindows } from '@/shared/platform'
 import { TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
 import { Button } from '@/ui/Button'
@@ -212,6 +212,8 @@ export function PermissionPanel() {
       setFailure(formatCmdError(e))
     }
   }, [])
+
+  if (!isMacOS) return null
 
   return (
     <div className="space-y-3">
