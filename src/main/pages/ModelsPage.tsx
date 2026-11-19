@@ -346,16 +346,6 @@ function ModelRow({
       title={
         <span className="flex flex-wrap items-center gap-1.5">
           {modelTitle(model, t)}
-          {model.selected && (
-            <span
-              role="img"
-              aria-label={t('models.inUse')}
-              title={t('models.inUse')}
-              className="inline-flex items-center text-[var(--color-accent)]"
-            >
-              <Icon name="check" size={15} strokeWidth={2.25} />
-            </span>
-          )}
           {languageBadge && (
             <StatusBadge size="sm" tone="info">
               {languageBadge}
@@ -410,6 +400,13 @@ function ModelRow({
                 >
                   {model.installed ? t('common.redownload') : t('common.download')}
                 </Button>
+              )}
+
+              {model.selected && (
+                <span className="inline-flex items-center gap-1.5 rounded-[var(--radius-ctl)] border border-[var(--color-border-subtle)] px-2.5 py-1.5 font-medium text-[var(--color-accent)] text-xs">
+                  <Icon name="check" size={12} strokeWidth={2.25} />
+                  {t('models.inUse')}
+                </span>
               )}
 
               {canDelete &&

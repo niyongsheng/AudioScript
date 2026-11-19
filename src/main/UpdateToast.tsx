@@ -1,6 +1,8 @@
 import { useState } from 'react'
 import { track } from '@/shared/analytics'
 import { useI18n } from '@/shared/i18n'
+import { openUrl } from '@/shared/ipc'
+import { DOWNLOAD_URL } from '@/shared/links'
 import { TaskStatus } from '@/shared/types'
 import { Alert } from '@/ui/Alert'
 import { Button } from '@/ui/Button'
@@ -15,8 +17,17 @@ interface Props {
 
 export function UpdateToast({ hidden }: Props) {
   const { t } = useI18n()
-  const { status, updateInfo, updatePhase, updateProgress, updateError, installedVersion, installUpdate, restartApp } =
-    useStore()
+  const {
+    status,
+    updateInfo,
+    updatePhase,
+    updateProgress,
+    updateError,
+    installedVersion,
+    checkUpdate,
+    installUpdate,
+    restartApp,
+  } = useStore()
   const [dismissedVersion, setDismissedVersion] = useState<string | null>(null)
   const [ignoredVersion, setIgnoredVersion] = useState<string | null>(() => localStorage.getItem(IGNORED_UPDATE_KEY))
 
@@ -70,14 +81,34 @@ export function UpdateToast({ hidden }: Props) {
               <Button size="sm" variant="primary" icon="refresh" onClick={() => void restartApp()} disabled={capturing}>
                 {t('common.restart')}
               </Button>
+            ) : updatePhase === 'error' || updatePhase === 'checking' ? (
+              <>
+                <Button
+                  size="sm"
+                  variant="primary"
+                  icon="refresh"
+                  onClick={() => void checkUpdate()}
+                  disabled={capturing || updatePhase === 'checking'}
+                  spinning={updatePhase === 'checking'}
+                >
+                  {t('common.retry')}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  icon="external"
+                  onClick={() => void openUrl(DOWNLOAD_URL).catch(() => {})}
+                >
+                  {t('about.manualUpdate')}
+                </Button>
+              </>
             ) : (
               <Button
                 size="sm"
                 variant="primary"
                 icon="download"
                 onClick={() => void installUpdate()}
-                disabled={capturing || updatePhase === 'checking'}
-                pending={updatePhase === 'checking'}
+                disabled={capturing}
               >
                 {t('app.updateNow')}
               </Button>
