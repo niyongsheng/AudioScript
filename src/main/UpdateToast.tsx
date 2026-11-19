@@ -44,7 +44,7 @@ export function UpdateToast({ hidden }: Props) {
     if (updatePhase === 'error') {
       return t('about.updateError', { error: updateError ?? t('about.unknownError') })
     }
-    return t('app.updateAvailable', { version })
+    return t('about.updateAvailable', { version })
   })()
 
   const close = () => {

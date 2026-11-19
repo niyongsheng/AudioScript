@@ -58,18 +58,14 @@ export const fr: Partial<Messages> = {
   'language.ar': 'العربية',
 
   'app.windowTitle': 'AudioScript',
-  'app.updateAvailable': 'La version v{version} est disponible',
   'app.updateNow': 'Mettre à jour maintenant',
   'app.updateIgnore': 'Ignorer',
-  'app.updateGoAbout': 'Mettre à jour dans À propos',
   'app.operationFailed': 'Échec de l’opération',
   'app.permissionMissing': 'Autorisation système manquante',
   'app.permissionGo': 'Ouvrir Général → Autorisations',
   'app.hotkeyFailed': 'Échec de l’enregistrement des raccourcis globaux : {count}',
   'app.hotkeyFailedDetail':
     '. La superposition ne peut pas être contrôlée par raccourci. Réattribuez-les sur la page Superposition.',
-  'app.audioSilent': 'Aucun son détecté (niveau ≈ 0)',
-  'app.audioSilentDetail': 'Consultez les étapes de dépannage sur la page Audio.',
   'app.languageMismatch': 'La direction de traduction ne correspond pas à la langue parlée',
   'app.languageMismatchDetail':
     'La langue détectée ne correspond pas à la langue source configurée ; la traduction a été ignorée. Réglez la langue source sur la page Traduction ou désactivez la traduction ; le changement prendra effet au prochain démarrage de la transcription.',
@@ -158,7 +154,6 @@ export const fr: Partial<Messages> = {
   'audio.app': 'Application',
   'audio.appSelectPlaceholder': 'Choisir une application',
   'audio.appHint': 'Capture jusqu’à 4 sources audio d’applications.',
-  'audio.appPickHint': 'Choisissez jusqu’à 4 applications à capturer ensemble.',
   'audio.appRequired': 'Choisissez une application à capturer',
   'audio.appLoading': 'Recherche des applications qui émettent du son…',
   'audio.appEmpty': 'Aucune application n’émet de son. Lancez une lecture, puis actualisez.',
@@ -179,7 +174,6 @@ export const fr: Partial<Messages> = {
     'Tant que l’autorisation du microphone n’est pas accordée, macOS refuse toute la liste des périphériques. Vérifiez d’abord Général → Autorisations.',
   'audio.viewPermissions': 'Voir les autorisations',
   'audio.previewFailed': 'Impossible de prévisualiser le niveau d’entrée',
-  'audio.captureHint': 'Les changements de périphérique pendant la capture s’appliquent à la session suivante.',
   'audio.silenceTitle': 'Aucun son détecté (niveau ≈ 0)',
   'audio.silenceCheckApp':
     'Vérifiez que « {app} » émet du son ; une application silencieuse n’a aucun flux audio à capturer.',
@@ -194,7 +188,6 @@ export const fr: Partial<Messages> = {
   'audio.silenceVirtualDevice': 'Pour les périphériques audio virtuels, acheminez d’abord l’audio vers eux.',
   'audio.silenceMic':
     'Vérifiez l’autorisation du microphone ; remplacez les périphériques de bouclage virtuels par un vrai microphone.',
-  'audio.silenceGoPermissions': 'Tester dans Général → Autorisations',
   'audio.silenceOpenSettings': 'Ouvrir directement les Réglages Système',
   'audio.deviceSelectPlaceholder': 'Choisir un périphérique d’entrée',
   'audio.deviceSelectNoDevices': '(aucun périphérique trouvé)',
@@ -241,7 +234,6 @@ export const fr: Partial<Messages> = {
     'Ce n’est pas une .app empaquetée ; le système ne demandera ni n’accordera l’accès. Compilez avec pnpm build:app et lancez depuis la .app.',
   'permissions.micDescNotDetermined': 'Sans autorisation, macOS n’expose pas la liste des périphériques.',
   'permissions.micDescUnknown': 'Impossible de lire l’état d’autorisation du microphone.',
-  'permissions.probeNoProbe': 'Lisez de l’audio, puis cliquez sur Tester.',
   'permissions.probeAudible': 'Un audio non nul a été capturé ; l’autorisation fonctionne.',
   'permissions.probeSilentWhilePlaying':
     'Le système lit de l’audio, mais seul du silence numérique a été capturé — signe typique d’une autorisation refusée.',

@@ -58,18 +58,14 @@ export const de: Partial<Messages> = {
   'language.ar': 'العربية',
 
   'app.windowTitle': 'AudioScript',
-  'app.updateAvailable': 'Version v{version} ist verfügbar',
   'app.updateNow': 'Jetzt aktualisieren',
   'app.updateIgnore': 'Ignorieren',
-  'app.updateGoAbout': 'Unter „Info“ aktualisieren',
   'app.operationFailed': 'Vorgang fehlgeschlagen',
   'app.permissionMissing': 'Systemberechtigung fehlt',
   'app.permissionGo': 'Allgemein → Berechtigungen öffnen',
   'app.hotkeyFailed': 'Globale Tastenkürzel konnten nicht registriert werden: {count}',
   'app.hotkeyFailedDetail':
     '. Das Overlay kann nicht per Tastenkürzel gesteuert werden. Weisen Sie sie auf der Overlay-Seite neu zu.',
-  'app.audioSilent': 'Kein Ton erkannt (Pegel ≈ 0)',
-  'app.audioSilentDetail': 'Lesen Sie die Schritte zur Fehlerbehebung auf der Audio-Seite.',
   'app.languageMismatch': 'Die Übersetzungsrichtung passt nicht zur gesprochenen Sprache',
   'app.languageMismatchDetail':
     'Die erkannte Sprache passt nicht zur eingestellten Ausgangssprache, daher wurde die Übersetzung übersprungen. Stellen Sie die Ausgangssprache auf der Übersetzungsseite ein oder deaktivieren Sie die Übersetzung; die Änderung wirkt beim nächsten Start der Transkription.',
@@ -157,7 +153,6 @@ export const de: Partial<Messages> = {
   'audio.app': 'App',
   'audio.appSelectPlaceholder': 'App auswählen',
   'audio.appHint': 'Nimmt bis zu 4 App-Audioquellen auf.',
-  'audio.appPickHint': 'Wählen Sie bis zu 4 Apps zur gemeinsamen Aufnahme.',
   'audio.appRequired': 'Wählen Sie eine App zum Aufnehmen',
   'audio.appLoading': 'Suche nach Apps mit Audioausgabe…',
   'audio.appEmpty': 'Keine App mit Audioausgabe gefunden. Starten Sie die Wiedergabe und aktualisieren Sie.',
@@ -178,7 +173,6 @@ export const de: Partial<Messages> = {
     'Solange die Mikrofonberechtigung nicht entschieden ist, lehnt macOS die gesamte Geräteliste ab. Prüfen Sie zuerst Allgemein → Berechtigungen.',
   'audio.viewPermissions': 'Berechtigungen anzeigen',
   'audio.previewFailed': 'Eingangspegel kann nicht angezeigt werden',
-  'audio.captureHint': 'Geräteänderungen während der Aufnahme gelten ab der nächsten Sitzung.',
   'audio.silenceTitle': 'Kein Ton erkannt (Pegel ≈ 0)',
   'audio.silenceCheckApp': 'Prüfen Sie, ob „{app}“ Ton ausgibt; eine stumme App hat keinen Audio-Stream zum Aufnehmen.',
   'audio.silenceCheckPlayer': 'Prüfen Sie, ob der Player Ton ausgibt und die Systemlautstärke nicht auf null steht.',
@@ -192,7 +186,6 @@ export const de: Partial<Messages> = {
   'audio.silenceVirtualDevice': 'Leiten Sie bei virtuellen Audiogeräten den Ton zuerst dorthin.',
   'audio.silenceMic':
     'Prüfen Sie die Mikrofonberechtigung; ersetzen Sie virtuelle Loopback-Geräte durch ein echtes Mikrofon.',
-  'audio.silenceGoPermissions': 'Unter Allgemein → Berechtigungen testen',
   'audio.silenceOpenSettings': 'Systemeinstellungen direkt öffnen',
   'audio.deviceSelectPlaceholder': 'Eingabegerät auswählen',
   'audio.deviceSelectNoDevices': '(keine Geräte gefunden)',
@@ -240,7 +233,6 @@ export const de: Partial<Messages> = {
     'Dies ist keine gepackte .app; das System fragt nicht und erteilt keinen Zugriff. Bauen Sie mit pnpm build:app und starten Sie aus der .app.',
   'permissions.micDescNotDetermined': 'Ohne Berechtigung stellt macOS die Geräteliste nicht bereit.',
   'permissions.micDescUnknown': 'Mikrofonberechtigungsstatus kann nicht gelesen werden.',
-  'permissions.probeNoProbe': 'Spielen Sie Audio ab und klicken Sie dann auf Prüfen.',
   'permissions.probeAudible': 'Nichtstilles Audio wurde erfasst; die Berechtigung funktioniert.',
   'permissions.probeSilentWhilePlaying':
     'Das System gibt Audio aus, aber es wurde nur digitales Schweigen erfasst – ein typisches Zeichen für eine verweigerte Berechtigung.',

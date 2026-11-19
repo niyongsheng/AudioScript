@@ -58,17 +58,13 @@ export const ptBR: Partial<Messages> = {
   'language.ar': 'العربية',
 
   'app.windowTitle': 'AudioScript',
-  'app.updateAvailable': 'Versão v{version} disponível',
   'app.updateNow': 'Atualizar agora',
   'app.updateIgnore': 'Ignorar',
-  'app.updateGoAbout': 'Atualizar na página Sobre',
   'app.operationFailed': 'Falha na operação',
   'app.permissionMissing': 'Permissão do sistema ausente',
   'app.permissionGo': 'Abrir Geral → Permissões',
   'app.hotkeyFailed': 'Falha ao registrar atalhos globais: {count}',
   'app.hotkeyFailedDetail': '. A sobreposição não pode ser controlada por atalho. Reassocie na página Sobreposição.',
-  'app.audioSilent': 'Nenhum áudio detectado (nível ≈ 0)',
-  'app.audioSilentDetail': 'Veja as etapas de solução de problemas na página Áudio.',
   'app.languageMismatch': 'A direção da tradução não corresponde ao idioma falado',
   'app.languageMismatchDetail':
     'O idioma detectado não corresponde ao idioma de origem configurado, então a tradução foi ignorada. Ajuste o idioma de origem na página Tradução ou desative a tradução; a alteração vale ao iniciar uma nova transcrição.',
@@ -155,7 +151,6 @@ export const ptBR: Partial<Messages> = {
   'audio.app': 'Aplicativo',
   'audio.appSelectPlaceholder': 'Escolher um aplicativo',
   'audio.appHint': 'Captura até 4 fontes de áudio de aplicativos.',
-  'audio.appPickHint': 'Escolha até 4 aplicativos para capturar juntos.',
   'audio.appRequired': 'Escolha um aplicativo para capturar',
   'audio.appLoading': 'Procurando aplicativos com saída de áudio…',
   'audio.appEmpty': 'Nenhum aplicativo com saída de áudio. Inicie a reprodução e atualize.',
@@ -176,7 +171,6 @@ export const ptBR: Partial<Messages> = {
     'Enquanto a permissão de microfone não é decidida, o macOS rejeita a lista inteira de dispositivos. Verifique Geral → Permissões primeiro.',
   'audio.viewPermissions': 'Ver permissões',
   'audio.previewFailed': 'Não foi possível pré-visualizar o nível de entrada',
-  'audio.captureHint': 'Mudanças de dispositivo durante a captura valem para a próxima sessão.',
   'audio.silenceTitle': 'Nenhum áudio detectado (nível ≈ 0)',
   'audio.silenceCheckApp':
     'Confirme que «{app}» está reproduzindo som; um aplicativo em silêncio não tem fluxo de áudio para capturar.',
@@ -191,7 +185,6 @@ export const ptBR: Partial<Messages> = {
   'audio.silenceVirtualDevice': 'Para dispositivos de áudio virtuais, direcione o áudio para eles primeiro.',
   'audio.silenceMic':
     'Verifique a permissão do microfone; substitua dispositivos de loopback virtuais por um microfone real.',
-  'audio.silenceGoPermissions': 'Testar em Geral → Permissões',
   'audio.silenceOpenSettings': 'Abrir Ajustes do Sistema',
   'audio.deviceSelectPlaceholder': 'Selecionar dispositivo de entrada',
   'audio.deviceSelectNoDevices': '(nenhum dispositivo encontrado)',
@@ -238,7 +231,6 @@ export const ptBR: Partial<Messages> = {
     'Este não é um .app empacotado, então o sistema não solicita nem concede acesso. Compile com pnpm build:app e inicie pelo .app.',
   'permissions.micDescNotDetermined': 'Sem permissão, o macOS não expõe a lista de dispositivos.',
   'permissions.micDescUnknown': 'Não foi possível ler o status de autorização do microfone.',
-  'permissions.probeNoProbe': 'Reproduza algum áudio e clique em Testar.',
   'permissions.probeAudible': 'Áudio diferente de zero capturado; a permissão está funcionando.',
   'permissions.probeSilentWhilePlaying':
     'O sistema está reproduzindo áudio, mas só foi capturado silêncio digital — sinal típico de permissão negada.',

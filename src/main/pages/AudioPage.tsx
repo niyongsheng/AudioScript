@@ -356,9 +356,7 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
                   ? t('audio.appEmpty')
                   : !showAllApps && visibleProcesses.length === 0
                     ? t('audio.appNoPlaying')
-                    : appTargets.length === 0
-                      ? t('audio.appPickHint')
-                      : t('audio.appHint'))
+                    : t('audio.appHint'))
             }
             control={
               <div className="flex items-center gap-1.5">
@@ -400,8 +398,6 @@ export function AudioPage({ onOpenPermissions }: { onOpenPermissions: () => void
           />
         )}
       </SettingsGroup>
-
-      {capturing && <p className="text-[var(--color-ink-2)] text-[0.7rem]">{t('audio.captureHint')}</p>}
     </Page>
   )
 }
@@ -496,7 +492,7 @@ function SilenceHelp({
         <>
           {isMacOS && (
             <Button size="sm" onClick={onOpenPermissions}>
-              {t('audio.silenceGoPermissions')}
+              {t('app.permissionGo')}
             </Button>
           )}
           {(isMacOS || isWindows) && (

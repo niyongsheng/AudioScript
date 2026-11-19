@@ -132,7 +132,7 @@ export function PermissionPanel() {
   }
 
   const probeDescription = (value: SystemAudioProbe | null): string => {
-    if (!value) return t('permissions.probeNoProbe')
+    if (!value) return t('permissions.probeNoAudioPlaying')
     switch (value.verdict) {
       case SystemAudioVerdict.Audible:
         return t('permissions.probeAudible')

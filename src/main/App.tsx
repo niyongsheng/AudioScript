@@ -104,7 +104,12 @@ function Shell() {
       <section className="flex min-w-0 flex-1 flex-col bg-[var(--color-surface-0)]">
         <TitleBarSpacer />
 
-        <Alerts onOpenPermissions={openPermissions} onOpenTranslate={() => setPage('translate')} />
+        <Alerts
+          page={page}
+          onOpenPermissions={openPermissions}
+          onOpenTranslate={() => setPage('translate')}
+          onOpenAudio={() => setPage('audio')}
+        />
 
         <div className="flex-1 overflow-y-auto">
           <PageSwitch
@@ -166,11 +171,13 @@ function PageSwitch({ page, onOpenPermissions, focusPermissions, onFocusPermissi
 }
 
 interface AlertsProps {
+  page: PageId
   onOpenPermissions: () => void
   onOpenTranslate: () => void
+  onOpenAudio: () => void
 }
 
-function Alerts({ onOpenPermissions, onOpenTranslate }: AlertsProps) {
+function Alerts({ page, onOpenPermissions, onOpenTranslate, onOpenAudio }: AlertsProps) {
   const { t } = useI18n()
   const {
     error,
@@ -192,7 +199,7 @@ function Alerts({ onOpenPermissions, onOpenTranslate }: AlertsProps) {
   const showHotkeys = hotkeyProblems.length > 0 && dismissedHotkeys !== hotkeyKey
   const silentNow = Boolean(audio?.silent && audio.segments === 0 && status === TaskStatus.Capturing)
   const showMismatch = languageMismatch && status === TaskStatus.Capturing
-  const showSilent = silentNow && !silentDismissed
+  const showSilent = silentNow && !silentDismissed && page !== 'audio'
 
   useEffect(() => {
     if (hotkeyProblems.length === 0) setDismissedHotkeys(null)
@@ -246,9 +253,11 @@ function Alerts({ onOpenPermissions, onOpenTranslate }: AlertsProps) {
           title={t('app.languageMismatch')}
           onDismiss={() => setLanguageMismatch(false)}
           actions={
-            <Button size="sm" onClick={onOpenTranslate}>
-              {t('app.languageMismatchGo')}
-            </Button>
+            page !== 'translate' && (
+              <Button size="sm" onClick={onOpenTranslate}>
+                {t('app.languageMismatchGo')}
+              </Button>
+            )
           }
         >
           {t('app.languageMismatchDetail')}
@@ -267,9 +276,16 @@ function Alerts({ onOpenPermissions, onOpenTranslate }: AlertsProps) {
       )}
 
       {showSilent && (
-        <Alert tone="warn" title={t('app.audioSilent')} onDismiss={() => setSilentDismissed(true)}>
-          {t('app.audioSilentDetail')}
-        </Alert>
+        <Alert
+          tone="warn"
+          title={t('audio.silenceTitle')}
+          onDismiss={() => setSilentDismissed(true)}
+          actions={
+            <Button size="sm" onClick={onOpenAudio}>
+              {t('app.audioSilentGo')}
+            </Button>
+          }
+        />
       )}
     </div>
   )

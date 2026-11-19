@@ -58,18 +58,14 @@ export const ja: Partial<Messages> = {
   'language.ar': 'العربية',
 
   'app.windowTitle': 'AudioScript',
-  'app.updateAvailable': '新しいバージョン v{version} があります',
   'app.updateNow': '今すぐ更新',
   'app.updateIgnore': '無視',
-  'app.updateGoAbout': '「情報」ページで更新',
   'app.operationFailed': '操作に失敗しました',
   'app.permissionMissing': 'システム権限がありません',
   'app.permissionGo': '「一般 → 権限」で対処',
   'app.hotkeyFailed': '{count} 個のグローバルショートカットを登録できませんでした',
   'app.hotkeyFailedDetail':
     '。ショートカットでオーバーレイを操作できません。「オーバーレイ」ページで再割り当てしてください。',
-  'app.audioSilent': '音声が入力されません（レベル ≈ 0）',
-  'app.audioSilentDetail': '「音声」ページでトラブルシューティングを確認してください。',
   'app.languageMismatch': '翻訳方向と音声の言語が一致しません',
   'app.languageMismatchDetail':
     '認識された言語が設定中の元の言語と一致しないため、翻訳をスキップしました。「翻訳」ページで元の言語を変更するか、翻訳をオフにしてください。文字起こしを開始し直すと反映されます。',
@@ -153,7 +149,6 @@ export const ja: Partial<Messages> = {
   'audio.app': 'アプリ',
   'audio.appSelectPlaceholder': 'アプリを選択',
   'audio.appHint': '最大 4 つのアプリ音声をキャプチャします。',
-  'audio.appPickHint': '同時にキャプチャするアプリを最大 4 つ選択できます。',
   'audio.appRequired': 'キャプチャするアプリを選択してください',
   'audio.appLoading': '音声を出力中のアプリを検索しています…',
   'audio.appEmpty': '音声を出力中のアプリが見つかりません。再生してから更新してください。',
@@ -174,7 +169,6 @@ export const ja: Partial<Messages> = {
     'マイクの権限が未決定の間、macOS はデバイス一覧全体を拒否します。先に「一般 → 権限」を確認してください。',
   'audio.viewPermissions': '権限を確認',
   'audio.previewFailed': '入力レベルをプレビューできません',
-  'audio.captureHint': 'キャプチャ中にデバイスを変更しても、次のセッションから適用されます。',
   'audio.silenceTitle': '音声が入力されません（レベル ≈ 0）',
   'audio.silenceCheckApp':
     '「{app}」が音声を再生していることを確認してください。無音のアプリにはキャプチャできる音声ストリームがありません。',
@@ -188,7 +182,6 @@ export const ja: Partial<Messages> = {
     'PipeWire がアプリの音声を選択したデバイスにルーティングしているか確認してください。',
   'audio.silenceVirtualDevice': '仮想オーディオデバイスを選んだ場合は、先に音声をそこへルーティングしてください。',
   'audio.silenceMic': 'マイクの権限を確認してください。仮想ループバックデバイスは実際のマイクに変更してください。',
-  'audio.silenceGoPermissions': '「一般 → 権限」で検出',
   'audio.silenceOpenSettings': 'システム設定を直接開く',
   'audio.deviceSelectPlaceholder': '入力デバイスを選択',
   'audio.deviceSelectNoDevices': '（デバイスが見つかりません）',
@@ -233,7 +226,6 @@ export const ja: Partial<Messages> = {
     'これはパッケージ済みの .app ではないため、システムは確認も許可も行いません。pnpm build:app でビルドし、.app から起動してください。',
   'permissions.micDescNotDetermined': '許可がない場合、macOS はデバイス一覧を提供しません。',
   'permissions.micDescUnknown': 'マイクの許可状態を読み取れません。',
-  'permissions.probeNoProbe': '音声を再生してから「検出」をクリックしてください。',
   'permissions.probeAudible': '非ゼロの音声を取得しました。権限は正常です。',
   'permissions.probeSilentWhilePlaying':
     'システムは音声を再生していますが、取得できたのはデジタル無音のみです。権限が拒否されている典型的な症状です。',
