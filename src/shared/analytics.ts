@@ -120,12 +120,21 @@ function reportError(
   }
 }
 
+// wry 在 macOS 把鼠标侧键（后退/前进）合成为 mousedown/mouseup 时，
+// document.elementFromPoint 命中空白区域会返回 null，脚本仍调用 el.dispatchEvent 抛出
+// TypeError。这是上游 wry 的缺陷，用户侧没有功能损失，不必上报。
+function isWrySyntheticMouseMiss(error: unknown, message: string): boolean {
+  const text = error instanceof Error ? error.message : message
+  return text.includes("evaluating 'el.dispatchEvent'")
+}
+
 if (typeof window !== 'undefined') {
   window.addEventListener('error', (event) => {
+    const message = String(event.message || '')
     if (!event.error) {
-      const message = String(event.message || '')
       if (!message || message === 'Script error.' || message.includes('ResizeObserver loop')) return
     }
+    if (isWrySyntheticMouseMiss(event.error, message)) return
     reportError(event.error ?? event.message, 'error', {
       source: event.filename || undefined,
       line: event.lineno || undefined,
