@@ -202,7 +202,7 @@ export const en: Messages = {
   'permissions.speechDescNotDetermined':
     'Not authorized yet; macOS prompts when transcription starts, or request it now.',
   'permissions.speechDescDenied': 'Denied. Allow AudioScript to use speech recognition in System Settings.',
-  'permissions.speechAssets': '{count} system language assets installed.',
+  'permissions.speechAssets': 'System language assets installed: {count}',
   'permissions.speechAuthorized': 'Authorized',
   'permissions.speechNotDetermined': 'Not authorized',
   'permissions.speechDenied': 'Denied',

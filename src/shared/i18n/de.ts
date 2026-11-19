@@ -69,7 +69,7 @@ export const de: Partial<Messages> = {
     '. Das Overlay kann nicht per Tastenkürzel gesteuert werden. Weisen Sie sie auf der Overlay-Seite neu zu.',
   'app.languageMismatch': 'Die Übersetzungsrichtung passt nicht zur gesprochenen Sprache',
   'app.languageMismatchDetail':
-    'Die erkannte Sprache passt nicht zur eingestellten Ausgangssprache, daher wurde die Übersetzung übersprungen. Stellen Sie die Ausgangssprache auf der Übersetzungsseite ein oder deaktivieren Sie die Übersetzung; die Änderung wirkt beim nächsten Start der Transkription.',
+    'Die erkannte Sprache passt nicht zur eingestellten Ausgangssprache, daher wurde die Übersetzung übersprungen. Beenden Sie die Transkription, stellen Sie die Ausgangssprache auf der Übersetzungsseite ein und starten Sie neu – oder deaktivieren Sie die Übersetzung.',
   'app.languageMismatchGo': 'Übersetzungsseite öffnen',
 
   'whatsNew.welcome': 'Willkommen bei',
@@ -210,7 +210,7 @@ export const de: Partial<Messages> = {
     'Noch nicht autorisiert; macOS fragt beim Start der Transkription oder Sie fordern es jetzt an.',
   'permissions.speechDescDenied':
     'Verweigert. Erlauben Sie AudioScript die Spracherkennung in den Systemeinstellungen.',
-  'permissions.speechAssets': '{count} Systemsprachressourcen installiert.',
+  'permissions.speechAssets': 'Installierte Systemsprachressourcen: {count}',
   'permissions.speechAuthorized': 'Autorisiert',
   'permissions.speechNotDetermined': 'Nicht autorisiert',
   'permissions.speechDenied': 'Verweigert',
@@ -247,7 +247,7 @@ export const de: Partial<Messages> = {
   'permissions.probeSilentWhilePlaying':
     'Das System gibt Audio aus, aber es wurde nur digitales Schweigen erfasst – ein typisches Zeichen für eine verweigerte Berechtigung.',
   'permissions.probeTapRejected': 'Das System hat die Systemaudioaufnahme ausdrücklich abgelehnt.',
-  'permissions.probeNoAudioPlaying': 'Es wird kein Systemaudio abgespielt. Spielen Sie Audio ab und prüfen Sie erneut.',
+  'permissions.probeNoAudioPlaying': 'Spielen Sie Audio ab und klicken Sie dann auf Prüfen.',
   'permissions.probeUnsupportedOs': 'Erfordert macOS 14.4 oder neuer.',
   'permissions.probeInconclusive': 'Nicht feststellbar. Versuchen Sie es erneut.',
   'permissions.mute': 'Stumm',
@@ -319,8 +319,7 @@ export const de: Partial<Messages> = {
   'overlay.shortcutsGroup': 'Tastenkürzel',
   'overlay.shortcutToggleMode': 'Overlay-Sperre / Entsperren umschalten',
   'overlay.shortcutToggleVisible': 'Overlay ein-/ausblenden',
-  'overlay.shortcutsFooter':
-    'Nur Kombinationen aus Modifikatortaste + einzelner Taste werden unterstützt; unter macOS ist keine Bedienungshilfen-Berechtigung nötig.',
+  'overlay.shortcutsFooter': 'Nur Kombinationen aus Modifikatortaste + einzelner Taste werden unterstützt.',
   'overlay.customized': 'Taste geändert',
   'overlay.registerFailed': 'Registrierung fehlgeschlagen; möglicherweise verwendet eine andere App sie',
   'overlay.appearanceGroup': 'Darstellung',
@@ -386,22 +385,21 @@ export const de: Partial<Messages> = {
   'models.capturingBody': 'Beenden Sie die Transkription, bevor Sie ein Modell löschen.',
   'models.downloadFailedTitle': 'Download von {title} fehlgeschlagen',
   'models.downloadFailedFallback': 'Download fehlgeschlagen',
-  'models.downloadFailedOfflineHint':
-    'Wenn es wiederholt fehlschlägt, laden Sie das Offline-Modellpaket und folgen Sie den Hinweisen auf der Seite.',
+  'models.downloadFailedOfflineHint': 'Wenn es wiederholt fehlschlägt, wechseln Sie zur Offline-Installation.',
   'models.downloadOffline': 'Offline-Modellpaket holen',
   'models.asrGroup': 'Spracherkennung',
   'models.mtGroup': 'Maschinelle Übersetzung',
   'models.noStorage': 'Der Modellspeicherordner kann nicht ermittelt werden; optionale Modelle sind nicht verfügbar.',
   'models.storageGroup': 'Speicher',
   'models.storageLocation': 'Modellspeicherort',
-  'models.storageChange': 'Ändern',
+  'models.storageChange': 'Pfad ändern',
   'models.storageReset': 'Standardort verwenden',
   'models.storagePickTitle': 'Ordner für heruntergeladene Modelle wählen',
   'models.storageResetTitle': 'Standard-Speicherort wiederherstellen?',
   'models.storageResetWarn':
     'Modelle, die nach {path} heruntergeladen wurden, bleiben auf dem Datenträger, werden aber nicht mehr aufgelistet. Löschen Sie sie zuerst, um den Speicherplatz freizugeben.',
   'models.storageResetConfirm': 'Standardort wiederherstellen',
-  'models.inUse': 'In Verwendung',
+  'models.inUse': 'Aktiviert',
   'models.bundled': 'Integriert',
   'models.multilingual': 'Mehrsprachig',
   'models.languageZh': 'Chinesisch',

@@ -69,7 +69,7 @@ export const ja: Partial<Messages> = {
     '。ショートカットでオーバーレイを操作できません。「オーバーレイ」ページで再割り当てしてください。',
   'app.languageMismatch': '翻訳方向と音声の言語が一致しません',
   'app.languageMismatchDetail':
-    '認識された言語が設定中の元の言語と一致しないため、翻訳をスキップしました。「翻訳」ページで元の言語を変更するか、翻訳をオフにしてください。文字起こしを開始し直すと反映されます。',
+    '認識された言語が設定中の元の言語と一致しないため、翻訳をスキップしました。文字起こしを停止し、「翻訳」ページで元の言語を設定してから再開してください。翻訳をオフにすることもできます。',
   'app.languageMismatchGo': '「翻訳」ページを開く',
 
   'welcome.title': '{name} へようこそ',
@@ -240,7 +240,7 @@ export const ja: Partial<Messages> = {
   'permissions.probeSilentWhilePlaying':
     'システムは音声を再生していますが、取得できたのはデジタル無音のみです。権限が拒否されている典型的な症状です。',
   'permissions.probeTapRejected': 'システムがシステム音声のキャプチャを明確に拒否しました。',
-  'permissions.probeNoAudioPlaying': 'システム音声が再生されていません。音声を再生してから再度検出してください。',
+  'permissions.probeNoAudioPlaying': '音声を再生してから「検出」をクリックしてください。',
   'permissions.probeUnsupportedOs': 'macOS 14.4 以降が必要です。',
   'permissions.probeInconclusive': '判定できません。再試行してください。',
   'permissions.mute': 'ミュート',
@@ -310,8 +310,7 @@ export const ja: Partial<Messages> = {
   'overlay.shortcutsGroup': 'ショートカット',
   'overlay.shortcutToggleMode': 'オーバーレイのロック / 解除を切り替え',
   'overlay.shortcutToggleVisible': 'オーバーレイの表示 / 非表示を切り替え',
-  'overlay.shortcutsFooter':
-    '「修飾キー + 単一キー」の組み合わせのみ対応しています。macOS ではアクセシビリティ権限が不要です。',
+  'overlay.shortcutsFooter': '「修飾キー + 単一キー」の組み合わせのみ対応しています。',
   'overlay.customized': 'キーを変更済み',
   'overlay.registerFailed': '登録に失敗しました。他のアプリが使用中の可能性があります',
   'overlay.appearanceGroup': '外観',
@@ -376,22 +375,21 @@ export const ja: Partial<Messages> = {
   'models.capturingBody': 'モデルを削除するには文字起こしを停止してください。',
   'models.downloadFailedTitle': '{title} のダウンロードに失敗しました',
   'models.downloadFailedFallback': 'ダウンロードに失敗しました',
-  'models.downloadFailedOfflineHint':
-    '何度も失敗する場合は、オフラインモデルパックを入手し、ページの手順に従ってインストールしてください。',
+  'models.downloadFailedOfflineHint': '何度も失敗する場合は、オフラインインストールに切り替えてください。',
   'models.downloadOffline': 'オフラインモデルパックを入手',
   'models.asrGroup': '音声認識',
   'models.mtGroup': '機械翻訳',
   'models.noStorage': 'モデルの保存先を解決できないため、オプションのモデルは利用できません。',
   'models.storageGroup': 'ストレージ',
   'models.storageLocation': 'モデルの保存先',
-  'models.storageChange': '変更',
+  'models.storageChange': 'パスを変更',
   'models.storageReset': 'デフォルトに戻す',
   'models.storagePickTitle': 'モデルのダウンロード先フォルダーを選択',
   'models.storageResetTitle': '保存先をデフォルトに戻しますか？',
   'models.storageResetWarn':
     '{path} にダウンロードしたモデルはディスクに残りますが、一覧には表示されなくなります。容量を空ける場合は先に削除してください。',
   'models.storageResetConfirm': 'デフォルトに戻す',
-  'models.inUse': '使用中',
+  'models.inUse': '有効',
   'models.bundled': '内蔵',
   'models.multilingual': '多言語',
   'models.languageZh': '中国語',

@@ -68,7 +68,7 @@ export const ptBR: Partial<Messages> = {
   'app.hotkeyFailedDetail': '. A sobreposição não pode ser controlada por atalho. Reassocie na página Sobreposição.',
   'app.languageMismatch': 'A direção da tradução não corresponde ao idioma falado',
   'app.languageMismatchDetail':
-    'O idioma detectado não corresponde ao idioma de origem configurado, então a tradução foi ignorada. Ajuste o idioma de origem na página Tradução ou desative a tradução; a alteração vale ao iniciar uma nova transcrição.',
+    'O idioma detectado não corresponde ao idioma de origem configurado, então a tradução foi ignorada. Pare a transcrição, ajuste o idioma de origem na página Tradução e comece de novo — ou desative a tradução.',
   'app.languageMismatchGo': 'Abrir a página Tradução',
 
   'welcome.title': 'Bem-vindo ao {name}',
@@ -209,7 +209,7 @@ export const ptBR: Partial<Messages> = {
     'Ainda não autorizado; o macOS pergunta ao iniciar a transcrição, ou solicite agora.',
   'permissions.speechDescDenied':
     'Negado. Permita que o AudioScript use reconhecimento de fala nos Ajustes do Sistema.',
-  'permissions.speechAssets': '{count} recursos de idioma do sistema instalados.',
+  'permissions.speechAssets': 'Recursos de idioma do sistema instalados: {count}',
   'permissions.speechAuthorized': 'Autorizado',
   'permissions.speechNotDetermined': 'Não autorizado',
   'permissions.speechDenied': 'Negado',
@@ -245,7 +245,7 @@ export const ptBR: Partial<Messages> = {
   'permissions.probeSilentWhilePlaying':
     'O sistema está reproduzindo áudio, mas só foi capturado silêncio digital — sinal típico de permissão negada.',
   'permissions.probeTapRejected': 'O sistema rejeitou explicitamente a captura de áudio do sistema.',
-  'permissions.probeNoAudioPlaying': 'Nenhum áudio do sistema está tocando. Reproduza algo e teste novamente.',
+  'permissions.probeNoAudioPlaying': 'Reproduza um áudio e clique em Testar.',
   'permissions.probeUnsupportedOs': 'Requer macOS 14.4 ou posterior.',
   'permissions.probeInconclusive': 'Não foi possível determinar. Tente novamente.',
   'permissions.mute': 'Silenciar',
@@ -315,8 +315,7 @@ export const ptBR: Partial<Messages> = {
   'overlay.shortcutsGroup': 'Atalhos',
   'overlay.shortcutToggleMode': 'Alternar bloqueio / desbloqueio da sobreposição',
   'overlay.shortcutToggleVisible': 'Mostrar / ocultar sobreposição',
-  'overlay.shortcutsFooter':
-    'Somente combinações de modificador + uma tecla; no macOS elas não exigem permissão de Acessibilidade.',
+  'overlay.shortcutsFooter': 'Somente combinações de modificador + uma tecla são suportadas.',
   'overlay.customized': 'Tecla alterada',
   'overlay.registerFailed': 'Falha no registro; outro aplicativo pode estar usando',
   'overlay.appearanceGroup': 'Aparência',
@@ -381,22 +380,21 @@ export const ptBR: Partial<Messages> = {
   'models.capturingBody': 'Pare a transcrição antes de excluir um modelo.',
   'models.downloadFailedTitle': 'Falha no download de {title}',
   'models.downloadFailedFallback': 'Falha no download',
-  'models.downloadFailedOfflineHint':
-    'Se falhar repetidamente, baixe o pacote de modelos offline e siga as instruções da página.',
+  'models.downloadFailedOfflineHint': 'Se falhar repetidamente, use a instalação offline.',
   'models.downloadOffline': 'Obter pacote de modelos offline',
   'models.asrGroup': 'Reconhecimento de fala',
   'models.mtGroup': 'Tradução automática',
   'models.noStorage': 'Não foi possível resolver a pasta de armazenamento de modelos; modelos opcionais indisponíveis.',
   'models.storageGroup': 'Armazenamento',
   'models.storageLocation': 'Local de armazenamento dos modelos',
-  'models.storageChange': 'Alterar',
+  'models.storageChange': 'Alterar caminho',
   'models.storageReset': 'Usar padrão',
   'models.storagePickTitle': 'Escolha uma pasta para os modelos baixados',
   'models.storageResetTitle': 'Restaurar o local padrão?',
   'models.storageResetWarn':
     'Modelos baixados em {path} permanecerão no disco, mas não aparecerão mais na lista. Exclua-os primeiro se quiser liberar esse espaço.',
   'models.storageResetConfirm': 'Restaurar padrão',
-  'models.inUse': 'Em uso',
+  'models.inUse': 'Ativado',
   'models.bundled': 'Incluído',
   'models.multilingual': 'Multilíngue',
   'models.languageZh': 'Chinês',

@@ -68,7 +68,7 @@ export const ru: Partial<Messages> = {
   'app.hotkeyFailedDetail': '. Оверлеем нельзя управлять сочетанием клавиш. Задайте его заново на странице «Оверлей».',
   'app.languageMismatch': 'Направление перевода не совпадает с языком речи',
   'app.languageMismatchDetail':
-    'Обнаруженный язык не совпадает с исходным языком в настройках, поэтому перевод пропущен. Укажите исходный язык на странице «Перевод» или отключите перевод; изменение вступит в силу при следующем запуске транскрипции.',
+    'Обнаруженный язык не совпадает с исходным языком в настройках, поэтому перевод пропущен. Остановите транскрипцию, укажите исходный язык на странице «Перевод» и запустите снова — или отключите перевод.',
   'app.languageMismatchGo': 'Открыть страницу «Перевод»',
 
   'welcome.title': 'Добро пожаловать в {name}',
@@ -243,7 +243,7 @@ export const ru: Partial<Messages> = {
   'permissions.probeSilentWhilePlaying':
     'Система воспроизводит звук, но записана только цифровая тишина — типичный признак отказа в разрешении.',
   'permissions.probeTapRejected': 'Система явно отклонила захват системного звука.',
-  'permissions.probeNoAudioPlaying': 'Системный звук не воспроизводится. Включите что-нибудь и проверьте снова.',
+  'permissions.probeNoAudioPlaying': 'Включите аудио и нажмите «Проверить».',
   'permissions.probeUnsupportedOs': 'Требуется macOS 14.4 или новее.',
   'permissions.probeInconclusive': 'Не удалось определить. Повторите попытку.',
   'permissions.mute': 'Без звука',
@@ -314,8 +314,7 @@ export const ru: Partial<Messages> = {
   'overlay.shortcutsGroup': 'Сочетания клавиш',
   'overlay.shortcutToggleMode': 'Переключить блокировку / разблокировку оверлея',
   'overlay.shortcutToggleVisible': 'Показать / скрыть оверлей',
-  'overlay.shortcutsFooter':
-    'Поддерживаются только сочетания «модификатор + одна клавиша»; в macOS они не требуют разрешения «Универсальный доступ».',
+  'overlay.shortcutsFooter': 'Поддерживаются только сочетания «модификатор + одна клавиша».',
   'overlay.customized': 'Клавиша изменена',
   'overlay.registerFailed': 'Не удалось зарегистрировать; возможно, занято другим приложением',
   'overlay.appearanceGroup': 'Внешний вид',
@@ -380,22 +379,21 @@ export const ru: Partial<Messages> = {
   'models.capturingBody': 'Остановите транскрипцию перед удалением модели.',
   'models.downloadFailedTitle': 'Не удалось скачать {title}',
   'models.downloadFailedFallback': 'Не удалось скачать',
-  'models.downloadFailedOfflineHint':
-    'Если загрузка снова не удалась, скачайте офлайн-набор моделей и следуйте инструкции на странице.',
+  'models.downloadFailedOfflineHint': 'Если загрузка снова не удалась, перейдите к офлайн-установке.',
   'models.downloadOffline': 'Скачать офлайн-набор моделей',
   'models.asrGroup': 'Распознавание речи',
   'models.mtGroup': 'Машинный перевод',
   'models.noStorage': 'Не удалось определить папку моделей; дополнительные модели недоступны.',
   'models.storageGroup': 'Хранилище',
   'models.storageLocation': 'Расположение хранилища моделей',
-  'models.storageChange': 'Изменить',
+  'models.storageChange': 'Изменить путь',
   'models.storageReset': 'Использовать по умолчанию',
   'models.storagePickTitle': 'Выберите папку для скачанных моделей',
   'models.storageResetTitle': 'Восстановить расположение по умолчанию?',
   'models.storageResetWarn':
     'Модели, скачанные в {path}, останутся на диске, но пропадут из списка. Удалите их заранее, если хотите освободить место.',
   'models.storageResetConfirm': 'Восстановить по умолчанию',
-  'models.inUse': 'Используется',
+  'models.inUse': 'Включено',
   'models.bundled': 'Встроенная',
   'models.multilingual': 'Многоязычная',
   'models.languageZh': 'Китайский',

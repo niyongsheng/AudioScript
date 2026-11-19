@@ -69,7 +69,7 @@ export const it: Partial<Messages> = {
     '. La sovrapposizione non può essere controllata con scorciatoie. Riassegnala nella pagina Sovrapposizione.',
   'app.languageMismatch': 'La direzione della traduzione non corrisponde alla lingua parlata',
   'app.languageMismatchDetail':
-    'La lingua rilevata non corrisponde alla lingua di origine configurata, quindi la traduzione è stata saltata. Imposta la lingua di origine nella pagina Traduzione o disattiva la traduzione; la modifica vale al prossimo avvio della trascrizione.',
+    'La lingua rilevata non corrisponde alla lingua di origine configurata, quindi la traduzione è stata saltata. Interrompi la trascrizione, imposta la lingua di origine nella pagina Traduzione e riavvia — oppure disattiva la traduzione.',
   'app.languageMismatchGo': 'Apri la pagina Traduzione',
 
   'welcome.title': 'Benvenuto in {name}',
@@ -210,7 +210,7 @@ export const it: Partial<Messages> = {
     'Non ancora autorizzato; macOS chiede all’avvio della trascrizione, oppure richiedilo ora.',
   'permissions.speechDescDenied':
     'Negato. Consenti ad AudioScript di usare il riconoscimento vocale nelle Impostazioni di Sistema.',
-  'permissions.speechAssets': 'Risorse linguistiche di sistema installate: {count}.',
+  'permissions.speechAssets': 'Risorse linguistiche di sistema installate: {count}',
   'permissions.speechAuthorized': 'Autorizzato',
   'permissions.speechNotDetermined': 'Non autorizzato',
   'permissions.speechDenied': 'Negato',
@@ -246,7 +246,7 @@ export const it: Partial<Messages> = {
   'permissions.probeSilentWhilePlaying':
     'Il sistema sta riproducendo audio, ma è stato catturato solo silenzio digitale: segno tipico di autorizzazione negata.',
   'permissions.probeTapRejected': 'Il sistema ha rifiutato esplicitamente la cattura dell’audio di sistema.',
-  'permissions.probeNoAudioPlaying': 'Nessun audio di sistema in riproduzione. Riproduci qualcosa e verifica di nuovo.',
+  'permissions.probeNoAudioPlaying': 'Riproduci dell’audio, poi fai clic su Verifica.',
   'permissions.probeUnsupportedOs': 'Richiede macOS 14.4 o successivo.',
   'permissions.probeInconclusive': 'Impossibile determinare. Riprova.',
   'permissions.mute': 'Disattiva audio',
@@ -316,8 +316,7 @@ export const it: Partial<Messages> = {
   'overlay.shortcutsGroup': 'Scorciatoie',
   'overlay.shortcutToggleMode': 'Attiva/disattiva blocco / sblocco della sovrapposizione',
   'overlay.shortcutToggleVisible': 'Mostra / nascondi sovrapposizione',
-  'overlay.shortcutsFooter':
-    'Sono supportate solo combinazioni modificatore + singolo tasto; su macOS non richiedono l’autorizzazione Accessibilità.',
+  'overlay.shortcutsFooter': 'Sono supportate solo combinazioni modificatore + singolo tasto.',
   'overlay.customized': 'Tasto modificato',
   'overlay.registerFailed': 'Registrazione non riuscita; forse è usata da un’altra app',
   'overlay.appearanceGroup': 'Aspetto',
@@ -382,8 +381,7 @@ export const it: Partial<Messages> = {
   'models.capturingBody': 'Ferma la trascrizione prima di eliminare un modello.',
   'models.downloadFailedTitle': 'Download di {title} non riuscito',
   'models.downloadFailedFallback': 'Download non riuscito',
-  'models.downloadFailedOfflineHint':
-    'Se continua a fallire, scarica il pacchetto di modelli offline e segui le istruzioni della pagina.',
+  'models.downloadFailedOfflineHint': 'Se continua a fallire, passa all’installazione offline.',
   'models.downloadOffline': 'Ottieni il pacchetto offline',
   'models.asrGroup': 'Riconoscimento vocale',
   'models.mtGroup': 'Traduzione automatica',
@@ -391,14 +389,14 @@ export const it: Partial<Messages> = {
     'Impossibile risolvere la cartella di archiviazione dei modelli; i modelli opzionali non sono disponibili.',
   'models.storageGroup': 'Archiviazione',
   'models.storageLocation': 'Posizione di archiviazione dei modelli',
-  'models.storageChange': 'Cambia',
+  'models.storageChange': 'Cambia percorso',
   'models.storageReset': 'Usa predefinito',
   'models.storagePickTitle': 'Scegli una cartella per i modelli scaricati',
   'models.storageResetTitle': 'Ripristinare la posizione predefinita?',
   'models.storageResetWarn':
     'I modelli scaricati in {path} resteranno sul disco ma non saranno più elencati. Eliminali prima se vuoi liberare quello spazio.',
   'models.storageResetConfirm': 'Ripristina predefinito',
-  'models.inUse': 'In uso',
+  'models.inUse': 'Attivo',
   'models.bundled': 'Incluso',
   'models.multilingual': 'Multilingue',
   'models.languageZh': 'Cinese',

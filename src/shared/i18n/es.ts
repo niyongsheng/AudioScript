@@ -69,7 +69,7 @@ export const es: Partial<Messages> = {
     '. La superposición no se puede controlar con atajos. Vuelva a asignarlos en la página Superposición.',
   'app.languageMismatch': 'La dirección de traducción no coincide con el idioma hablado',
   'app.languageMismatchDetail':
-    'El idioma detectado no coincide con el idioma de origen configurado, por lo que se omitió la traducción. Configure el idioma de origen en la página Traducción o desactive la traducción; el cambio se aplicará al volver a iniciar la transcripción.',
+    'El idioma detectado no coincide con el idioma de origen configurado, por lo que se omitió la traducción. Detén la transcripción, configura el idioma de origen en la página Traducción y vuelve a empezar; también puedes desactivar la traducción.',
   'app.languageMismatchGo': 'Abrir la página Traducción',
 
   'whatsNew.welcome': 'Bienvenido a',
@@ -209,7 +209,7 @@ export const es: Partial<Messages> = {
     'Aún no autorizado; macOS lo pedirá al iniciar la transcripción, o solicítelo ahora.',
   'permissions.speechDescDenied':
     'Denegado. Permita que AudioScript use el reconocimiento de voz en Ajustes del Sistema.',
-  'permissions.speechAssets': '{count} recursos de idioma del sistema instalados.',
+  'permissions.speechAssets': 'Recursos de idioma del sistema instalados: {count}',
   'permissions.speechAuthorized': 'Autorizado',
   'permissions.speechNotDetermined': 'No autorizado',
   'permissions.speechDenied': 'Denegado',
@@ -245,8 +245,7 @@ export const es: Partial<Messages> = {
   'permissions.probeSilentWhilePlaying':
     'El sistema está reproduciendo audio, pero solo se capturó silencio digital: una señal típica de permiso denegado.',
   'permissions.probeTapRejected': 'El sistema rechazó explícitamente la captura de audio del sistema.',
-  'permissions.probeNoAudioPlaying':
-    'No se está reproduciendo audio del sistema. Reproduzca audio y vuelva a comprobar.',
+  'permissions.probeNoAudioPlaying': 'Reproduce audio y luego pulsa Comprobar.',
   'permissions.probeUnsupportedOs': 'Requiere macOS 14.4 o posterior.',
   'permissions.probeInconclusive': 'No se puede determinar. Inténtelo de nuevo.',
   'permissions.mute': 'Silenciar',
@@ -318,8 +317,7 @@ export const es: Partial<Messages> = {
   'overlay.shortcutsGroup': 'Atajos',
   'overlay.shortcutToggleMode': 'Alternar bloqueo / desbloqueo de la superposición',
   'overlay.shortcutToggleVisible': 'Mostrar / ocultar superposición',
-  'overlay.shortcutsFooter':
-    'Solo se admiten combinaciones de tecla modificadora + una tecla; no requieren permiso de accesibilidad en macOS.',
+  'overlay.shortcutsFooter': 'Solo se admiten combinaciones de tecla modificadora + una tecla.',
   'overlay.customized': 'Tecla cambiada',
   'overlay.registerFailed': 'Error de registro; puede que otra aplicación lo esté usando',
   'overlay.appearanceGroup': 'Apariencia',
@@ -385,8 +383,7 @@ export const es: Partial<Messages> = {
   'models.capturingBody': 'Detén la transcripción antes de eliminar un modelo.',
   'models.downloadFailedTitle': 'Error al descargar {title}',
   'models.downloadFailedFallback': 'Error de descarga',
-  'models.downloadFailedOfflineHint':
-    'Si vuelve a fallar, consigue el paquete de modelos sin conexión y sigue las instrucciones de la página.',
+  'models.downloadFailedOfflineHint': 'Si vuelve a fallar, usa la instalación sin conexión.',
   'models.downloadOffline': 'Obtener el paquete sin conexión',
   'models.asrGroup': 'Reconocimiento de voz',
   'models.mtGroup': 'Traducción automática',
@@ -394,14 +391,14 @@ export const es: Partial<Messages> = {
     'No se puede resolver la carpeta de almacenamiento de modelos; los modelos opcionales no están disponibles.',
   'models.storageGroup': 'Almacenamiento',
   'models.storageLocation': 'Ubicación de los modelos',
-  'models.storageChange': 'Cambiar',
+  'models.storageChange': 'Cambiar ruta',
   'models.storageReset': 'Usar la predeterminada',
   'models.storagePickTitle': 'Elegir una carpeta para los modelos descargados',
   'models.storageResetTitle': '¿Restaurar la ubicación de almacenamiento predeterminada?',
   'models.storageResetWarn':
     'Los modelos descargados en {path} seguirán en el disco, pero dejarán de aparecer en la lista. Elimínelos primero si desea liberar ese espacio.',
   'models.storageResetConfirm': 'Restaurar predeterminada',
-  'models.inUse': 'En uso',
+  'models.inUse': 'Activado',
   'models.bundled': 'Incluido',
   'models.multilingual': 'Multilingüe',
   'models.languageZh': 'Chino',

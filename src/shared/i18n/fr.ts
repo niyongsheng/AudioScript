@@ -69,7 +69,7 @@ export const fr: Partial<Messages> = {
     '. La superposition ne peut pas être contrôlée par raccourci. Réattribuez-les sur la page Superposition.',
   'app.languageMismatch': 'La direction de traduction ne correspond pas à la langue parlée',
   'app.languageMismatchDetail':
-    'La langue détectée ne correspond pas à la langue source configurée ; la traduction a été ignorée. Réglez la langue source sur la page Traduction ou désactivez la traduction ; le changement prendra effet au prochain démarrage de la transcription.',
+    'La langue détectée ne correspond pas à la langue source configurée ; la traduction a été ignorée. Arrêtez la transcription, réglez la langue source sur la page Traduction, puis relancez — ou désactivez la traduction.',
   'app.languageMismatchGo': 'Ouvrir la page Traduction',
 
   'whatsNew.welcome': 'Bienvenue dans',
@@ -212,7 +212,7 @@ export const fr: Partial<Messages> = {
     'Pas encore autorisé ; macOS demandera l’autorisation au démarrage de la transcription, ou demandez-la maintenant.',
   'permissions.speechDescDenied':
     'Refusé. Autorisez AudioScript à utiliser la reconnaissance vocale dans Réglages Système.',
-  'permissions.speechAssets': '{count} ressources linguistiques système installées.',
+  'permissions.speechAssets': 'Ressources linguistiques système installées : {count}',
   'permissions.speechAuthorized': 'Autorisé',
   'permissions.speechNotDetermined': 'Non autorisé',
   'permissions.speechDenied': 'Refusé',
@@ -248,7 +248,7 @@ export const fr: Partial<Messages> = {
   'permissions.probeSilentWhilePlaying':
     'Le système lit de l’audio, mais seul du silence numérique a été capturé — signe typique d’une autorisation refusée.',
   'permissions.probeTapRejected': 'Le système a explicitement refusé la capture audio système.',
-  'permissions.probeNoAudioPlaying': 'Aucun audio système n’est lu. Lisez de l’audio, puis testez à nouveau.',
+  'permissions.probeNoAudioPlaying': 'Lisez de l’audio, puis cliquez sur Tester.',
   'permissions.probeUnsupportedOs': 'Nécessite macOS 14.4 ou ultérieur.',
   'permissions.probeInconclusive': 'Impossible de déterminer. Réessayez.',
   'permissions.mute': 'Muet',
@@ -321,8 +321,7 @@ export const fr: Partial<Messages> = {
   'overlay.shortcutsGroup': 'Raccourcis',
   'overlay.shortcutToggleMode': 'Basculer verrouillage / déverrouillage de la superposition',
   'overlay.shortcutToggleVisible': 'Afficher / masquer la superposition',
-  'overlay.shortcutsFooter':
-    'Seules les combinaisons touche de modification + touche unique sont prises en charge ; elles ne nécessitent aucune autorisation d’accessibilité sous macOS.',
+  'overlay.shortcutsFooter': 'Seules les combinaisons touche de modification + touche unique sont prises en charge.',
   'overlay.customized': 'Touche modifiée',
   'overlay.registerFailed': 'Échec de l’enregistrement ; une autre application l’utilise peut-être',
   'overlay.appearanceGroup': 'Apparence',
@@ -388,8 +387,7 @@ export const fr: Partial<Messages> = {
   'models.capturingBody': 'Arrêtez la transcription avant de supprimer un modèle.',
   'models.downloadFailedTitle': 'Échec du téléchargement de {title}',
   'models.downloadFailedFallback': 'Échec du téléchargement',
-  'models.downloadFailedOfflineHint':
-    'Si l’échec se répète, récupérez le pack de modèles hors ligne et suivez les instructions de la page.',
+  'models.downloadFailedOfflineHint': 'Si l’échec se répète, passez à l’installation hors ligne.',
   'models.downloadOffline': 'Obtenir le pack de modèles hors ligne',
   'models.asrGroup': 'Reconnaissance vocale',
   'models.mtGroup': 'Traduction automatique',
@@ -397,14 +395,14 @@ export const fr: Partial<Messages> = {
     'Impossible de localiser le dossier de stockage des modèles ; les modèles optionnels sont indisponibles.',
   'models.storageGroup': 'Stockage',
   'models.storageLocation': 'Emplacement des modèles',
-  'models.storageChange': 'Modifier',
+  'models.storageChange': 'Changer le chemin',
   'models.storageReset': 'Emplacement par défaut',
   'models.storagePickTitle': 'Choisir un dossier pour les modèles téléchargés',
   'models.storageResetTitle': 'Revenir à l’emplacement par défaut ?',
   'models.storageResetWarn':
     'Les modèles téléchargés dans {path} resteront sur le disque mais n’apparaîtront plus dans la liste. Supprimez-les d’abord pour libérer cet espace.',
   'models.storageResetConfirm': 'Revenir au défaut',
-  'models.inUse': 'Utilisé',
+  'models.inUse': 'Activé',
   'models.bundled': 'Intégré',
   'models.multilingual': 'Multilingue',
   'models.languageZh': 'Chinois',
