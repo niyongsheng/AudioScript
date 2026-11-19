@@ -52,12 +52,22 @@ const WHATS_NEW: Record<string, readonly WhatsNewFeature[]> = {
 3. Rust `i18n.rs` 的每条消息补齐 13 个字段（`zh_cn / en / zh_tw / ja / ko / fr / de / es / pt_br / ru / it / id / ar`）。
 4. `resources/<locale>.lproj/InfoPlist.strings` 覆盖所有发布语言，并在 `tauri.conf.json` 注册；葡萄牙语同时提供 `pt-BR` 与 `pt-PT`。
 5. `ar` 为 RTL：确认 `document.documentElement.dir = 'rtl'` 生效，界面与悬浮窗没有反向错位。
+6. **语义同步**：开发期只改 zh-CN / en 的文案，其余 locale 不会自动变旧为新。`audit-i18n.mjs` 会对比最近 tag，列出「zh-CN / en 已改但某个 locale 没动」的词条，逐条确认是无需翻译（产品名、纯占位符）还是漏翻。
 
 只跑语言对齐检查（可反复执行）：
 
 ```bash
 node .claude/skills/audioscript-release/scripts/check-release.mjs --locales-only
 ```
+
+语义一致性审计（发布前跑，可指定基线）：
+
+```bash
+node .claude/skills/audioscript-release/scripts/audit-i18n.mjs
+node .claude/skills/audioscript-release/scripts/audit-i18n.mjs --since v0.7.1 --strict
+```
+
+检查 key / 占位符 / 空值 / 重复词条、非 CJK 语言里的中日韩文字、整句直接复用英文、`{count}` 单复数风险；语义漂移项按「待确认」输出，`--strict` 时有待确认项会以非 0 退出。
 
 ## 3. 官网 docs/index.html
 
@@ -155,6 +165,7 @@ node .claude/skills/audioscript-release/scripts/check-release.mjs X.Y.Z --post
 - [ ] 版本号已定，工作区干净且在 main
 - [ ] `WHATS_NEW` 以**本次版本号**为 key，13 个 locale 词条齐全
 - [ ] 全部 locale 已对齐（key / 占位符 / Rust i18n / lproj），`check-release.mjs` 语言检查全绿
+- [ ] 语义审计 `audit-i18n.mjs` 无未确认项（zh-CN / en 改过的文案已在全部 locale 更新，或确认无需翻译）
 - [ ] `docs/index.html` 的 `softwareVersion` / `data-version` / `data-date`
 - [ ] `docs/llms.txt` 的最新版本与日期
 - [ ] `docs/index.html` 模型表与 catalog 对齐，中英双语都改

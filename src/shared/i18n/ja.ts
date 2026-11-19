@@ -204,7 +204,7 @@ export const ja: Partial<Messages> = {
   'permissions.speechDescNotDetermined':
     'まだ許可されていません。文字起こし開始時にダイアログが表示されます。今すぐ要求することもできます。',
   'permissions.speechDescDenied': '拒否されています。システム設定で AudioScript の音声認識を許可してください。',
-  'permissions.speechAssets': 'システム言語アセットが {count} 件インストールされています。',
+  'permissions.speechAssets': 'インストール済みのシステム言語アセット: {count}',
   'permissions.speechAuthorized': '許可済み',
   'permissions.speechNotDetermined': '未許可',
   'permissions.speechDenied': '拒否',

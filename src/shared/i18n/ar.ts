@@ -197,7 +197,7 @@ export const ar: Partial<Messages> = {
   'permissions.speechDescGranted': 'مصرّح به. يمكنك اختيار MacNativeSpeech كمحرك تعرف في صفحة «الترجمة».',
   'permissions.speechDescNotDetermined': 'غير مصرّح به بعد؛ يطلب macOS الإذن عند بدء النسخ، أو اطلبه الآن.',
   'permissions.speechDescDenied': 'مرفوض. اسمح لـ AudioScript باستخدام التعرف على الكلام في إعدادات النظام.',
-  'permissions.speechAssets': 'تم تثبيت {count} من موارد لغة النظام.',
+  'permissions.speechAssets': 'موارد لغة النظام المثبتة: {count}',
   'permissions.speechAuthorized': 'مصرّح به',
   'permissions.speechNotDetermined': 'غير مصرّح به',
   'permissions.speechDenied': 'مرفوض',

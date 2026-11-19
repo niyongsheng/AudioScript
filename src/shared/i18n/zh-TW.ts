@@ -188,7 +188,7 @@ export const zhTW: Partial<Messages> = {
   'permissions.speechDescGranted': '已授權，可在「翻譯」頁把語音辨識引擎切換為 MacNativeSpeech。',
   'permissions.speechDescNotDetermined': '尚未授權；首次開始轉寫時會彈窗，也可以現在請求。',
   'permissions.speechDescDenied': '已拒絕，請在系統設定中允許 AudioScript 使用語音辨識。',
-  'permissions.speechAssets': '已安裝 {count} 種系統語言資產。',
+  'permissions.speechAssets': '系統語言資產已安裝：{count} 種',
   'permissions.speechAuthorized': '已授權',
   'permissions.speechNotDetermined': '未授權',
   'permissions.speechDenied': '已拒絕',

@@ -198,7 +198,7 @@ export const ko: Partial<Messages> = {
   'permissions.speechDescNotDetermined':
     '아직 승인되지 않았습니다. 전사 시작 시 macOS가 권한을 요청하며, 지금 요청할 수도 있습니다.',
   'permissions.speechDescDenied': '거부되었습니다. 시스템 설정에서 AudioScript의 음성 인식을 허용하세요.',
-  'permissions.speechAssets': '시스템 언어 자산 {count}개가 설치되어 있습니다.',
+  'permissions.speechAssets': '설치된 시스템 언어 자산: {count}개',
   'permissions.speechAuthorized': '승인됨',
   'permissions.speechNotDetermined': '미승인',
   'permissions.speechDenied': '거부됨',

@@ -207,7 +207,7 @@ export const ru: Partial<Messages> = {
   'permissions.speechDescNotDetermined':
     'Ещё не разрешено; macOS запросит при запуске транскрипции, либо запросите сейчас.',
   'permissions.speechDescDenied': 'Запрещено. Разрешите AudioScript распознавание речи в системных настройках.',
-  'permissions.speechAssets': 'Установлено языковых ресурсов системы: {count}.',
+  'permissions.speechAssets': 'Установленные языковые ресурсы системы: {count}',
   'permissions.speechAuthorized': 'Разрешено',
   'permissions.speechNotDetermined': 'Не разрешено',
   'permissions.speechDenied': 'Запрещено',
