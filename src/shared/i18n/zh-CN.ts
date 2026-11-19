@@ -280,7 +280,7 @@ export const zhCN = {
   'overlay.shortcutsGroup': '快捷键',
   'overlay.shortcutToggleMode': '切换悬浮窗锁定 / 解锁',
   'overlay.shortcutToggleVisible': '显示 / 隐藏悬浮窗',
-  'overlay.shortcutsFooter': '仅支持「修饰键 + 单键」组合，该类组合在 macOS 上无需辅助功能权限。',
+  'overlay.shortcutsFooter': '仅支持「修饰键 + 单键」组合。',
   'overlay.customized': '已改过键位',
   'overlay.registerFailed': '注册失败，可能已被其他应用占用',
   'overlay.appearanceGroup': '外观',

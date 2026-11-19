@@ -298,8 +298,7 @@ export const en: Messages = {
   'overlay.shortcutsGroup': 'Shortcuts',
   'overlay.shortcutToggleMode': 'Toggle overlay lock / unlock',
   'overlay.shortcutToggleVisible': 'Show / hide overlay',
-  'overlay.shortcutsFooter':
-    'Only modifier + single key combinations are supported; they need no Accessibility permission on macOS.',
+  'overlay.shortcutsFooter': 'Only modifier + single key combinations are supported.',
   'overlay.customized': 'Key changed',
   'overlay.registerFailed': 'Registration failed; another app may be using it',
   'overlay.appearanceGroup': 'Appearance',
