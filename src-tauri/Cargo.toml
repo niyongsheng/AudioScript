@@ -169,4 +169,4 @@ winreg = "0.56"
 # CT2_USE_MKL=0 只切 GEMM，无 AVX 的机器仍会在模型加载时 0xc000001d。fork 里改成按
 # mayiuse_mkl() 选分配器；上游合并前不要删，升级 ct2rs 时也要确认补丁仍在。
 [patch.crates-io]
-ct2rs = { git = "https://github.com/niyongsheng/ctranslate2-rs", rev = "bd99522316fb8d1527787c28975b7aad94d7c135" }
+ct2rs = { git = "https://github.com/niyongsheng/ctranslate2-rs", rev = "c1317dc6f71c6103b72851f71ddac13e4cacc155" }
