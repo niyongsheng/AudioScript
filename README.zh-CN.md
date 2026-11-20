@@ -35,7 +35,7 @@ https://github.com/user-attachments/assets/b1f88a82-b3fe-4721-8736-af6a9e4d828e
 
 ## 功能
 
-- **采集**：系统声音 / 麦克风 / 两者混合。
+- **采集**：应用声音 / 系统声音 / 麦克风 / 系统 + 麦克风混合。
 - **常驻**：托盘、关窗不退出、单实例、开机自启。
 - **识别**：内置 Zipformer 流式双语识别；可选 X-ASR、Nemotron 3.5、Qwen3-ASR。
 - **翻译**：内置 Opus-MT 中英互译；可选 LMT-60、NLLB-200。

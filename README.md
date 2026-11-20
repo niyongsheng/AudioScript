@@ -35,7 +35,7 @@ https://github.com/user-attachments/assets/b1f88a82-b3fe-4721-8736-af6a9e4d828e
 
 ## Features
 
-- **Capture**: system audio / microphone / both mixed.
+- **Capture**: per-app audio / system audio / microphone / system + microphone mixed.
 - **Background**: tray-resident, closing the window does not quit, single instance, launch at login.
 - **Recognition**: bundled Zipformer streaming bilingual recognition; optional X-ASR, Nemotron 3.5, and Qwen3-ASR.
 - **Translation**: bundled Opus-MT en ↔ zh; optional LMT-60 and NLLB-200.
