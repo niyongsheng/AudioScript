@@ -155,6 +155,7 @@ node .claude/skills/audioscript-release/scripts/check-release.mjs X.Y.Z --post
 
 - 三平台产物齐全：macOS dmg + `AudioScript.app.tar.gz`（含 `.sig`）、Windows exe / msi、Linux AppImage / deb；
 - `latest.json` 存在且指向新版本（自动更新依赖它）；
+- Release 正文由 `scripts/make-release-body.mjs` 生成：Download 表直链各平台安装包，What's Changed 只列 `feat` / `fix` / `perf` 提交，Full Changelog 指向上一个 tag（CI 需 `fetch-depth: 0` 才能找到它）；
 - Release 不是 draft；
 - 官网版本行已更新（静态值仍是旧版说明漏了第 3 步）；
 - 新增模型能在「模型」页下载并通过 sha256 校验；
@@ -174,4 +175,5 @@ node .claude/skills/audioscript-release/scripts/check-release.mjs X.Y.Z --post
 - [ ] `check-release.mjs` 全绿
 - [ ] `pnpm release` 成功，tag 已推送
 - [ ] CI 三平台 + latest.json + .sig 全部成功
+- [ ] Release 正文含 Download 表与 What's Changed，安装包链接可点开
 - [ ] 官网与 What's New 线上验证

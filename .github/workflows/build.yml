@@ -382,6 +382,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          # 生成 What's Changed 要回到上一个 tag，浅克隆会让 git describe 找不到它
+          fetch-depth: 0
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
@@ -403,11 +406,22 @@ jobs:
             --platform "linux-x86_64-appimage=$(ls updater-Linux-x64/*.AppImage)" \
             --platform "linux-x86_64-deb=$(ls updater-Linux-x64-deb/*.deb)"
 
+      # 正文格式对齐 Copycraft 的 release 页：Download 表 → What's Changed → Full Changelog
+      - name: Compose release body
+        run: |-
+          node scripts/make-release-body.mjs \
+            --repo "$GITHUB_REPOSITORY" \
+            --tag "$GITHUB_REF_NAME" \
+            --out release-body.md \
+            --asset "macos-pkg=$(ls AudioScript-macOS-ARM-pkg/*.pkg)" \
+            --asset "windows-exe=$(ls AudioScript-Windows-x64/nsis/*.exe)" \
+            --asset "linux-deb=$(ls AudioScript-Linux-x64/deb/*.deb)"
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           name: AudioScript ${{ github.ref_name }}
-          generate_release_notes: true
+          body_path: release-body.md
           fail_on_unmatched_files: true
           # upload-artifact 以匹配文件的公共祖先为根，Windows 的 nsis/、msi/ 是子目录；
           # 少一层会报「Pattern ... does not match any files」并让 release 失败。
