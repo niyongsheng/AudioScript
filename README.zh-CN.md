@@ -23,6 +23,10 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-555555?style=flat-square" alt="MIT"></a>
 </p>
 
+<p>
+  <a href="https://trendshift.io/repositories/312558?utm_source=trendshift-badge&amp;utm_medium=badge&amp;utm_campaign=badge-trendshift-312558" target="_blank" rel="noopener noreferrer"><img src="https://trendshift.io/api/badge/trendshift/repositories/312558/daily?language=Rust" alt="niyongsheng%2FAudioScript | Trendshift" width="250" height="55" /></a>
+</p>
+
 </div>
 
 <br>
