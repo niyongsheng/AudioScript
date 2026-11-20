@@ -267,6 +267,10 @@ export const zhCN = {
   'translate.presetInterpretation': '同传',
   'translate.presetDictation': '听写',
   'translate.footer': '段落越长，译文出现越晚。',
+  'translate.advancedGroup': '高级',
+  'translate.mklTitle': 'Intel MKL 加速',
+  'translate.mklDescription': '关闭后改用兼容性更好的通用计算后端，翻译稍慢；重启应用后生效。',
+  'translate.mklUnsupported': '当前 CPU 不支持，已自动使用通用后端',
 
   'overlay.title': '悬浮窗',
   'overlay.loading': '读取配置中…',

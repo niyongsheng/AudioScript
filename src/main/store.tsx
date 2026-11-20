@@ -114,6 +114,9 @@ interface Store {
   analyticsEnabled: boolean
   setAnalyticsEnabled: (v: boolean) => void
 
+  mklEnabled: boolean
+  setMklEnabled: (v: boolean) => void
+
   permissions: PermissionSnapshot | null
   refreshPermission: () => Promise<void>
   speechStatus: MacSpeechStatus | null
@@ -207,6 +210,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
 
   const [onboardingDone, setOnboardingDone] = useState(false)
   const [analyticsEnabled, setAnalyticsEnabledState] = useState(true)
+  const [mklEnabled, setMklEnabledState] = useState(true)
   const [permissions, setPermissions] = useState<PermissionSnapshot | null>(null)
   const [speechStatus, setSpeechStatus] = useState<MacSpeechStatus | null>(null)
   const [systemAudioProbe, setSystemAudioProbe] = useState<SystemAudioProbe | null>(null)
@@ -291,6 +295,7 @@ export function StoreProvider({ children }: { children: ReactNode }) {
         setEndpoint(p.endpoint)
         setOnboardingDone(p.onboardingDone)
         setAnalyticsEnabledState(p.analyticsEnabled)
+        setMklEnabledState(p.mklEnabled)
         setTrackingEnabled(p.analyticsEnabled)
         if (p.deviceId) setDevice(p.deviceId)
         if (p.mixMicDeviceId) setMixMicDevice(p.mixMicDeviceId)
@@ -398,6 +403,14 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       setTrackingEnabled(next)
       void patchPrefs({ analyticsEnabled: next })
       if (next) track('setting_changed', { key: 'analytics', value: 'on' })
+    },
+    [patchPrefs],
+  )
+
+  const setMklEnabled = useCallback(
+    (next: boolean) => {
+      setMklEnabledState(next)
+      void patchPrefs({ mklEnabled: next })
     },
     [patchPrefs],
   )
@@ -817,6 +830,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       completeOnboarding,
       analyticsEnabled,
       setAnalyticsEnabled,
+      mklEnabled,
+      setMklEnabled,
       permissions,
       refreshPermission,
       speechStatus,
@@ -894,6 +909,8 @@ export function StoreProvider({ children }: { children: ReactNode }) {
       completeOnboarding,
       analyticsEnabled,
       setAnalyticsEnabled,
+      mklEnabled,
+      setMklEnabled,
       permissions,
       refreshPermission,
       speechStatus,

@@ -99,6 +99,7 @@ export interface AppInfo {
   macSpeechSupported: boolean
   appAudioSupported: boolean
   overlayAlwaysOnTop: boolean
+  mklSupported: boolean
   analyticsTier: AnalyticsTier
   builtAtMs: number | null
 }

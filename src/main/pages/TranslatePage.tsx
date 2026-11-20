@@ -44,6 +44,7 @@ import { Page } from '@/ui/Page'
 import { Select } from '@/ui/Select'
 import { SettingsGroup, SettingsRow } from '@/ui/Settings'
 import { Slider } from '@/ui/Slider'
+import { Switch } from '@/ui/Switch'
 
 type TranslateFn = (key: MessageKey, vars?: Record<string, string | number>) => string
 
@@ -79,10 +80,14 @@ export function TranslatePage() {
     setEndpoint,
     status,
     setError,
+    mklEnabled,
+    setMklEnabled,
   } = useStore()
   const { locale, t } = useI18n()
   const { list: models, setList: setModels } = useModels()
   const capturing = status === TaskStatus.Capturing
+  const showMkl = info?.platform !== 'macos' && info?.arch === 'x86_64'
+  const mklSupported = info?.mklSupported === true
   const [dismissedCapturing, setDismissedCapturing] = useState(false)
 
   useEffect(() => {
@@ -479,6 +484,25 @@ export function TranslatePage() {
           }
         />
       </SettingsGroup>
+
+      {showMkl && (
+        <SettingsGroup title={t('translate.advancedGroup')}>
+          <SettingsRow
+            icon="chip"
+            title={t('translate.mklTitle')}
+            description={t('translate.mklDescription')}
+            unavailableReason={!mklSupported ? t('translate.mklUnsupported') : undefined}
+            control={
+              <Switch
+                label={t('translate.mklTitle')}
+                checked={mklEnabled && mklSupported}
+                disabled={!mklSupported}
+                onChange={setMklEnabled}
+              />
+            }
+          />
+        </SettingsGroup>
+      )}
     </Page>
   )
 }

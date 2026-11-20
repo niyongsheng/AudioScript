@@ -288,6 +288,11 @@ export const en: Messages = {
   'translate.presetInterpretation': 'Live',
   'translate.presetDictation': 'Dictation',
   'translate.footer': 'Longer segments delay translations.',
+  'translate.advancedGroup': 'Advanced',
+  'translate.mklTitle': 'Intel MKL acceleration',
+  'translate.mklDescription':
+    'Turn off to use a more compatible general-purpose backend. Translation is slower. Takes effect after restarting the app.',
+  'translate.mklUnsupported': 'Not supported by this CPU; the compatible backend is used automatically',
 
   'overlay.title': 'Overlay',
   'overlay.loading': 'Loading configuration…',

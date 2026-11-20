@@ -262,6 +262,7 @@ export interface Preferences {
 	mtModelTier: MtModelTier;
 	modelsDir?: string;
 	analyticsEnabled: boolean;
+	mklEnabled: boolean;
 }
 
 export interface PrefsPatch {
@@ -282,6 +283,7 @@ export interface PrefsPatch {
 	onboardingDone?: boolean;
 	asrModelTier?: AsrModelTier;
 	analyticsEnabled?: boolean;
+	mklEnabled?: boolean;
 }
 
 export interface TranslateConfig {
