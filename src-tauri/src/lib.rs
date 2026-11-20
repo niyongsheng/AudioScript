@@ -166,6 +166,7 @@ pub fn run() {
             }
 
             let saved_prefs = prefs::load(&handle);
+            cpu::apply_mkl_preference(saved_prefs.mkl_enabled);
             i18n::set_locale(i18n::Locale::from_language(saved_prefs.language));
             update_window_titles(&handle);
             env_info::log_startup(&saved_prefs);

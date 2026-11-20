@@ -632,6 +632,7 @@ fn app_info() -> Value {
         "macSpeechSupported": crate::asr::mac_native::available() == crate::asr::mac_native::AVAILABLE,
         "appAudioSupported": crate::env_info::app_audio_supported(),
         "overlayAlwaysOnTop": crate::env_info::overlay_always_on_top(),
+        "mklSupported": crate::cpu::mkl_supported(),
         "analyticsTier": crate::telemetry::ANALYTICS_TIER.as_str(),
         "builtAtMs": exe_mtime_ms(),
     })

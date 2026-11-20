@@ -581,6 +581,7 @@ pub struct Preferences {
     pub mt_model_tier: MtModelTier,
     pub models_dir: Option<String>,
     pub analytics_enabled: bool,
+    pub mkl_enabled: bool,
 }
 
 impl Default for Preferences {
@@ -608,6 +609,7 @@ impl Default for Preferences {
             mt_model_tier: MtModelTier::default(),
             models_dir: None,
             analytics_enabled: true,
+            mkl_enabled: true,
         }
     }
 }
@@ -633,6 +635,7 @@ pub struct PrefsPatch {
     pub onboarding_done: Option<bool>,
     pub asr_model_tier: Option<AsrModelTier>,
     pub analytics_enabled: Option<bool>,
+    pub mkl_enabled: Option<bool>,
 }
 
 impl PrefsPatch {
@@ -723,6 +726,9 @@ impl PrefsPatch {
         }
         if let Some(v) = self.analytics_enabled {
             p.analytics_enabled = v;
+        }
+        if let Some(v) = self.mkl_enabled {
+            p.mkl_enabled = v;
         }
     }
 }
@@ -1774,6 +1780,25 @@ mod tests {
         }
         .apply_to(&mut p);
         assert!(!p.analytics_enabled);
+    }
+
+    #[test]
+    fn mkl_defaults_on_and_patch_can_disable_it() {
+        assert!(Preferences::default().mkl_enabled);
+
+        let mut p = Preferences::default();
+        PrefsPatch {
+            mkl_enabled: Some(false),
+            ..Default::default()
+        }
+        .apply_to(&mut p);
+        assert!(!p.mkl_enabled);
+    }
+
+    #[test]
+    fn missing_mkl_pref_defaults_on() {
+        let p: Preferences = serde_json::from_str("{}").unwrap();
+        assert!(p.mkl_enabled, "旧配置没有该字段时必须默认开启");
     }
 
     #[test]

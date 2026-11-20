@@ -133,8 +133,11 @@ objc2-app-kit = { version = "0.3", default-features = false, features = [
 # 报「No SGEMM backend on CPU」。ruy 是 ct2rs 默认特性里的跨厂商 int8/fp32 回退，
 # 不能省。
 # ⚠️ oneMKL 2025 起要求 AVX，2026 只把 AVX2 及以上当作受支持分支：没有 AVX2 的
-# GenuineIntel（Pentium / Celeron / Atom）执行 MKL 权重打包会以 0xc000001d
-# 静默退出；crate::cpu 在启动时按 cpuid 设 CT2_USE_MKL=0，这批机器改走 ruy。
+# GenuineIntel（Pentium / Celeron / Atom）第一次进入 MKL 就会以 0xc000001d 静默退出。
+# CTranslate2 的 CPU 分配器在 CT2_WITH_MKL 下无条件走 mkl_malloc（CT2_USE_MKL 只切
+# GEMM 后端），所以 ct2rs 用 [patch.crates-io] 指向带 allocator 补丁的 fork；
+# crate::cpu 在启动时按 CPU 与用户偏好（设置 → 翻译 → Intel MKL 加速）设 CT2_USE_MKL=0，
+# 关闭时 MKL 完全不会被调用，改走 ruy。
 ct2rs = { version = "0.10", default-features = false, features = [
     "tokenizers",
     "mkl",
@@ -161,3 +164,9 @@ rubato = "3"
 rtrb = "0.3"
 # Windows 的系统代理在注册表里，ureq 的 proxy-from-env 读不到。
 winreg = "0.56"
+
+# ⚠️ 上游 CTranslate2 的 CPU 分配器是编译期选择的：带 mkl 编译时永远走 mkl_malloc，
+# CT2_USE_MKL=0 只切 GEMM，无 AVX 的机器仍会在模型加载时 0xc000001d。fork 里改成按
+# mayiuse_mkl() 选分配器；上游合并前不要删，升级 ct2rs 时也要确认补丁仍在。
+[patch.crates-io]
+ct2rs = { git = "https://github.com/niyongsheng/ctranslate2-rs", rev = "bd99522316fb8d1527787c28975b7aad94d7c135" }

@@ -9,10 +9,33 @@ const CT2_USE_MKL: &str = "CT2_USE_MKL";
 /// 加载模型、打包 GEMM 权重时会执行 AVX/AVX2 指令，进程以
 /// 0xc000001d（STATUS_ILLEGAL_INSTRUCTION）静默退出；`CT2_FORCE_CPU_ISA` 管不到 MKL，
 /// 只能在 MKL 被选中之前关掉它，退回 ruy。
+///
+/// CTranslate2 的 CPU 分配器在 `CT2_WITH_MKL` 下无条件走 `mkl_malloc`，`CT2_USE_MKL=0`
+/// 只切 GEMM 后端；真正不进 MKL 依赖 fork 里的 allocator 补丁（按 `mayiuse_mkl()` 选分配器）。
 pub fn apply_ct2_backend_env() {
-    if mkl_unusable() && std::env::var_os(CT2_USE_MKL).is_none() {
+    apply_mkl_preference(true);
+}
+
+/// 必须在 prefs 加载后、第一次 CTranslate2 调用之前执行；显式设置的环境变量优先，便于排障。
+pub fn apply_mkl_preference(enabled: bool) {
+    if !mkl_platform_supported() || std::env::var_os(CT2_USE_MKL).is_some() {
+        return;
+    }
+    if mkl_should_disable(enabled, mkl_cpu_supported()) {
         set_native_env(CT2_USE_MKL, "0");
     }
+}
+
+/// 当前平台是否编译了 MKL 后端且 CPU 能安全执行（有 AVX2）。
+pub fn mkl_supported() -> bool {
+    mkl_platform_supported() && mkl_cpu_supported()
+}
+
+fn mkl_platform_supported() -> bool {
+    cfg!(all(
+        not(target_os = "macos"),
+        any(target_arch = "x86", target_arch = "x86_64")
+    ))
 }
 
 pub fn ct2_mkl_disabled() -> bool {
@@ -40,14 +63,23 @@ fn should_disable_mkl(has_avx2: bool) -> bool {
     !has_avx2
 }
 
+fn mkl_should_disable(enabled: bool, cpu_supported: bool) -> bool {
+    !enabled || !cpu_supported
+}
+
 #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
-fn mkl_unusable() -> bool {
-    should_disable_mkl(std::is_x86_feature_detected!("avx2"))
+fn mkl_cpu_supported() -> bool {
+    !mkl_unusable()
 }
 
 #[cfg(not(any(target_arch = "x86", target_arch = "x86_64")))]
-fn mkl_unusable() -> bool {
+fn mkl_cpu_supported() -> bool {
     false
+}
+
+#[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
+fn mkl_unusable() -> bool {
+    should_disable_mkl(std::is_x86_feature_detected!("avx2"))
 }
 
 fn set_native_env(key: &str, value: &str) {
@@ -72,9 +104,12 @@ mod tests {
     use super::*;
 
     #[test]
-    fn mkl_is_disabled_below_avx2() {
+    fn mkl_is_disabled_below_avx2_or_by_preference() {
         assert!(should_disable_mkl(false));
         assert!(!should_disable_mkl(true));
+        assert!(!mkl_should_disable(true, true));
+        assert!(mkl_should_disable(false, true));
+        assert!(mkl_should_disable(true, false));
     }
 
     #[test]

@@ -44,6 +44,7 @@ pub fn log_startup(prefs: &Preferences) {
         models_dir = prefs.models_dir.as_deref().unwrap_or("default"),
         analytics_enabled = prefs.analytics_enabled,
         analytics_tier = crate::telemetry::ANALYTICS_TIER.as_str(),
+        mkl_enabled = prefs.mkl_enabled,
         "当前配置"
     );
 }

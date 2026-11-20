@@ -1169,8 +1169,7 @@ dependencies = [
 [[package]]
 name = "ct2rs"
 version = "0.10.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "b68f8baf9feaac18f4380e1079ed2c633f7703cee391d34521f5dded6c005725"
+source = "git+https://github.com/niyongsheng/ctranslate2-rs?rev=bd99522316fb8d1527787c28975b7aad94d7c135#bd99522316fb8d1527787c28975b7aad94d7c135"
 dependencies = [
  "anyhow",
  "cmake",

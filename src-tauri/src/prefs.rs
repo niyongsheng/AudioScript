@@ -222,6 +222,7 @@ mod tests {
             models_dir: Some("/Volumes/Data/AudioScript".into()),
             zh_script: crate::config::ZhScript::Traditional,
             analytics_enabled: false,
+            mkl_enabled: false,
         };
 
         save_to(&path, &p).expect("写入应成功（含创建父目录）");
