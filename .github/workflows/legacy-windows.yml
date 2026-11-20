@@ -1,0 +1,115 @@
+name: Legacy Windows Build (no AVX)
+
+# 一次性用途：给没有 AVX 的老 CPU（Pentium / Celeron、旧虚拟机）单独出一个安装包。
+# 只在手动触发时运行，不参与 tag 发布、不产出更新清单；自动更新在 legacy-cpu 构建里已关闭。
+# 产物：AudioScript_<version>_x64-legacy-setup.exe，手动分发（例如网盘）即可。
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build-windows-legacy:
+    name: Build (Windows x64 legacy)
+    runs-on: windows-latest
+    timeout-minutes: 90
+    env:
+      # ct2rs/sherpa-onnx 的 CMake 构建用 /MT，Rust 默认 /MD，不对齐会报 LNK2038/LNK1169
+      RUSTFLAGS: -C target-feature=+crt-static
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust target
+        uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          # 和普通构建的 ct2rs 产物不通用（CPU 分派开关不同）
+          key: legacy-cpu
+
+      - name: Cache sherpa-onnx native libs
+        uses: actions/cache@v4
+        with:
+          path: src-tauri/target/sherpa-onnx-prebuilt
+          key: sherpa-onnx-1.13.8-${{ runner.os }}-${{ runner.arch }}
+
+      # sherpa-onnx-sys 的 build.rs 只检查 lib/ 目录存在就跳过下载，
+      # rust-cache 恢复出空目录时会让链接器找不到 .lib/.a。
+      - name: Verify sherpa-onnx native libs
+        shell: bash
+        run: |-
+          found=$(find src-tauri/target/sherpa-onnx-prebuilt -type f \
+            \( -name 'sherpa-onnx-c-api.lib' -o -name 'libsherpa-onnx-c-api.a' \) -print -quit 2>/dev/null || true)
+          if [ -z "$found" ]; then
+            echo "::warning::sherpa-onnx 预编译库缺失，清空缓存后重新下载"
+            rm -rf src-tauri/target/sherpa-onnx-prebuilt
+          fi
+
+      - name: Cache typeshare CLI
+        uses: actions/cache@v4
+        with:
+          path: ~/.cargo/bin/typeshare
+          key: typeshare-1.13.4-${{ runner.os }}
+
+      - name: Cache ASR model
+        uses: actions/cache@v4
+        with:
+          path: src-tauri/assets/models/sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16
+          key: asr-model-v1
+          restore-keys: asr-model-
+
+      - name: Cache MT models
+        uses: actions/cache@v4
+        with:
+          path: |
+            src-tauri/assets/models/mt
+            .cache/mt
+          key: mt-models-v1
+          restore-keys: mt-models-
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install typeshare CLI
+        shell: bash
+        run: typeshare --version 2>/dev/null | grep -q 1.13.4 || cargo install typeshare-cli --version 1.13.4 --locked
+
+      - name: Fetch MT models
+        run: pnpm fetch:mt
+
+      - name: Build legacy installer
+        run: pnpm tauri build --bundles nsis --features legacy-cpu
+
+      # 文件名带上 legacy，方便和普通安装包区分（更新签名与此包无关，不复制 .sig）
+      - name: Rename installer
+        shell: bash
+        run: |-
+          cd src-tauri/target/release/bundle/nsis
+          for f in *_x64-setup.exe; do
+            cp "$f" "${f%_x64-setup.exe}_x64-legacy-setup.exe"
+          done
+
+      - name: Upload legacy installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: AudioScript-Windows-legacy
+          path: src-tauri/target/release/bundle/nsis/*-legacy-setup.exe
+          compression-level: 0

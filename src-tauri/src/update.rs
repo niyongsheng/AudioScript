@@ -35,6 +35,18 @@ impl Drop for InstallGuard {
 }
 
 pub async fn check(app: &AppHandle) -> Result<UpdateCheck, String> {
+    let current_version = env!("CARGO_PKG_VERSION").to_string();
+
+    // 老 CPU 版单独分发，不接自动更新：否则会被更新回普通版，重新触发非法指令退出
+    if cfg!(feature = "legacy-cpu") {
+        return Ok(UpdateCheck {
+            current_version,
+            available: false,
+            version: None,
+            notes: None,
+        });
+    }
+
     let updater = app
         .updater()
         .map_err(|e| tf(Key::UpdateNotReady, &[&e.to_string()]))?;
@@ -42,8 +54,6 @@ pub async fn check(app: &AppHandle) -> Result<UpdateCheck, String> {
         .check()
         .await
         .map_err(|e| tf(Key::UpdateCheckFailed, &[&e.to_string()]))?;
-
-    let current_version = env!("CARGO_PKG_VERSION").to_string();
     match update {
         Some(update) => {
             tracing::info!(version = %update.version, "发现新版本");
@@ -64,6 +74,10 @@ pub async fn check(app: &AppHandle) -> Result<UpdateCheck, String> {
 }
 
 pub async fn install(app: &AppHandle) -> Result<String, String> {
+    if cfg!(feature = "legacy-cpu") {
+        return Err(tr(Key::UpdateLatest).into());
+    }
+
     if INSTALLING.swap(true, Ordering::SeqCst) {
         return Err(tr(Key::UpdateInProgress).into());
     }

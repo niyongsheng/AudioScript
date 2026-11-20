@@ -18,6 +18,13 @@ crate-type = ["staticlib", "cdylib", "rlib"]
 name = "AudioScript"
 path = "src/main.rs"
 
+[features]
+# 一次性老 CPU 构建（Pentium / Celeron、旧虚拟机）专用：关闭 CTranslate2 的 CPU 分派，
+# 只编一份基线内核。开着分派时 MSVC 会把「GENERIC」符号解析到 AVX 编码的 Vec<float>
+# 副本上，没有 AVX 的机器第一次 reduce 就 0xc000001d（0.7.2 用户反馈）。
+# 用 .github/workflows/legacy-windows.yml 手动构建，产物单独分发，不参与发版与自动更新。
+legacy-cpu = ["ct2rs/disable-cpu-dispatch"]
+
 [build-dependencies]
 tauri-build = { version = "2", features = [] }
 

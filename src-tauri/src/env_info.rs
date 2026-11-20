@@ -25,6 +25,7 @@ pub fn log_startup(prefs: &Preferences) {
         webview = %webview,
         system_locale = %system_locale,
         ui_locale = crate::i18n::locale().as_str(),
+        legacy_cpu = cfg!(feature = "legacy-cpu"),
         debug = cfg!(debug_assertions),
         "运行环境"
     );
