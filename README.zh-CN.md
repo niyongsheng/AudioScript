@@ -46,7 +46,7 @@ https://github.com/user-attachments/assets/b1f88a82-b3fe-4721-8736-af6a9e4d828e
 ## 系统要求
 
 * macOS 14.2 及以上的 Apple Silicon、Windows 10 及以上、Ubuntu 24（x64）。
-* x86-64 CPU 需要 SSE4.1；没有 AVX2 的机型（Pentium / Celeron、部分虚拟机）会跳过 Intel MKL，改用可移植后端，翻译仍可用但更慢。
+* x86-64 CPU 需要 SSE4.1；默认启用 Intel MKL 加速，可在「设置 → 翻译」中关闭；没有 AVX2 的机型（Pentium / Celeron、部分虚拟机）会自动改用可移植后端。
 
 ## 构建
 

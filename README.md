@@ -46,7 +46,7 @@ https://github.com/user-attachments/assets/b1f88a82-b3fe-4721-8736-af6a9e4d828e
 ## Requirements
 
 * macOS 14.2+ on Apple Silicon, Windows 10+, or Ubuntu 24 (x64).
-* x86-64 CPUs need SSE4.1. Without AVX2 (Pentium / Celeron, some VMs) the app skips Intel MKL and uses a portable backend, so translation still works but is slower.
+* x86-64 CPUs need SSE4.1. Intel MKL acceleration is on by default and can be turned off under Settings → Translation; CPUs without AVX2 (Pentium / Celeron, some VMs) use the portable backend automatically.
 
 ## Build
 
