@@ -1,9 +1,12 @@
 name: Legacy Windows Build (no AVX)
 
 # 一次性用途：给没有 AVX 的老 CPU（Pentium / Celeron、旧虚拟机）单独出一个安装包。
-# 只在手动触发时运行，不参与 tag 发布、不产出更新清单；自动更新在 legacy-cpu 构建里已关闭。
+# 不参与 tag 发布、不产出更新清单；自动更新在 legacy-cpu 构建里已关闭。
 # 产物：AudioScript_<version>_x64-legacy-setup.exe，手动分发（例如网盘）即可。
+# workflow_dispatch 需要文件先在默认分支上，所以同时允许一次性分支 push 触发构建。
 on:
+  push:
+    branches: ['feat/legacy-cpu-package']
   workflow_dispatch:
 
 permissions:
