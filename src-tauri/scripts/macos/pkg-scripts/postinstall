@@ -1,0 +1,5 @@
+#!/bin/sh
+# The pkg is not notarized yet; clear quarantine so Gatekeeper does not block
+# the installed app on first launch.
+xattr -dr com.apple.quarantine "/Applications/AudioScript.app" 2>/dev/null || true
+exit 0

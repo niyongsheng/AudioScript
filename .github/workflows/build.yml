@@ -98,11 +98,30 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
         run: pnpm tauri build --config src-tauri/tauri.updater.conf.json
 
+      - name: Build macOS pkg
+        run: |-
+          APP="src-tauri/target/release/bundle/macos/AudioScript.app"
+          VERSION=$(node -p "require('./package.json').version")
+          mkdir -p src-tauri/target/release/bundle/pkg
+          pkgbuild --component "$APP" \
+            --install-location /Applications \
+            --identifier com.audioscript.desktop \
+            --version "$VERSION" \
+            --scripts src-tauri/scripts/macos/pkg-scripts \
+            "src-tauri/target/release/bundle/pkg/AudioScript_${VERSION}_aarch64.pkg"
+
       - name: Upload DMG
         uses: actions/upload-artifact@v4
         with:
           name: AudioScript-macOS-ARM
           path: src-tauri/target/release/bundle/dmg/*.dmg
+          compression-level: 0
+
+      - name: Upload pkg
+        uses: actions/upload-artifact@v4
+        with:
+          name: AudioScript-macOS-ARM-pkg
+          path: src-tauri/target/release/bundle/pkg/*.pkg
           compression-level: 0
 
       - name: Upload updater artifacts
@@ -394,6 +413,7 @@ jobs:
           # 少一层会报「Pattern ... does not match any files」并让 release 失败。
           files: |
             AudioScript-macOS-ARM/*.dmg
+            AudioScript-macOS-ARM-pkg/*.pkg
             AudioScript-Windows-x64/nsis/*.exe
             AudioScript-Windows-x64/msi/*.msi
             AudioScript-Linux-x64/deb/*.deb
