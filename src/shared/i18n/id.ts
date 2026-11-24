@@ -195,6 +195,10 @@ export const id: Partial<Messages> = {
   'audio.deviceSelectPlaceholder': 'Pilih perangkat input',
   'audio.deviceSelectNoDevices': '(perangkat tidak ditemukan)',
 
+  'audio.deviceFallbackTitle': 'Perangkat yang dipilih tidak lagi tersedia',
+  'audio.deviceFallbackBody': 'Beralih ke perangkat default sistem: {device}',
+  'audio.deviceUnavailableOption': 'Perangkat tidak tersedia (menggunakan default)',
+  'audio.deviceDefaultLabel': 'perangkat default sistem',
   'permissions.title': 'Izin',
   'permissions.mic': 'Mikrofon',
   'permissions.systemAudio': 'Perekaman audio sistem',

@@ -190,6 +190,10 @@ export const ko: Partial<Messages> = {
   'audio.deviceSelectPlaceholder': '입력 장치 선택',
   'audio.deviceSelectNoDevices': '(장치를 찾을 수 없음)',
 
+  'audio.deviceFallbackTitle': '선택한 장치를 더 이상 사용할 수 없습니다',
+  'audio.deviceFallbackBody': '시스템 기본 장치로 전환했습니다: {device}',
+  'audio.deviceUnavailableOption': '장치를 사용할 수 없음(기본 장치 사용)',
+  'audio.deviceDefaultLabel': '시스템 기본 장치',
   'permissions.title': '권한',
   'permissions.mic': '마이크',
   'permissions.systemAudio': '시스템 오디오 녹음',

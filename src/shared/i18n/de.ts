@@ -200,6 +200,10 @@ export const de: Partial<Messages> = {
   'audio.deviceSelectPlaceholder': 'Eingabegerät auswählen',
   'audio.deviceSelectNoDevices': '(keine Geräte gefunden)',
 
+  'audio.deviceFallbackTitle': 'Das gewählte Gerät ist nicht mehr verfügbar',
+  'audio.deviceFallbackBody': 'Auf das Systemstandardgerät umgeschaltet: {device}',
+  'audio.deviceUnavailableOption': 'Gerät nicht verfügbar (Standard wird verwendet)',
+  'audio.deviceDefaultLabel': 'Systemstandardgerät',
   'permissions.title': 'Berechtigungen',
   'permissions.mic': 'Mikrofon',
   'permissions.systemAudio': 'Systemaudioaufnahme',

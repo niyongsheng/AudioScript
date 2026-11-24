@@ -190,6 +190,10 @@ export const ar: Partial<Messages> = {
   'audio.deviceSelectPlaceholder': 'اختر جهاز الإدخال',
   'audio.deviceSelectNoDevices': '(لم يُعثر على أجهزة)',
 
+  'audio.deviceFallbackTitle': 'الجهاز المحدد لم يعد متاحًا',
+  'audio.deviceFallbackBody': 'تم التبديل إلى جهاز النظام الافتراضي: {device}',
+  'audio.deviceUnavailableOption': 'الجهاز غير متاح (يُستخدم الافتراضي)',
+  'audio.deviceDefaultLabel': 'جهاز النظام الافتراضي',
   'permissions.title': 'الأذونات',
   'permissions.mic': 'الميكروفون',
   'permissions.systemAudio': 'تسجيل صوت النظام',

@@ -193,6 +193,10 @@ export const en: Messages = {
   'audio.deviceSelectPlaceholder': 'Select input device',
   'audio.deviceSelectNoDevices': '(no devices found)',
 
+  'audio.deviceFallbackTitle': 'The selected device is no longer available',
+  'audio.deviceFallbackBody': 'Switched to the system default device: {device}',
+  'audio.deviceUnavailableOption': 'Device unavailable (using default)',
+  'audio.deviceDefaultLabel': 'system default device',
   'permissions.title': 'Permissions',
   'permissions.mic': 'Microphone',
   'permissions.systemAudio': 'System audio recording',

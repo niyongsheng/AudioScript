@@ -199,6 +199,10 @@ export const ptBR: Partial<Messages> = {
   'audio.deviceSelectPlaceholder': 'Selecionar dispositivo de entrada',
   'audio.deviceSelectNoDevices': '(nenhum dispositivo encontrado)',
 
+  'audio.deviceFallbackTitle': 'O dispositivo selecionado não está mais disponível',
+  'audio.deviceFallbackBody': 'Alternado para o dispositivo padrão do sistema: {device}',
+  'audio.deviceUnavailableOption': 'Dispositivo indisponível (usando o padrão)',
+  'audio.deviceDefaultLabel': 'dispositivo padrão do sistema',
   'permissions.title': 'Permissões',
   'permissions.mic': 'Microfone',
   'permissions.systemAudio': 'Gravação de áudio do sistema',

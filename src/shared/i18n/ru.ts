@@ -198,6 +198,10 @@ export const ru: Partial<Messages> = {
   'audio.deviceSelectPlaceholder': 'Выберите устройство ввода',
   'audio.deviceSelectNoDevices': '(устройства не найдены)',
 
+  'audio.deviceFallbackTitle': 'Выбранное устройство больше недоступно',
+  'audio.deviceFallbackBody': 'Переключено на системное устройство по умолчанию: {device}',
+  'audio.deviceUnavailableOption': 'Устройство недоступно (используется устройство по умолчанию)',
+  'audio.deviceDefaultLabel': 'системное устройство по умолчанию',
   'permissions.title': 'Разрешения',
   'permissions.mic': 'Микрофон',
   'permissions.systemAudio': 'Запись системного звука',
