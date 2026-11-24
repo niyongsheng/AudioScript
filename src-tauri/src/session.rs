@@ -270,6 +270,7 @@ pub const EVENT_TASK_STATE: &str = "transcript://state";
 pub const EVENT_AUDIO: &str = "transcript://audio";
 pub const EVENT_LEVEL: &str = "transcript://level";
 pub const EVENT_LANGUAGE_MISMATCH: &str = "transcript://language-mismatch";
+pub const EVENT_DEVICE_FALLBACK: &str = "transcript://device-fallback";
 
 const FIRST_TEXT_BUDGET_MS: u128 = 200;
 
@@ -341,6 +342,17 @@ enum UiEvent {
     Audio(AudioStatus),
     Segments(Vec<TranscriptSegment>),
     LanguageMismatch(bool),
+    DeviceFallback(DeviceFallbackEvent),
+}
+
+/// A saved capture device disappeared and start fell back to the OS default device.
+#[typeshare::typeshare]
+#[derive(Debug, Clone, serde::Serialize)]
+pub struct DeviceFallbackEvent {
+    /// Saved device ids that were no longer present.
+    pub requested: Vec<String>,
+    /// Display name of the device that capture actually started on.
+    pub actual: String,
 }
 
 static EVENT_SENDER: std::sync::OnceLock<Sender<UiEvent>> = std::sync::OnceLock::new();
@@ -376,6 +388,11 @@ pub fn init_emitter(app: &AppHandle) -> Result<(), String> {
                     UiEvent::LanguageMismatch(mismatch) => {
                         if let Err(e) = app.emit(EVENT_LANGUAGE_MISMATCH, mismatch) {
                             tracing::debug!("广播语言不匹配提示失败（可能没有窗口）：{e}");
+                        }
+                    }
+                    UiEvent::DeviceFallback(fallback) => {
+                        if let Err(e) = app.emit(EVENT_DEVICE_FALLBACK, fallback) {
+                            tracing::debug!("广播设备回退提示失败（可能没有窗口）：{e}");
                         }
                     }
                 }
@@ -976,6 +993,13 @@ pub fn start(
         }
     })
     .map_err(|e| tf(Key::SessionStartCaptureFailed, &[&e.to_string()]))?;
+
+    if !capture.fell_back_from().is_empty() {
+        let _ = events.send(UiEvent::DeviceFallback(DeviceFallbackEvent {
+            requested: capture.fell_back_from().to_vec(),
+            actual: capture.device_name().to_string(),
+        }));
+    }
 
     let device_name = capture.device_name().to_string();
     let device_sample_rate = capture.device_sample_rate();

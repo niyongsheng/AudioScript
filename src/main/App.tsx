@@ -11,6 +11,7 @@ import { PrimaryAction } from '@/ui/PrimaryAction'
 import { Sidebar } from '@/ui/Sidebar'
 import { TitleBarSpacer } from '@/ui/TitleBarSpacer'
 import { Brand } from './Brand'
+import { DeviceFallbackToast } from './DeviceFallbackToast'
 import { navItems, type PageId } from './navigation'
 import { AboutPage } from './pages/AboutPage'
 import { AudioPage } from './pages/AudioPage'
@@ -129,6 +130,7 @@ function Shell() {
       </section>
 
       <UpdateToast hidden={page === 'about'} />
+      <DeviceFallbackToast hidden={page === 'about'} />
     </main>
   )
 }

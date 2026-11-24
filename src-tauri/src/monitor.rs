@@ -267,6 +267,14 @@ fn reconcile(app: &AppHandle) -> Result<(), MonitorError> {
 
         match started {
             Ok(capture) => {
+                if !capture.fell_back_from().is_empty() {
+                    tracing::warn!(
+                        source = target.source.as_str(),
+                        requested = ?capture.fell_back_from(),
+                        device = %capture.device_name(),
+                        "预览设备已不可用，已回退到系统默认设备"
+                    );
+                }
                 let mut inner = monitor.inner.lock().expect("monitor mutex poisoned");
                 let accepted = inner.visible
                     && !session.is_running()

@@ -181,6 +181,10 @@ export const zhTW: Partial<Messages> = {
   'audio.deviceSelectPlaceholder': '選擇輸入裝置',
   'audio.deviceSelectNoDevices': '（找不到裝置）',
 
+  'audio.deviceFallbackTitle': '之前選擇的裝置已無法使用',
+  'audio.deviceFallbackBody': '已切換到系統預設裝置：{device}',
+  'audio.deviceUnavailableOption': '裝置無法使用（使用預設）',
+  'audio.deviceDefaultLabel': '系統預設裝置',
   'permissions.title': '權限',
   'permissions.mic': '麥克風',
   'permissions.systemAudio': '系統聲音錄製',

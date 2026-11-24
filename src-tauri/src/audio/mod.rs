@@ -112,6 +112,9 @@ pub struct CaptureHandle {
     thread: Option<std::thread::JoinHandle<()>>,
     device_sample_rate: u32,
     device_name: String,
+    /// Saved device ids that were no longer present when capture started and were replaced by
+    /// the OS default device. Empty when the requested device (or the default) was used.
+    fell_back_from: Vec<String>,
 }
 
 impl CaptureHandle {
@@ -121,6 +124,11 @@ impl CaptureHandle {
 
     pub fn device_name(&self) -> &str {
         &self.device_name
+    }
+
+    /// Saved device ids that disappeared and fell back to the OS default at start.
+    pub fn fell_back_from(&self) -> &[String] {
+        &self.fell_back_from
     }
 
     pub fn request_stop(&self) {
@@ -524,6 +532,67 @@ fn reconnect_config(_config: &StreamConfig) -> Option<StreamConfig> {
     None
 }
 
+/// Drop saved device selections that are no longer present and fall back to the OS default.
+///
+/// Saved ids are name-based and disappear when a headset disconnects, an interface is
+/// unplugged, or an aggregate device is removed. Passing a stale id to flexaudio fails the
+/// whole session with `DeviceNotFound`, so start falls back to the default device instead and
+/// reports the original ids for the UI.
+fn sanitize_device_selection(
+    kind: AudioSourceKind,
+    selection: &DeviceSelection,
+) -> (DeviceSelection, Vec<String>) {
+    sanitize_device_selection_with(kind, selection, |side| {
+        devices_for(side)
+            .ok()
+            .map(|devices| devices.into_iter().map(|device| device.id).collect())
+    })
+}
+
+/// Testable core of [`sanitize_device_selection`].
+///
+/// `inventory(side)` returns the available device ids for a source kind, or `None` when
+/// enumeration itself failed. In the latter case the saved id is kept so flexaudio reports the
+/// real enumeration error instead of silently switching devices.
+fn sanitize_device_selection_with<I>(
+    kind: AudioSourceKind,
+    selection: &DeviceSelection,
+    inventory: I,
+) -> (DeviceSelection, Vec<String>)
+where
+    I: Fn(AudioSourceKind) -> Option<Vec<String>>,
+{
+    let mut cleaned = selection.clone();
+    let mut fell_back = Vec::new();
+    let mut pick = |side: AudioSourceKind, wanted: Option<&str>| -> Option<String> {
+        let id = wanted?;
+        match inventory(side) {
+            Some(available) if available.iter().any(|candidate| candidate == id) => {
+                Some(id.to_owned())
+            }
+            Some(_) => {
+                tracing::warn!(
+                    source = side.as_str(),
+                    device = id,
+                    "保存的音频设备已不可用，回退到系统默认设备"
+                );
+                fell_back.push(id.to_owned());
+                None
+            }
+            None => Some(id.to_owned()),
+        }
+    };
+    match kind {
+        AudioSourceKind::App => {}
+        AudioSourceKind::Mix => {
+            cleaned.mix_mic = pick(AudioSourceKind::Mic, selection.mix_mic.as_deref());
+            cleaned.mix_system = pick(AudioSourceKind::Loopback, selection.mix_system.as_deref());
+        }
+        _ => cleaned.device = pick(kind, selection.device.as_deref()),
+    }
+    (cleaned, fell_back)
+}
+
 pub fn start<S>(
     kind: AudioSourceKind,
     selection: &DeviceSelection,
@@ -549,6 +618,10 @@ where
         return start_apps(selection, sink);
     }
 
+    // A previously selected device may have disappeared (Bluetooth headset disconnected,
+    // interface unplugged). Fall back to the default device instead of failing the session.
+    let (selection, fell_back_from) = sanitize_device_selection(kind, selection);
+
     let config = StreamConfig {
         kind: kind.to_flexaudio(),
         device_id: selection.device.clone(),
@@ -565,7 +638,7 @@ where
     let stream = open_started(&config)?;
     let native_rate = stream.native_format().0;
 
-    let device_name = display_name(kind, selection);
+    let device_name = display_name(kind, &selection);
 
     tracing::info!(
         source = kind.as_str(),
@@ -585,6 +658,7 @@ where
         thread: Some(thread),
         device_sample_rate: native_rate,
         device_name,
+        fell_back_from,
     })
 }
 
@@ -645,6 +719,7 @@ where
         thread: Some(thread),
         device_sample_rate: native_rate,
         device_name,
+        fell_back_from: Vec::new(),
     })
 }
 
@@ -1044,6 +1119,84 @@ mod tests {
             AudioSourceKind::App.to_flexaudio(),
             SourceKind::ProcessLoopback
         );
+    }
+
+    fn ids(values: &[&str]) -> Option<Vec<String>> {
+        Some(values.iter().map(|value| (*value).to_string()).collect())
+    }
+
+    #[test]
+    fn empty_selection_reports_no_fallback() {
+        let (cleaned, fell_back) = sanitize_device_selection_with(
+            AudioSourceKind::Loopback,
+            &DeviceSelection::default(),
+            |_| ids(&["builtin"]),
+        );
+        assert_eq!(cleaned.device, None);
+        assert!(fell_back.is_empty());
+    }
+
+    #[test]
+    fn mix_with_both_sides_missing_reports_both() {
+        let selection = DeviceSelection::mix(Some("mic".into()), Some("headset".into()));
+        let (cleaned, fell_back) =
+            sanitize_device_selection_with(AudioSourceKind::Mix, &selection, |_| ids(&["other"]));
+        assert_eq!(cleaned.mix_mic, None);
+        assert_eq!(cleaned.mix_system, None);
+        assert_eq!(fell_back, vec!["mic".to_string(), "headset".to_string()]);
+    }
+
+    #[test]
+    fn existing_saved_device_is_kept() {
+        let selection = DeviceSelection::single(Some("headset".into()));
+        let (cleaned, fell_back) =
+            sanitize_device_selection_with(AudioSourceKind::Loopback, &selection, |_| {
+                ids(&["headset", "builtin"])
+            });
+        assert_eq!(cleaned.device.as_deref(), Some("headset"));
+        assert!(fell_back.is_empty());
+    }
+
+    #[test]
+    fn missing_saved_device_falls_back_to_default() {
+        let selection = DeviceSelection::single(Some("headset".into()));
+        let (cleaned, fell_back) =
+            sanitize_device_selection_with(AudioSourceKind::Loopback, &selection, |_| {
+                ids(&["builtin"])
+            });
+        assert_eq!(cleaned.device, None);
+        assert_eq!(fell_back, vec!["headset".to_string()]);
+    }
+
+    #[test]
+    fn guess_enumeration_failure_keeps_selection() {
+        let selection = DeviceSelection::single(Some("headset".into()));
+        let (cleaned, fell_back) =
+            sanitize_device_selection_with(AudioSourceKind::Loopback, &selection, |_| None);
+        assert_eq!(cleaned.device.as_deref(), Some("headset"));
+        assert!(fell_back.is_empty());
+    }
+
+    #[test]
+    fn mix_validates_both_sides() {
+        let selection = DeviceSelection::mix(Some("mic".into()), Some("headset".into()));
+        let (cleaned, fell_back) =
+            sanitize_device_selection_with(AudioSourceKind::Mix, &selection, |side| match side {
+                AudioSourceKind::Mic => ids(&["mic"]),
+                _ => ids(&["builtin"]),
+            });
+        assert_eq!(cleaned.mix_mic.as_deref(), Some("mic"));
+        assert_eq!(cleaned.mix_system, None);
+        assert_eq!(fell_back, vec!["headset".to_string()]);
+    }
+
+    #[test]
+    fn app_source_keeps_its_selection() {
+        let selection = DeviceSelection::single(Some("ignored".into()));
+        let (cleaned, fell_back) =
+            sanitize_device_selection_with(AudioSourceKind::App, &selection, |_| ids(&[]));
+        assert_eq!(cleaned, selection);
+        assert!(fell_back.is_empty());
     }
 
     #[test]

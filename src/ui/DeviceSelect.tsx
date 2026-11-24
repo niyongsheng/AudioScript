@@ -234,7 +234,11 @@ export function DeviceSelect({
         {meter}
         <span className="min-w-0 flex-1 truncate text-start">
           {selected?.name ??
-            (devices.length === 0 ? t('audio.deviceSelectNoDevices') : t('audio.deviceSelectPlaceholder'))}
+            (value && devices.length > 0
+              ? t('audio.deviceUnavailableOption')
+              : devices.length === 0
+                ? t('audio.deviceSelectNoDevices')
+                : t('audio.deviceSelectPlaceholder'))}
         </span>
         <Icon
           name="chevronDown"

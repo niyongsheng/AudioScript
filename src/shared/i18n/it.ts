@@ -200,6 +200,10 @@ export const it: Partial<Messages> = {
   'audio.deviceSelectPlaceholder': 'Seleziona dispositivo di ingresso',
   'audio.deviceSelectNoDevices': '(nessun dispositivo trovato)',
 
+  'audio.deviceFallbackTitle': 'Il dispositivo selezionato non è più disponibile',
+  'audio.deviceFallbackBody': 'Passato al dispositivo predefinito di sistema: {device}',
+  'audio.deviceUnavailableOption': 'Dispositivo non disponibile (viene usato il predefinito)',
+  'audio.deviceDefaultLabel': 'dispositivo predefinito di sistema',
   'permissions.title': 'Autorizzazioni',
   'permissions.mic': 'Microfono',
   'permissions.systemAudio': 'Registrazione audio di sistema',

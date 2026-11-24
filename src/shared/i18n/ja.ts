@@ -196,6 +196,10 @@ export const ja: Partial<Messages> = {
   'audio.deviceSelectPlaceholder': '入力デバイスを選択',
   'audio.deviceSelectNoDevices': '（デバイスが見つかりません）',
 
+  'audio.deviceFallbackTitle': '選択したデバイスは利用できなくなりました',
+  'audio.deviceFallbackBody': 'システムの既定のデバイスに切り替えました：{device}',
+  'audio.deviceUnavailableOption': 'デバイスを利用できません（既定を使用）',
+  'audio.deviceDefaultLabel': 'システムの既定のデバイス',
   'permissions.title': '権限',
   'permissions.mic': 'マイク',
   'permissions.systemAudio': 'システム音声の録音',

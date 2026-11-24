@@ -202,6 +202,10 @@ export const fr: Partial<Messages> = {
   'audio.deviceSelectPlaceholder': 'Choisir un périphérique d’entrée',
   'audio.deviceSelectNoDevices': '(aucun périphérique trouvé)',
 
+  'audio.deviceFallbackTitle': 'Le périphérique sélectionné n’est plus disponible',
+  'audio.deviceFallbackBody': 'Passage au périphérique système par défaut : {device}',
+  'audio.deviceUnavailableOption': 'Périphérique indisponible (utilisation du périphérique par défaut)',
+  'audio.deviceDefaultLabel': 'périphérique système par défaut',
   'permissions.title': 'Autorisations',
   'permissions.mic': 'Microphone',
   'permissions.systemAudio': 'Enregistrement audio du système',

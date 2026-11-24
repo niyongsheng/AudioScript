@@ -76,6 +76,7 @@ export const EVENT = {
   audio: 'transcript://audio',
   level: 'transcript://level',
   languageMismatch: 'transcript://language-mismatch',
+  deviceFallback: 'transcript://device-fallback',
   deviceLevel: 'transcript://device-level',
   modelsProgress: 'models://progress',
   updateProgress: 'update://progress',

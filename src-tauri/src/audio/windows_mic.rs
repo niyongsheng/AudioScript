@@ -96,6 +96,7 @@ where
             thread: Some(thread),
             device_sample_rate: sample_rate,
             device_name,
+            fell_back_from: Vec::new(),
         }),
         Ok(Err(e)) => {
             let _ = thread.join();

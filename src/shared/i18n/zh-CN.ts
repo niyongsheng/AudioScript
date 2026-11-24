@@ -178,6 +178,10 @@ export const zhCN = {
   'audio.deviceSelectPlaceholder': '选择输入设备',
   'audio.deviceSelectNoDevices': '（未找到设备）',
 
+  'audio.deviceFallbackTitle': '之前选择的设备已不可用',
+  'audio.deviceFallbackBody': '已切换到系统默认设备：{device}',
+  'audio.deviceUnavailableOption': '设备不可用（使用默认）',
+  'audio.deviceDefaultLabel': '系统默认设备',
   'permissions.title': '权限',
   'permissions.mic': '麦克风',
   'permissions.systemAudio': '系统声音录制',
