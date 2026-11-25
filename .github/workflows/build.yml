@@ -14,7 +14,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Assert arm64 runner
         run: |-
@@ -22,17 +22,17 @@ jobs:
             { echo "::error::runner 不是 arm64——产物会是 x86_64 却被当成 ARM 发出去，需改用 macos-14 并显式 --target"; exit 1; }
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
 
       # 钉版本：torch 要求 Python >= 3.10，runner 自带的 3.9 会让 pip 报「(from versions: none)」
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
@@ -49,7 +49,7 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Cache sherpa-onnx native libs
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: src-tauri/target/sherpa-onnx-prebuilt
           key: sherpa-onnx-1.13.8-${{ runner.os }}-${{ runner.arch }}
@@ -67,7 +67,7 @@ jobs:
           fi
 
       - name: Cache ASR model
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: src-tauri/assets/models/sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16
           key: asr-model-v1
@@ -75,7 +75,7 @@ jobs:
           # 跨平台共享：hashFiles 在 Windows 会因换行符不同算出另一个哈希；换模型时手动升 v2
 
       - name: Cache MT models
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             src-tauri/assets/models/mt
@@ -111,21 +111,21 @@ jobs:
             "src-tauri/target/release/bundle/pkg/AudioScript_${VERSION}_aarch64.pkg"
 
       - name: Upload DMG
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: AudioScript-macOS-ARM
           path: src-tauri/target/release/bundle/dmg/*.dmg
           compression-level: 0
 
       - name: Upload pkg
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: AudioScript-macOS-ARM-pkg
           path: src-tauri/target/release/bundle/pkg/*.pkg
           compression-level: 0
 
       - name: Upload updater artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: updater-macOS-ARM
           path: src-tauri/target/release/bundle/macos/*.app.tar.gz*
@@ -141,13 +141,13 @@ jobs:
       RUSTFLAGS: -C target-feature=+crt-static
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -163,7 +163,7 @@ jobs:
           save-if: ${{ github.ref == 'refs/heads/main' }}
 
       - name: Cache sherpa-onnx native libs
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: src-tauri/target/sherpa-onnx-prebuilt
           key: sherpa-onnx-1.13.8-${{ runner.os }}-${{ runner.arch }}
@@ -181,20 +181,20 @@ jobs:
           fi
 
       - name: Cache typeshare CLI
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cargo/bin/typeshare
           key: typeshare-1.13.4-${{ runner.os }}
 
       - name: Cache ASR model
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: src-tauri/assets/models/sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16
           key: asr-model-v1
           restore-keys: asr-model-
 
       - name: Cache MT models
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             src-tauri/assets/models/mt
@@ -203,7 +203,7 @@ jobs:
           restore-keys: mt-models-
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
@@ -224,7 +224,7 @@ jobs:
         run: pnpm tauri build --bundles nsis,msi --config src-tauri/tauri.updater.conf.json
 
       - name: Upload installers
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: AudioScript-Windows-x64
           path: |-
@@ -233,14 +233,14 @@ jobs:
           compression-level: 0
 
       - name: Upload NSIS updater artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: updater-Windows-x64
           path: src-tauri/target/release/bundle/nsis/*.exe*
           compression-level: 0
 
       - name: Upload MSI updater artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: updater-Windows-x64-msi
           path: src-tauri/target/release/bundle/msi/*.msi*
@@ -259,7 +259,7 @@ jobs:
       CXXFLAGS: -D_GLIBCXX_USE_CXX11_ABI=0
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Install Tauri system dependencies
         run: |-
@@ -269,10 +269,10 @@ jobs:
             libpipewire-0.3-dev cmake ninja-build
 
       - name: Setup pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@v6
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: pnpm
@@ -290,7 +290,7 @@ jobs:
           key: cxx-abi-0
 
       - name: Cache sherpa-onnx native libs
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: src-tauri/target/sherpa-onnx-prebuilt
           key: sherpa-onnx-1.13.8-${{ runner.os }}-${{ runner.arch }}
@@ -308,20 +308,20 @@ jobs:
           fi
 
       - name: Cache typeshare CLI
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cargo/bin/typeshare
           key: typeshare-1.13.4-${{ runner.os }}
 
       - name: Cache ASR model
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: src-tauri/assets/models/sherpa-onnx-streaming-zipformer-small-bilingual-zh-en-2023-02-16
           key: asr-model-v1
           restore-keys: asr-model-
 
       - name: Cache MT models
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: |
             src-tauri/assets/models/mt
@@ -330,7 +330,7 @@ jobs:
           restore-keys: mt-models-
 
       - name: Setup Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v7
         with:
           python-version: '3.12'
 
@@ -350,7 +350,7 @@ jobs:
         run: pnpm tauri build --bundles deb,appimage --config src-tauri/tauri.updater.conf.json
 
       - name: Upload installers
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: AudioScript-Linux-x64
           path: |-
@@ -359,14 +359,14 @@ jobs:
           compression-level: 0
 
       - name: Upload updater artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: updater-Linux-x64
           path: src-tauri/target/release/bundle/appimage/*.AppImage*
           compression-level: 0
 
       - name: Upload deb updater artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: updater-Linux-x64-deb
           path: src-tauri/target/release/bundle/deb/*.deb*
@@ -381,13 +381,13 @@ jobs:
       contents: write
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
         with:
           # 生成 What's Changed 要回到上一个 tag，浅克隆会让 git describe 找不到它
           fetch-depth: 0
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
 
       # 每个平台只产出本平台的 .sig，这里合成 updater 所需的单一 latest.json。
       - name: Generate updater manifest
@@ -418,7 +418,7 @@ jobs:
             --asset "linux-deb=$(ls AudioScript-Linux-x64/deb/*.deb)"
 
       - name: Create Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           name: AudioScript ${{ github.ref_name }}
           body_path: release-body.md
