@@ -297,7 +297,9 @@
       .download .meta{margin-top:16px; color:var(--ink-3); font-size:14px; line-height:20px;}
       .download .note{margin-top:8px; color:var(--ink-2); font-size:14px; line-height:20px;}
       .download .actions{display:flex; gap:8px; margin-top:auto; padding-top:24px;}
-      .download .actions .btn{flex:1; min-width:0;}
+      .download .actions .btn{position:relative; flex:1; min-width:0; white-space:normal; text-align:center;}
+      .download .actions .btn .hint{position:absolute; bottom:calc(100% + 8px); left:50%; transform:translateX(-50%); z-index:10; padding:6px 10px; border-radius:var(--r-md); border:1px solid var(--line-2); background:var(--surface-3); color:var(--ink-2); font-size:12px; line-height:16px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity 200ms var(--ease);}
+      .download .actions .btn:hover .hint,.download .actions .btn:focus-visible .hint{opacity:1;}
       .download-alt{display:flex; align-items:center; gap:16px; margin-top:16px; padding:16px 24px; border-radius:var(--r-2xl); background:var(--surface); transition:background-color 300ms var(--ease),box-shadow 300ms var(--ease);}
       .download-alt-glyph{display:inline-flex; flex:none; align-items:center; justify-content:center; width:40px; height:40px; border-radius:var(--r-xl); background:var(--surface-3); font-size:16px;}
       .download-alt-copy{min-width:0; flex:1;}
@@ -1096,7 +1098,8 @@
                   ><span class="zh" lang="zh-CN">下载 .dmg</span><span class="en" lang="en">Download .dmg</span></a
                 >
                 <a class="btn btn-outline btn-block" href="https://github.com/niyongsheng/AudioScript/releases/latest" target="_blank" rel="noopener noreferrer" data-asset="aarch64.pkg"
-                  ><span class="zh" lang="zh-CN">下载 .pkg（自动清除隔离标记）</span><span class="en" lang="en">Download .pkg (clears the quarantine flag)</span></a
+                  ><span class="zh" lang="zh-CN">下载 .pkg</span><span class="en" lang="en">Download .pkg</span
+                  ><span class="hint"><span class="zh" lang="zh-CN">自动清除隔离标记</span><span class="en" lang="en">Clears the quarantine flag</span></span></a
                 >
               </div>
             </article>
