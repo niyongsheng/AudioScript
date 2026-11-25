@@ -345,13 +345,10 @@ enum UiEvent {
     DeviceFallback(DeviceFallbackEvent),
 }
 
-/// A saved capture device disappeared and start fell back to the OS default device.
 #[typeshare::typeshare]
 #[derive(Debug, Clone, serde::Serialize)]
 pub struct DeviceFallbackEvent {
-    /// Saved device ids that were no longer present.
     pub requested: Vec<String>,
-    /// Display name of the device that capture actually started on.
     pub actual: String,
 }
 
@@ -615,7 +612,7 @@ pub fn start(
     cfg: SessionConfig,
     source: audio::AudioSourceKind,
     devices: audio::DeviceSelection,
-) -> Result<(), CmdError> {
+) -> Result<audio::DeviceSelection, CmdError> {
     let mut cfg = cfg;
     let prefs = crate::prefs::load(app);
     cfg.translate.mt_model_tier = prefs.mt_model_tier;
@@ -1001,6 +998,7 @@ pub fn start(
         }));
     }
 
+    let effective = capture.effective_selection().clone();
     let device_name = capture.device_name().to_string();
     let device_sample_rate = capture.device_sample_rate();
 
@@ -1051,7 +1049,7 @@ pub fn start(
         })),
     );
 
-    Ok(())
+    Ok(effective)
 }
 
 pub fn stop(app: &AppHandle) -> Result<(), String> {

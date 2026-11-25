@@ -51,6 +51,7 @@ pub(super) fn start<S>(
     kind: AudioSourceKind,
     selection: &DeviceSelection,
     mic_name: String,
+    fell_back_from: Vec<String>,
     sink: S,
 ) -> Result<CaptureHandle, AudioError>
 where
@@ -96,7 +97,8 @@ where
             thread: Some(thread),
             device_sample_rate: sample_rate,
             device_name,
-            fell_back_from: Vec::new(),
+            fell_back_from,
+            effective: selection.clone(),
         }),
         Ok(Err(e)) => {
             let _ = thread.join();

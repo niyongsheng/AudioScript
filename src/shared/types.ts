@@ -49,11 +49,8 @@ export interface AudioStatus {
 	segments: number;
 }
 
-/** A saved capture device disappeared and start fell back to the OS default device. */
 export interface DeviceFallbackEvent {
-	/** Saved device ids that were no longer present. */
 	requested: string[];
-	/** Display name of the device that capture actually started on. */
 	actual: string;
 }
 

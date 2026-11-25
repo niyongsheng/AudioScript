@@ -320,7 +320,7 @@ pub fn run() {
                     source,
                     audio::DeviceSelection::single(device),
                 ) {
-                    Ok(()) => tracing::info!("自动开始转写：成功"),
+                    Ok(_) => tracing::info!("自动开始转写：成功"),
                     Err(e) => tracing::error!("自动开始转写失败：{e}"),
                 }
             }
