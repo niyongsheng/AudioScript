@@ -112,9 +112,8 @@ pub struct CaptureHandle {
     thread: Option<std::thread::JoinHandle<()>>,
     device_sample_rate: u32,
     device_name: String,
-    /// Saved device ids that were no longer present when capture started and were replaced by
-    /// the OS default device. Empty when the requested device (or the default) was used.
     fell_back_from: Vec<String>,
+    effective: DeviceSelection,
 }
 
 impl CaptureHandle {
@@ -126,9 +125,12 @@ impl CaptureHandle {
         &self.device_name
     }
 
-    /// Saved device ids that disappeared and fell back to the OS default at start.
     pub fn fell_back_from(&self) -> &[String] {
         &self.fell_back_from
+    }
+
+    pub fn effective_selection(&self) -> &DeviceSelection {
+        &self.effective
     }
 
     pub fn request_stop(&self) {
@@ -532,12 +534,6 @@ fn reconnect_config(_config: &StreamConfig) -> Option<StreamConfig> {
     None
 }
 
-/// Drop saved device selections that are no longer present and fall back to the OS default.
-///
-/// Saved ids are name-based and disappear when a headset disconnects, an interface is
-/// unplugged, or an aggregate device is removed. Passing a stale id to flexaudio fails the
-/// whole session with `DeviceNotFound`, so start falls back to the default device instead and
-/// reports the original ids for the UI.
 fn sanitize_device_selection(
     kind: AudioSourceKind,
     selection: &DeviceSelection,
@@ -549,11 +545,6 @@ fn sanitize_device_selection(
     })
 }
 
-/// Testable core of [`sanitize_device_selection`].
-///
-/// `inventory(side)` returns the available device ids for a source kind, or `None` when
-/// enumeration itself failed. In the latter case the saved id is kept so flexaudio reports the
-/// real enumeration error instead of silently switching devices.
 fn sanitize_device_selection_with<I>(
     kind: AudioSourceKind,
     selection: &DeviceSelection,
@@ -601,9 +592,15 @@ pub fn start<S>(
 where
     S: FnMut(&[f32]) + Send + 'static,
 {
+    if kind == AudioSourceKind::App {
+        return start_apps(selection, sink);
+    }
+
+    let (selection, fell_back_from) = sanitize_device_selection(kind, selection);
+
     #[cfg(target_os = "windows")]
-    if let Some(probe) = windows_mic::probe(kind, selection) {
-        let handle = windows_mic::start(kind, selection, probe, sink)?;
+    if let Some(probe) = windows_mic::probe(kind, &selection) {
+        let handle = windows_mic::start(kind, &selection, probe, fell_back_from, sink)?;
         tracing::info!(
             source = kind.as_str(),
             device = %handle.device_name(),
@@ -613,14 +610,6 @@ where
         );
         return Ok(handle);
     }
-
-    if kind == AudioSourceKind::App {
-        return start_apps(selection, sink);
-    }
-
-    // A previously selected device may have disappeared (Bluetooth headset disconnected,
-    // interface unplugged). Fall back to the default device instead of failing the session.
-    let (selection, fell_back_from) = sanitize_device_selection(kind, selection);
 
     let config = StreamConfig {
         kind: kind.to_flexaudio(),
@@ -659,6 +648,7 @@ where
         device_sample_rate: native_rate,
         device_name,
         fell_back_from,
+        effective: selection.clone(),
     })
 }
 
@@ -720,6 +710,7 @@ where
         device_sample_rate: native_rate,
         device_name,
         fell_back_from: Vec::new(),
+        effective: selection.clone(),
     })
 }
 
@@ -1169,7 +1160,7 @@ mod tests {
     }
 
     #[test]
-    fn guess_enumeration_failure_keeps_selection() {
+    fn enumeration_failure_keeps_selection() {
         let selection = DeviceSelection::single(Some("headset".into()));
         let (cleaned, fell_back) =
             sanitize_device_selection_with(AudioSourceKind::Loopback, &selection, |_| None);

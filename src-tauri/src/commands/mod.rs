@@ -545,18 +545,18 @@ pub fn route(app: &AppHandle, name: &str, args: &Value) -> Result<Value, CmdErro
             }
 
             monitor::suspend(app);
-            match session::start(app, cfg, source, devices.clone()) {
-                Ok(()) => {
+            match session::start(app, cfg, source, devices) {
+                Ok(effective) => {
                     let saved = prefs::update(app, |p| {
                         p.apply_session(
                             source.as_str(),
-                            devices.device.clone(),
-                            devices.apps.clone(),
+                            effective.device.clone(),
+                            effective.apps.clone(),
                         );
                         if source == audio::AudioSourceKind::Mix {
                             p.apply_mix_devices(
-                                devices.mix_mic.clone(),
-                                devices.mix_system.clone(),
+                                effective.mix_mic.clone(),
+                                effective.mix_system.clone(),
                             );
                         }
                     });

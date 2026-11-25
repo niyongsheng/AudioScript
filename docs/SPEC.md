@@ -397,9 +397,10 @@ TranscriptStore ← 状态机在此
 系统默认输入设备可能是**虚拟回环设备**，只在其他程序把声音路由进去时才有信号，否则返回**数字静音**——而设备打开成功、回调按时触发，一切「正常」。
 
 1. **MUST 提供输入设备选择**，枚举时给出 `isDefault` 与 `isLoopback`（后者由 flexaudio 提供）。
-   - **MUST NOT 自动切换设备**，只做视觉提示。
-   - 「系统默认」不是具体设备：Windows 系统声音选择「系统默认」时 MUST 跟随默认输出端点切换并重开采集；选择具体设备时 MUST NOT 因默认设备变化而切换。
-   - 「麦克风 + 系统声音」下 MUST 提供两个独立选择器，分别写入 `mixMicDeviceId` / `mixSystemDeviceId`，MUST NOT 复用单设备 `deviceId`——flexaudio 对 Mix 会忽略它。
+   - **MUST NOT 因系统默认设备变化而自动切换设备**，只做视觉提示。
+   - 保存的具体设备**已不存在**时 MAY 回退到系统默认设备，并 MUST 以 UI 提示实际使用的设备；回退后 MUST 清除保存的设备 id。设备枚举失败时 MUST NOT 回退，保留原选择让打开失败报出真实错误。
+   - 「系统默认」不是具体设备：Windows 系统声音选择「系统默认」时 MUST 跟随默认输出端点切换并重开采集。
+   - 「麦克风 + 系统声音」下 MUST 提供两个独立选择器，分别写入 `mixMicDeviceId` / `mixSystemDeviceId`，MUST NOT 复用单设备 `deviceId`——flexaudio 对 Mix 会忽略它；设备回退 MUST 按侧独立判定。
 2. **MUST 有音频心跳**：每 5 秒统计最近窗口的 RMS，`rms < 1e-4`（约 -80 dBFS）判为静音并记 **WARN**，日志文案 MUST 明确写出「电平接近零」。阈值刻意留低：宁可漏报，也不要把很安静的房间误报成故障。
 3. **静音状态变化时 MUST 广播**（`transcript://audio`）。只在状态变化时播报，每 5 秒弹一次会变成骚扰。
 4. **电平表心跳**：会话采集中 MUST 广播 `transcript://level`（裸 RMS，200ms）；「音频」设置页打开期间广播 `transcript://device-level`（`{ source, device, app, rms }`，200ms，`device` 为 `null` 表示系统默认，`app` 为 `null` 表示全部软件）。

@@ -28,7 +28,6 @@ export function DeviceFallbackToast({ hidden }: Props) {
 
   const dismiss = useCallback(() => setNotice(null), [])
 
-  // Capture fell back at start because the saved device was gone.
   useEffect(() => {
     let cancelled = false
     let unlisten: (() => void) | undefined
@@ -50,7 +49,6 @@ export function DeviceFallbackToast({ hidden }: Props) {
     }
   }, [audioSource, device, mixMicDevice, mixSystemDevice, setDevice, setMixMicDevice, setMixSystemDevice])
 
-  // Clear saved ids that are no longer in the inventory as soon as the device list loads.
   useEffect(() => {
     if (audioSource === AudioSourceKind.App) return
     if (audioSource === AudioSourceKind.Mix) {
